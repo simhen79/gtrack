@@ -1,0 +1,451 @@
+<!doctype html>
+<!-- PROTOTYPE, throwaway. Three variants of each of four core flows, switchable via ?flow= and ?variant=.
+     Answers "What should the Round entry and Practice Session screens look like?" (gtrack #7).
+     State is in memory only. The allocator and Game picks are stubs. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PROTOTYPE core flows</title>
+<style>
+:root{--ink:#17201b;--mute:#66736b;--line:#dfe5e0;--bg:#f4f6f3;--card:#fff;--green:#1d6b45;--green2:#e3f0e8;--amber:#b86e00;--red:#b3362b;--blue:#2b5f9e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font:16px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:#d9ded9}
+#stage{display:flex;gap:24px;justify-content:center;align-items:flex-start;padding:20px 20px 90px}
+#phone{width:390px;height:780px;background:var(--bg);border-radius:30px;overflow:hidden;box-shadow:0 8px 30px #0003;flex:none;position:relative}
+#app{height:100%;display:flex;flex-direction:column;position:relative}
+#panel{width:360px;font-size:13px}
+#panel h3{margin:0 0 4px;font-size:15px}
+#panel p{margin:0 0 10px;color:#3c4a42}
+#panel pre{background:#fff;border-radius:8px;padding:10px;font-size:11px;max-height:560px;overflow:auto;white-space:pre-wrap;margin:0}
+@media(max-width:800px){#stage{padding:0}#panel{display:none}#phone{width:100%;height:calc(100dvh - 58px);border-radius:0;box-shadow:none}}
+#bar{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:#111;color:#fff;border-radius:99px;padding:6px 8px;box-shadow:0 4px 14px #0006;font-size:13px;z-index:50;white-space:nowrap;max-width:calc(100vw - 8px)}
+#bar button{background:#333;color:#fff;border:0;border-radius:99px;width:32px;height:32px;font-size:16px}
+#bar select{background:#333;color:#fff;border:0;border-radius:99px;padding:6px 8px;font-size:13px;max-width:124px}
+#bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;max-width:190px}
+.top{padding:44px 18px 10px;background:var(--card);border-bottom:1px solid var(--line)}
+@media(max-width:800px){.top{padding-top:14px}}
+.top h1{margin:0;font-size:21px}
+.top small{color:var(--mute)}
+.scroll{flex:1;overflow:auto;padding:14px 16px 20px}
+.foot{padding:10px 16px 16px;background:var(--card);border-top:1px solid var(--line);display:flex;gap:8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{flex:1;min-height:52px;border-radius:13px;border:1px solid var(--line);background:var(--card);font-weight:600}
+.btn.p{background:var(--green);border-color:var(--green);color:#fff}
+.sec{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);margin:18px 0 6px;font-weight:700}
+.sec:first-child{margin-top:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.fld{display:block;margin-bottom:10px}
+.fld span{display:block;font-size:13px;font-weight:600;margin-bottom:3px}
+em.req,em.opt{font-style:normal;font-weight:500;font-size:11px;margin-left:4px}
+em.req{color:var(--green)}em.opt{color:var(--mute)}
+input[type=text],input[type=date]{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:inherit;background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:42px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:14px}
+.chip.on{background:var(--green);color:#fff;border-color:var(--green)}
+.sgrow{display:grid;grid-template-columns:1fr 46px 92px;gap:6px;align-items:center;margin-bottom:8px}
+.sgrow input{text-align:right}
+.flip{height:46px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:18px;font-weight:700}
+.sheet{position:absolute;inset:0;background:#0006;display:flex;align-items:flex-end;z-index:10}
+.sheet>div{background:#fff;width:100%;padding:20px 16px 22px;border-radius:20px 20px 0 0}
+.sheet h2{margin:0 0 6px;font-size:20px}.sheet p{margin:0 0 14px;color:var(--mute)}
+.wizq{font-size:27px;font-weight:700;margin:6px 0 4px}
+.wizv{font-size:50px;font-weight:700;min-height:66px;margin:12px 0}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px 12px}
+.pad button{height:62px;font-size:25px;font-weight:600;border-radius:13px;border:1px solid var(--line);background:#fff}
+.bar-track{height:12px;background:#edf0ec;border-radius:7px;display:flex;overflow:hidden}
+.bar-track i{display:block;height:100%}
+.c0{background:var(--green)}.c1{background:#57a076}.c2{background:#e0a23a}.c3{background:#6b8fbd}
+.big-total{font-size:48px;font-weight:800;line-height:1}
+input[type=range]{width:100%;height:36px;accent-color:var(--green)}
+.sgc{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-weight:600}
+.sgc small{display:block;font-weight:500;color:var(--mute);font-size:12px}
+.cell{min-width:88px;height:46px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:19px;font-weight:700;text-align:right;padding:0 10px}
+.cell.on{border:2px solid var(--green);background:var(--green2)}
+.cell.fixed{display:flex;align-items:center;justify-content:flex-end;background:#f2f4f1}
+.bands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bands small{display:block;font-size:12px;color:var(--mute);margin-bottom:2px}
+.bands .cell{width:100%;min-width:0}
+.miss{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.miss .fld{margin-bottom:2px}
+.miss .fld span{font-size:12px;text-align:center}
+.miss input{text-align:center}
+.pad.k{padding:8px 12px 12px;gap:6px;background:#fff;border-top:1px solid var(--line)}
+.pad.k button{height:48px;font-size:21px}
+.pad.k .nx{background:var(--green);border-color:var(--green);color:#fff}
+.dark .keys{display:grid;gap:8px;padding:8px 12px}
+.dark .keys button{min-height:88px;border-radius:16px;border:0;background:#2b2b2b;color:#fff;font-size:30px;font-weight:800}
+.lbl-line{display:flex;justify-content:space-between;align-items:baseline;font-weight:600}
+.lbl-line b{font-size:20px}
+.detail-line{background:var(--green2);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:14px;margin-bottom:10px}
+.link{background:none;border:0;color:var(--green);font-weight:700;padding:8px 0}
+.dayrow{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:7px}
+.dayhead{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;padding:4px 0;text-align:left;min-height:32px}
+.dayhead b{width:62px;flex:none}
+.dayhead span{flex:1;color:var(--mute);font-size:14px}
+.tag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--green2);color:var(--green);display:inline-block;margin-right:4px}
+.game{padding:7px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:14px;gap:8px}
+.note{font-size:13px;color:var(--amber);margin:8px 0}
+table.mx{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border-radius:12px;overflow:hidden}
+table.mx th,table.mx td{padding:9px 5px;text-align:center;border-bottom:1px solid var(--line)}
+table.mx th:first-child,table.mx td:first-child{text-align:left;padding-left:10px}
+table.mx td.on{background:var(--green2);font-weight:700}
+table.mx tr.sum td{font-weight:700;background:#fafbf9}
+.strip{display:flex;gap:5px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.strip button{flex:1;border:1px solid var(--line);border-radius:12px;background:#fff;height:62px;font-size:12px;padding:0}
+.strip button b{display:block;font-size:17px}
+.strip button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.strip button.has{box-shadow:inset 0 -4px 0 var(--green)}
+.setup{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px}
+.setup b{font-size:19px;display:block}
+.setup span{color:var(--mute);font-size:14px}
+.status{border:0;background:var(--green2);color:var(--green);font-size:12px;font-weight:700;border-radius:99px;padding:4px 10px}
+.status.off{background:#fbecd0;color:var(--amber)}
+.tophead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dots{display:flex;gap:3px;margin-top:9px}
+.dots i{flex:1;height:5px;border-radius:3px;background:var(--line)}
+.dots i.d{background:var(--green)}.dots i.c{background:var(--amber)}
+.rule{font-size:16px;margin:8px 0}
+.lvl{display:inline-block;background:var(--ink);color:#fff;font-weight:700;font-size:12px;border-radius:7px;padding:3px 8px}
+.shot{font-size:66px;font-weight:800;line-height:1;margin:10px 0 2px}
+.thumb{padding:10px 12px 18px;background:#fff;border-top:1px solid var(--line);display:grid;gap:8px}
+.thumb button{min-height:112px;font-size:27px;font-weight:800;border-radius:16px;border:0;background:#edf1ed}
+.thumb.t2{grid-template-columns:1fr 1fr}.thumb.t3{grid-template-columns:repeat(3,1fr)}.thumb.t4{grid-template-columns:repeat(4,1fr)}
+.thumb.t3 button{min-height:86px}.thumb.t4 button{min-height:150px}
+.thumb button.y{background:var(--green);color:#fff}
+.thumb button.n{background:#f1dcd9;color:var(--red)}
+.mini{display:flex;justify-content:space-between;padding:7px 14px;background:#fff;align-items:center}
+.result{font-size:18px;font-weight:600;margin:12px 0}
+.tl{border-left:3px solid var(--line);padding:0 0 12px 14px;position:relative}
+.tl:before{content:"";position:absolute;left:-8px;top:3px;width:13px;height:13px;border-radius:50%;background:var(--line)}
+.tl.d:before{background:var(--green)}.tl.c:before{background:var(--amber)}
+.tl h4{margin:0;font-size:16px}
+.tl small{color:var(--mute)}
+.stepper{display:flex;align-items:center;gap:8px;margin:10px 0}
+.stepper button{width:72px;height:72px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:30px;font-weight:700}
+.stepper b{flex:1;text-align:center;font-size:44px}
+.dark{background:#000;color:#fff;height:100%;display:flex;flex-direction:column}
+.dark .hd{padding:40px 16px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+@media(max-width:800px){.dark .hd{padding-top:12px}}
+.dark .hd b{font-size:20px}
+.dark .tap{flex:1;background:#000;color:#fff;border:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px}
+.dark .tap strong{font-size:138px;line-height:1}
+.dark .tap em{font-style:normal;color:#aaa;font-size:18px}
+.dark .low{display:grid;grid-template-columns:1fr 2fr;gap:8px;padding:8px 12px 18px}
+.dark .low button{min-height:92px;border-radius:16px;border:0;background:#2b2b2b;color:#fff;font-size:24px;font-weight:800}
+.dark .low button.go{background:#fff;color:#000}
+.dark .txt{padding:6px 18px 12px;font-size:18px;color:#ddd}
+.dark .status{background:#222;color:#9ee0b9}.dark .status.off{background:#40300c;color:#ffcb6b}
+.dark .link{color:#9ee0b9}
+</style>
+</head>
+<body>
+<div id="stage"><div id="phone"><div id="app"></div></div><aside id="panel"></aside></div>
+<div id="bar"></div>
+<script>
+const FLOWS={round:'Round entry',week:'Weekly Plan',unplanned:'Unplanned',live:'Live session'};
+const NAMES={
+ round:{A:'One form',B:'One question at a time',C:'SG first, details reused'},
+ week:{A:'Agenda list',B:'Minutes matrix',C:'One day at a time'},
+ unplanned:{A:'Quick form',B:'One-tap recent setups',C:'Live split preview'},
+ live:{A:'Per-shot thumb pad',B:'Whole-session timeline',C:'Tap-anywhere counter'}};
+const JUDGE={
+ round:{A:'Everything visible and editable at once. Is it quick enough when copying from an SG app? Note the ± buttons: the iOS decimal keypad has no minus key.',B:'One field per screen with a built-in keypad. Good one-handed, but is it too many taps for a routine you repeat every Round?',C:'Course and handicap are reused, so SG leads. One keypad with ± and Next covers every signed number. Are 18 distance numbers OK to copy across?'},
+ week:{A:'Reads like a diary. Allocation is implied per visit, not shown across the week.',B:'Shows the 50/25/15/10 logic directly. Useful insight, or more than you want to see?',C:'Focuses on one day at a time. Lose the week overview in exchange for less clutter?'},
+ unplanned:{A:'The plain route: time, place, Generate.',B:'Bets you usually repeat a setup. Adjust after generating rather than before.',C:'See the split change as you adjust, then commit. Does the preview help decide?'},
+ live:{A:'Records every shot with big thumb targets. Most data, most taps. Is 18 taps for Eighteen OK between shots?',B:'Entire session in view; only the final score is entered. Least interruption, but you keep count in your head.',C:'Black, high-contrast, one giant target for bright sun. Hit/miss Games use the tap counter. Points and strokes Games use a big pad that adds up for you.'}};
+
+const qs=new URLSearchParams(location.search);
+let flow=FLOWS[qs.get('flow')]?qs.get('flow'):'round';
+let variant=['A','B','C'].includes(qs.get('variant'))?qs.get('variant'):'A';
+
+const CATS=[{k:'app',n:'Approach',s:-2.1},{k:'arg',n:'Short Game',s:-1.2},{k:'putt',n:'Putting',s:-0.4},{k:'ott',n:'Off the Tee',s:0.3}];
+const SG_ORDER=['ott','app','arg','putt'].map(k=>CATS.find(c=>c.k===k));
+const SHARE=[50,25,15,10];
+const APP_BANDS=['50-75','75-100','100-125','125-150','150-175','175-200','200+'];
+const PUTT_BANDS=['0-1','1-2','2-3','3-4','4-5','5-6','6-7','7-8','8-9','9-10','10+'];
+const blanks=a=>Object.fromEntries(a.map(b=>[b,'']));
+const FAC={range:'Range bay',chip:'Chipping area',putt:'Putting green',bunker:'Practice bunker'};
+const CATFAC={app:['range'],ott:['range'],arg:['chip','bunker'],putt:['putt']};
+const GROUNDS={'Home club':['range','chip','putt','bunker'],'City range':['range'],'Short-game park':['chip','putt']};
+const GAMES={app:['Eighteen','Target Knockout','Club Climb'],arg:['Par 18','Rings','15 Chips'],putt:['Seven Stations','Spiral Stations','Long-Putt Proximity'],ott:['Fairway Corridor (placeholder)']};
+const DAYS=['Mon 9','Tue 10','Wed 11','Thu 12','Fri 13','Sat 14','Sun 15'];
+const LAST={course:'Home club',tees:'White',holes:'18',par:'72',hi:'12.4',ch:'14',baseline:'Scratch'};
+const ITEMS=[
+ {t:'warm',name:'Warm-up',sub:'10 easy wedge swings, then 5 with a 7-iron.',fac:'Range bay',min:4},
+ {t:'drill',name:'Alignment-stick ladder',cat:'Approach',sub:'Three balls each at 50, 75 and 100 metres. No score.',fac:'Range bay',min:6},
+ {t:'game',name:'Eighteen',cat:'Approach',fac:'Range bay',min:12,n:18,kind:'hit',better:'high',lvl:3,up:12,down:6,prevUp:true,start:0,rule:'18 shots, a new club every shot from 4-iron to sand wedge. Count shots that would finish on the green.',diff:'Flag counts as a green 25 metres wide'},
+ {t:'game',name:'Rings',cat:'Short Game',fac:'Chipping area',min:8,n:9,kind:'pts',better:'high',lvl:3,up:18,down:9,fresh:true,start:0,rule:'9 chips to a hole with tee rings. Inner ring scores most, 5 for holed.',diff:'Rings at 3, 6, 9 and 12 feet'},
+ {t:'game',name:'Par 18',cat:'Short Game',fac:'Chipping area + Putting green',min:10,n:9,kind:'strokes',better:'low',lvl:4,up:21,down:27,start:18,rule:'9 spots, one ball each, hole out. Par is 2 per spot, lower is better.',diff:'Even mix of medium and hard spots'}];
+
+const blankRound=()=>({date:'2026-11-08',course:'',tees:'',holes:'18',score:'',par:'',hi:'',ch:'',baseline:'Scratch',sg:{ott:'',app:'',arg:'',putt:''},adv:{tee:{fw:'',left:'',right:'',pen:''},miss:{green:'',long:'',short:'',left:'',right:''},appSg:blanks(APP_BANDS),ud:'',udOf:'',puttSg:blanks(PUTT_BANDS)}});
+const S={};
+function reset(){
+ S.round=variant==='C'?{...blankRound(),...LAST}:blankRound();
+ S.ui={wiz:0,saved:false,details:false,adv:false,kp:null,sel:null,day:1,confirmEnd:false};
+ S.week={visits:[{d:1,g:'City range',m:45,f:['range']},{d:3,g:'Home club',m:60,f:['range','chip','putt','bunker']},{d:5,g:'Short-game park',m:30,f:['chip','putt']}],locked:false,started:null};
+ S.un={g:'Home club',m:45,f:['range','chip','putt','bunker'],gen:false,swap:{}};
+ S.live={i:0,shots:[],count:ITEMS[0].start||0,total:0,scores:{},result:null,offline:false,ended:false,rules:false};
+}
+const get=p=>p.split('.').reduce((o,k)=>o[k],S);
+const set=(p,v)=>{const a=p.split('.'),l=a.pop();a.reduce((o,k)=>o[k],S)[l]=v};
+const num=x=>{const n=parseFloat(x);return isNaN(n)?0:n};
+const fmt=v=>v===''||v==null?'—':(num(v)>0?'+':'')+num(v).toFixed(2);
+const sgTotal=()=>Object.values(S.round.sg).reduce((a,b)=>a+num(b),0);
+const facNames=f=>f.map(x=>FAC[x]).join(', ');
+
+/* Shared bits. Layouts are deliberately not shared. */
+const fld=(label,b,req,attrs='')=>`<label class="fld"><span>${label}<em class="${req?'req':'opt'}">${req?'required':'optional'}</em></span><input type="text" data-bind="${b}" value="${get(b)}" ${attrs}></label>`;
+const seg=(b,opts)=>`<div class="chips">${opts.map(o=>`<button class="chip ${get(b)===o?'on':''}" data-a="set" data-v="${b}=${o}">${o}</button>`).join('')}</div>`;
+const filled=o=>Object.entries(o).filter(([,v])=>v!==''&&v!=='-');
+const BAND_OF={app:'appSg',putt:'puttSg'};
+const derived=k=>BAND_OF[k]&&filled(S.round.adv[BAND_OF[k]]).length>0;
+const syncBands=()=>Object.entries(BAND_OF).forEach(([k,g])=>{const v=filled(S.round.adv[g]);if(v.length)S.round.sg[k]=v.reduce((a,[,x])=>a+num(x),0).toFixed(2)});
+const cell=p=>`<button class="cell ${S.ui.kp===p?'on':''}" data-a="kpOpen" data-v="${p}">${get(p)||'—'}</button>`;
+const pct=(l,p)=>`<label class="fld"><span>${l}</span><input type="text" inputmode="numeric" data-bind="${p}" value="${get(p)}"></label>`;
+const bandGrid=(g,bands)=>`<div class="bands">${bands.map(b=>`<div><small>${b} m</small>${cell(`round.adv.${g}.${b}`)}</div>`).join('')}</div>`;
+const missTotal=()=>Object.values(S.round.adv.miss).reduce((a,b)=>a+num(b),0);
+const mf=(l,k)=>pct(l+' %','round.adv.miss.'+k);
+const advForm=()=>`<div class="sec">Off the Tee</div><div class="grid2">${pct('Fairways hit %','round.adv.tee.fw')}${pct('Penalties','round.adv.tee.pen')}${pct('Missed left %','round.adv.tee.left')}${pct('Missed right %','round.adv.tee.right')}</div>
+ <div class="sec">Approach misses</div><div class="miss"><span></span>${mf('Long','long')}<span></span>${mf('Left','left')}${mf('Green','green')}${mf('Right','right')}<span></span>${mf('Short','short')}<span></span></div><div style="text-align:right;font-weight:700">Total <span data-out="missTotal">${missTotal()}%</span></div>
+ <div class="sec">Approach SG by distance</div>${bandGrid('appSg',APP_BANDS)}
+ <div class="sec">Short Game</div><div class="grid2">${pct('Up and downs','round.adv.ud')}${pct('Out of','round.adv.udOf')}</div>
+ <div class="sec">Putting SG by distance</div>${bandGrid('puttSg',PUTT_BANDS)}`;
+const kpSeq=()=>[...SG_ORDER.filter(c=>!derived(c.k)).map(c=>'round.sg.'+c.k),...(S.ui.adv?[...APP_BANDS.map(b=>'round.adv.appSg.'+b),...PUTT_BANDS.map(b=>'round.adv.puttSg.'+b)]:[])];
+const keypad=()=>`<div class="pad k">${['1','2','3','4','5','6','7','8','9','±','0','⌫'].map(k=>`<button data-a="kpKey" data-v="${k}">${k}</button>`).join('')}<button data-a="kpKey" data-v=".">.</button><button data-a="kpDone">Done</button><button class="nx" data-a="kpNext">Next</button></div>`;
+const advHints=()=>{const a=S.round.adv,h=[],worst=o=>filled(o).sort((x,y)=>num(x[1])-num(y[1]))[0];
+ const ab=worst(a.appSg),pb=worst(a.puttSg),{green,...misses}=a.miss,m=Object.entries(misses).filter(([,v])=>num(v)>0).sort((x,y)=>num(y[1])-num(x[1]))[0];
+ if(ab)h.push(`Approach Games will focus on ${ab[0]} m (${fmt(ab[1])}).`);if(m)h.push(`They will punish ${m[0]} misses.`);if(pb)h.push(`Putting Games will focus on ${pb[0]} m (${fmt(pb[1])}).`);if(num(a.tee.pen)>0)h.push('Off the Tee Games will punish penalty-sized misses.');return h.join(' ')};
+const savedSheet=()=>S.ui.saved?`<div class="sheet"><div><h2>Round saved</h2><p>${(w=>w?`Weakest SG Category this Round: ${w.n}. `:'')(CATS.filter(c=>S.round.sg[c.k]!=='').sort((a,b)=>num(S.round.sg[a.k])-num(S.round.sg[b.k]))[0])}${advHints()} Plan the next 7 days from this Round?</p><div style="display:flex;gap:8px"><button class="btn" data-a="dismiss">Not now</button><button class="btn p" data-a="go" data-v="week">Plan the week</button></div></div></div>`:'';
+const head=(t,s)=>`<div class="top"><h1>${t}</h1>${s?`<small>${s}</small>`:''}</div>`;
+
+/* ROUND */
+const roundA=()=>`${head('New Round','Copy your numbers across from your SG app')}
+<div class="scroll">
+ <div class="sec">The Round</div>
+ ${fld('Date','round.date',1)}${fld('Course','round.course',1,'placeholder="Home club"')}
+ <div class="grid2">${fld('Tees','round.tees',0,'placeholder="White"')}${fld('Score','round.score',1,'inputmode="numeric"')}</div>
+ <div class="fld"><span>Holes played<em class="req">required</em></span>${seg('round.holes',['18','9'])}</div>
+ <div class="sec">Course details</div>
+ ${fld('Par','round.par',0,'inputmode="numeric"')}
+ <div class="sec">Handicap that day</div>
+ <div class="grid2">${fld('Handicap Index','round.hi',1,'inputmode="decimal"')}${fld('Course Handicap','round.ch',1,'inputmode="numeric"')}</div>
+ <div class="sec">Strokes Gained</div>
+ <div class="fld"><span>Baseline<em class="req">required</em></span>${seg('round.baseline',['Tour','Scratch','10 hcp'])}</div>
+ ${SG_ORDER.map(c=>`<div class="sgrow"><span>${c.n}</span><button class="flip" data-a="flip" data-v="round.sg.${c.k}">±</button><input type="text" data-bind="round.sg.${c.k}" value="${S.round.sg[c.k]}" inputmode="decimal" placeholder="0.0"></div>`).join('')}
+ <div style="text-align:right;font-weight:700">Total <span data-out="total">${fmt(sgTotal())}</span></div>
+</div>
+<div class="foot"><button class="btn p" data-a="saveRound">Save Round</button></div>${savedSheet()}`;
+
+const sgStep=(k,n)=>({p:'round.sg.'+k,q:n,t:'key',sg:1,hint:'Strokes Gained, per Round'});
+const WIZ=[
+ {p:'round.course',q:'Where did you play?',t:'text',chips:['Home club','Links GC']},
+ {p:'round.tees',q:'Which tees?',t:'chips',chips:['White','Yellow','Blue','Red'],hint:'Optional'},
+ {p:'round.holes',q:'How many holes?',t:'chips',chips:['18','9']},
+ {p:'round.score',q:'Total score',t:'key'},
+ {p:'round.hi',q:'Handicap Index that day',t:'key'},
+ {p:'round.ch',q:'Course Handicap that day',t:'key'},
+ sgStep('ott','Off the Tee'),sgStep('app','Approach'),sgStep('arg','Short Game'),sgStep('putt','Putting'),
+ {t:'review'}];
+function roundB(){
+ const st=WIZ[S.ui.wiz],n=WIZ.length;
+ const prog=`<div class="dots">${WIZ.map((_,i)=>`<i class="${i<S.ui.wiz?'d':i===S.ui.wiz?'c':''}"></i>`).join('')}</div>`;
+ if(st.t==='review'){const r=S.round;return `<div class="top"><h1>Check and save</h1>${prog}</div><div class="scroll">
+  <div class="card"><b>${r.course||'No course'}</b> · ${r.tees||'no tees'} · ${r.holes} holes<br>Score ${r.score||'—'} · HI ${r.hi||'—'} · CH ${r.ch||'—'}</div>
+  <div class="card">${SG_ORDER.map(c=>`<div class="lbl-line"><span>${c.n}</span><span>${fmt(r.sg[c.k])}</span></div>`).join('')}<div class="lbl-line" style="margin-top:6px"><span>Total</span><b>${fmt(sgTotal())}</b></div></div>
+  <div class="sec">Baseline</div>${seg('round.baseline',['Tour','Scratch','10 hcp'])}
+  <div class="sec">More course details (optional)</div>${fld('Par','round.par',0)}
+ </div><div class="foot"><button class="btn" data-a="wiz" data-v="-1">Back</button><button class="btn p" data-a="saveRound">Save Round</button></div>${savedSheet()}`}
+ const val=get(st.p);
+ let body='',pad='';
+ if(st.t==='text')body=`<input type="text" data-bind="${st.p}" value="${val}" placeholder="Course name"><div style="height:10px"></div><div class="chips">${st.chips.map(c=>`<button class="chip" data-a="pick" data-v="${st.p}=${c}">${c}</button>`).join('')}</div>`;
+ if(st.t==='chips')body=`<div class="chips">${st.chips.map(c=>`<button class="chip ${val===c?'on':''}" style="min-height:60px;padding:0 24px;font-size:19px" data-a="pick" data-v="${st.p}=${c}">${c}</button>`).join('')}</div>`;
+ if(st.t==='key'){body=`<div class="wizv">${val||'&nbsp;'}</div>`;
+  pad=`<div class="pad">${['1','2','3','4','5','6','7','8','9',st.sg?'±':'','0','⌫'].map(k=>k?`<button data-a="key" data-v="${k}">${k}</button>`:'<span></span>').join('')}<button data-a="key" data-v=".">.</button></div>`}
+ return `<div class="top"><small>${S.ui.wiz+1} of ${n}</small>${prog}</div><div class="scroll"><div class="wizq">${st.q}</div><small style="color:var(--mute)">${st.hint||''}</small>${body}</div>${pad}<div class="foot">${S.ui.wiz?'<button class="btn" data-a="wiz" data-v="-1">Back</button>':''}<button class="btn p" data-a="wiz" data-v="1">Next</button></div>`;
+}
+const roundC=()=>{const r=S.round;return `<div class="top"><small>Sun 8 Nov</small><div class="tophead"><h1>Strokes Gained</h1><div style="text-align:right"><div class="big-total" data-out="total" style="font-size:34px">${fmt(sgTotal())}</div></div></div></div>
+<div class="scroll">
+ <div class="card">${SG_ORDER.map(c=>`<div class="sgc"><span>${c.n}${derived(c.k)?'<small>sum of distances</small>':''}</span>${derived(c.k)?`<b class="cell fixed">${fmt(r.sg[c.k])}</b>`:cell('round.sg.'+c.k)}</div>`).join('')}</div>
+ <div class="grid2">${fld('Score','round.score',1,'inputmode="numeric"')}<div class="fld"><span>Baseline</span>${seg('round.baseline',['Scratch','Tour'])}</div></div>
+ <div class="detail-line"><div><b>${r.course}</b> · ${r.tees} · ${r.holes} holes<br>HI ${r.hi} · CH ${r.ch}</div><button class="link" data-a="details">${S.ui.details?'Close':'Change'}</button></div>
+ ${S.ui.details?`<div class="card">${fld('Course','round.course',1)}<div class="grid2">${fld('Tees','round.tees',0)}${fld('Holes','round.holes',1)}${fld('Handicap Index','round.hi',1)}${fld('Course Handicap','round.ch',1)}${fld('Par','round.par',0)}</div></div>`:''}
+ <div class="detail-line"><div><b>Advanced stats</b><br>Optional. Makes your Games more specific.</div><button class="link" data-a="adv">${S.ui.adv?'Close':'Add'}</button></div>
+ ${S.ui.adv?`<div class="card">${advForm()}</div>`:''}
+</div>
+${S.ui.kp?keypad():'<div class="foot"><button class="btn p" data-a="saveRound">Save Round</button></div>'}${savedSheet()}`};
+
+/* WEEK */
+function plan(){
+ const vs=[...S.week.visits].sort((a,b)=>a.d-b.d).map(v=>({...v,free:v.m,a:{}}));
+ const tot=vs.reduce((s,v)=>s+v.m,0),notes=[];let carry=0;
+ CATS.forEach((c,i)=>{let need=Math.round(tot*SHARE[i]/100)+carry;carry=0;
+  for(const v of vs){if(need<=0)break;if(!v.free||Object.keys(v.a).length>=2)continue;if(!CATFAC[c.k].some(f=>v.f.includes(f)))continue;const x=Math.min(v.free,need);v.a[c.k]=x;v.free-=x;need-=x}
+  if(need>0){carry=need;notes.push(`${c.n}: ${need} min had no free visit with the right Facility.`)}});
+ return {vs,tot,notes};
+}
+const catOf=k=>CATS.find(c=>c.k===k);
+const vOf=(p,d)=>p.vs.find(v=>v.d===d);
+const allocTags=v=>Object.entries(v.a).map(([k,m])=>`<span class="tag">${catOf(k).n} ${m}m</span>`).join('');
+const sessionList=v=>Object.entries(v.a).map(([k,m])=>`<div class="game"><span>${GAMES[k][0]}<br><small style="color:var(--mute)">${catOf(k).n} · ${m} min</small></span><button class="chip">Swap</button></div>`).join('')+`<div style="margin-top:8px"><button class="btn p" style="width:100%" data-a="go" data-v="live">Start this session</button></div>`;
+const vEdit=d=>{const v=S.week.visits.find(x=>x.d===d);return `<div style="padding-top:8px"><div class="sec">Practice Ground</div><div class="chips">${Object.keys(GROUNDS).map(g=>`<button class="chip ${v.g===g?'on':''}" data-a="vGround" data-v="${d}|${g}">${g}</button>`).join('')}</div>
+ <div class="sec">Minutes</div><div class="chips">${[20,30,45,60,90].map(m=>`<button class="chip ${v.m===m?'on':''}" data-a="vMin" data-v="${d}|${m}">${m}</button>`).join('')}</div>
+ <div class="sec">Facilities today</div><div class="chips">${GROUNDS[v.g].map(f=>`<button class="chip ${v.f.includes(f)?'on':''}" data-a="vFac" data-v="${d}|${f}">${FAC[f]}</button>`).join('')}</div>
+ <button class="link" style="color:var(--red)" data-a="vDel" data-v="${d}">Remove visit</button></div>`};
+const lockFoot=()=>`<div class="foot">${S.week.locked?'<button class="btn" data-a="unlock">Change visits</button>':'<button class="btn p" data-a="lock">Create Weekly Plan</button>'}</div>`;
+function weekA(){const p=plan(),L=S.week.locked;return `${head('This week',`${p.vs.length} visits · ${p.tot} minutes`)}<div class="scroll">
+ ${DAYS.map((d,i)=>{const v=vOf(p,i),open=S.ui.sel===i;return `<div class="dayrow"><button class="dayhead" data-a="dayTap" data-v="${i}"><b>${d}</b><span>${v?`${v.g} · ${v.m} min`:'No visit'}</span><span style="flex:none;color:var(--green);font-weight:700">${v?(open?'Close':'Open'):'+ Add'}</span></button>
+  ${v&&!open?`<div>${allocTags(v)}</div>`:''}${v&&open?(L?sessionList(v):vEdit(i)):''}</div>`}).join('')}
+ ${p.notes.map(n=>`<div class="note">${n}</div>`).join('')}
+</div>${lockFoot()}`}
+function weekB(){const p=plan();const t={};p.vs.forEach(v=>Object.entries(v.a).forEach(([k,m])=>t[k]=(t[k]||0)+m));
+ return `${head('Week of 9 Nov',`${p.tot} minutes, split by your SG Categories`)}<div class="scroll">
+ <div class="bar-track" style="height:20px;margin-bottom:6px">${CATS.map((c,i)=>`<i class="c${i}" style="width:${SHARE[i]}%"></i>`).join('')}</div>
+ <div style="font-size:12px;color:var(--mute);margin-bottom:12px">${CATS.map((c,i)=>`${c.n} ${SHARE[i]}%`).join(' · ')}</div>
+ <table class="mx"><tr><th>Visit</th><th>App</th><th>Short</th><th>Putt</th><th>OTT</th></tr>
+ ${p.vs.map(v=>`<tr data-a="dayTap" data-v="${v.d}"><td><b>${DAYS[v.d]}</b><br><small>${v.g}</small></td>${CATS.map(c=>`<td class="${v.a[c.k]?'on':''}">${v.a[c.k]||''}</td>`).join('')}</tr>`).join('')}
+ <tr class="sum"><td>Planned</td>${CATS.map(c=>`<td>${t[c.k]||0}</td>`).join('')}</tr>
+ <tr class="sum"><td>Target</td>${CATS.map((c,i)=>`<td>${Math.round(p.tot*SHARE[i]/100)}</td>`).join('')}</tr></table>
+ ${p.notes.map(n=>`<div class="note">${n}</div>`).join('')}
+ ${S.ui.sel!=null&&vOf(p,S.ui.sel)?`<div class="card" style="margin-top:12px"><b>${DAYS[S.ui.sel]}</b>${S.week.locked?sessionList(vOf(p,S.ui.sel)):vEdit(S.ui.sel)}</div>`:''}
+ ${S.week.locked?'':`<div class="sec">Add a visit</div><div class="chips">${DAYS.map((d,i)=>vOf(p,i)?'':`<button class="chip" data-a="dayTap" data-v="${i}">${d}</button>`).join('')}</div>`}
+</div>${lockFoot()}`}
+function weekC(){const p=plan(),i=S.ui.day,v=vOf(p,i),L=S.week.locked;
+ return `<div class="top" style="padding-bottom:6px"><div class="tophead"><h1>${DAYS[i]}</h1><small>${p.tot} min this week</small></div></div>
+ <div class="strip">${DAYS.map((d,x)=>`<button class="${x===i?'on':''} ${vOf(p,x)?'has':''}" data-a="daySel" data-v="${x}">${d.split(' ')[0]}<b>${d.split(' ')[1]}</b></button>`).join('')}</div>
+ <div class="scroll">${v?`<div class="card"><b style="font-size:19px">${v.g}</b><br><span style="color:var(--mute)">${v.m} minutes</span><div style="margin-top:6px">${allocTags(v)}</div>${L?sessionList(v):vEdit(i)}</div>`:`<div style="text-align:center;padding:50px 10px"><p style="font-size:20px;font-weight:700">Practising on ${DAYS[i]}?</p><button class="btn p" style="width:100%" data-a="dayTap" data-v="${i}">Add a visit</button></div>`}
+ ${p.notes.map(n=>`<div class="note">${n}</div>`).join('')}</div>${lockFoot()}`}
+
+/* UNPLANNED */
+function unplan(){
+ const u=S.un,ok=c=>CATFAC[c.k].some(f=>u.f.includes(f));
+ const usable=CATS.filter(ok).slice(0,2),skipped=CATS.slice(0,CATS.indexOf(usable[usable.length-1])+1).filter(c=>!ok(c));
+ const split=usable.length===2?[Math.round(u.m*2/3),u.m-Math.round(u.m*2/3)]:[u.m];
+ return {cats:usable.map((c,i)=>({...c,m:split[i]})),skipped};
+}
+const unPreview=()=>{const p=unplan();return `${p.skipped.map(c=>`<div class="note">${c.n} skipped: no ${facNames(CATFAC[c.k])} here.</div>`).join('')}
+ ${p.cats.map(c=>{const g=GAMES[c.k];return `<div class="card"><span class="tag">${c.n} · ${c.m} min</span>${c.m>=15?`<div class="game" style="border:0"><span>Drill: ${{app:'Alignment-stick ladder',arg:'Landing-spot towel',putt:'Start-line gate',ott:'Tee-height ladder'}[c.k]}</span><button class="chip">Swap</button></div>`:''}<div class="game"><span>${g[(S.un.swap[c.k]||0)%g.length]}<br><small style="color:var(--mute)">Level 3</small></span><button class="chip" data-a="swap" data-v="${c.k}">Swap</button></div></div>`}).join('')}`};
+const groundChips=()=>`<div class="chips">${Object.keys(GROUNDS).map(g=>`<button class="chip ${S.un.g===g?'on':''}" data-a="unGround" data-v="${g}">${g}</button>`).join('')}</div>`;
+const facChips=()=>`<div class="chips">${GROUNDS[S.un.g].map(f=>`<button class="chip ${S.un.f.includes(f)?'on':''}" data-a="unFac" data-v="${f}">${FAC[f]}</button>`).join('')}</div>`;
+const startFoot=()=>`<div class="foot"><button class="btn" data-a="regen">Regenerate</button><button class="btn p" data-a="go" data-v="live">Start</button></div>`;
+const unA=()=>S.un.gen?`${head('Your session',`${S.un.g} · ${S.un.m} min`)}<div class="scroll">${unPreview()}</div>${startFoot()}`:`${head('Practise now','Outside any Weekly Plan')}<div class="scroll">
+ <div class="sec">How long?</div><div class="chips">${[20,30,45,60,90].map(m=>`<button class="chip ${S.un.m===m?'on':''}" data-a="unMin" data-v="${m}">${m} min</button>`).join('')}</div>
+ <div class="sec">Where?</div>${groundChips()}<div class="sec">Facilities today</div>${facChips()}</div>
+ <div class="foot"><button class="btn p" data-a="unGen">Generate session</button></div>`;
+const unB=()=>S.un.gen?`${head('Your session',S.un.g)}<div class="scroll"><div class="stepper" style="margin:0 0 12px"><button data-a="unStep" data-v="-15">−15</button><b style="font-size:30px">${S.un.m} min</b><button data-a="unStep" data-v="15">+15</button></div>${unPreview()}</div>${startFoot()}`:`${head('Practise now','Tap to generate straight away')}<div class="scroll">
+ ${[['Home club',60,'Range bay, Chipping area, Putting green','range,chip,putt'],['City range',45,'Range bay','range'],['Short-game park',30,'Chipping area, Putting green','chip,putt']].map(([g,m,t,f])=>`<button class="setup" data-a="unRecent" data-v="${g}|${m}|${f}"><b>${g} · ${m} min</b><span>${t}</span></button>`).join('')}
+ <button class="link" data-a="unRecent" data-v="Home club|45|range,chip,putt,bunker">Something different</button></div>`;
+const unC=()=>{const p=unplan(),u=S.un;return `${head('Practise now',p.cats.map(c=>`${c.n} ${c.m}m`).join(' + '))}<div class="scroll">
+ <div class="lbl-line"><span>Time</span><b data-out="un.m">${u.m} min</b></div><input type="range" min="15" max="120" step="5" data-bind="un.m" data-num data-redraw value="${u.m}">
+ <div class="sec">Where</div>${groundChips()}<div class="sec">Facilities</div>${facChips()}
+ <div class="sec">Split</div><div class="bar-track" style="height:26px;margin-bottom:6px">${p.cats.map((c,i)=>`<i class="c${i}" style="width:${c.m/u.m*100}%"></i>`).join('')}</div>
+ ${u.gen?unPreview():p.skipped.map(c=>`<div class="note">${c.n} skipped: no ${facNames(CATFAC[c.k])} here.</div>`).join('')}
+ </div>${u.gen?startFoot():'<div class="foot"><button class="btn p" data-a="unGen">Choose Games</button></div>'}`};
+
+/* LIVE */
+const outcome=(it,s)=>{const hi=it.better==='high',atUp=hi?s>=it.up:s<=it.up,atDown=hi?s<=it.down:s>=it.down,dir=hi?'at or above':'at or below',ddir=hi?'at or below':'at or above';
+ if(atUp&&(it.fresh||it.prevUp))return `Moved up to Level ${Math.min(5,it.lvl+1)}.`;
+ if(atUp)return `One more ${dir} ${it.up} moves you to Level ${it.lvl+1}.`;
+ if(atDown&&it.fresh)return `Moved down to Level ${it.lvl-1}.`;
+ if(atDown)return `One more ${ddir} ${it.down} moves you to Level ${it.lvl-1}.`;
+ return `Between targets. Staying at Level ${it.lvl}, streak reset.`};
+const statusChip=()=>`<button class="status ${S.live.offline?'off':''}" data-a="net">${S.live.offline?'Offline · saved on phone':'Online'}</button>`;
+const liveDots=()=>`<div class="dots">${ITEMS.map((_,i)=>`<i class="${i<S.live.i?'d':i===S.live.i?'c':''}"></i>`).join('')}</div>`;
+const endSheet=()=>S.ui.confirmEnd?`<div class="sheet"><div style="color:var(--ink)"><h2>End this session?</h2><p>Games you finished keep their scores. The Game in progress saves no score but counts as played.</p><div style="display:flex;gap:8px"><button class="btn" data-a="noEnd">Keep going</button><button class="btn p" data-a="end">End session</button></div></div></div>`:'';
+const summary=()=>`${head('Session finished',S.live.offline?'Saved on this phone, will sync when back online':'Saved')}<div class="scroll">${ITEMS.map((it,i)=>`<div class="card"><b>${it.name}</b> ${it.t==='game'?`<span style="float:right;font-weight:800">${S.live.scores[i]!=null?S.live.scores[i]:'no score'}</span>`:''}${it.t==='game'&&S.live.scores[i]!=null?`<br><small>${outcome(it,S.live.scores[i])}</small>`:''}</div>`).join('')}</div><div class="foot"><button class="btn p" data-a="restart">Run it again</button></div>`;
+function liveA(){const L=S.live,it=ITEMS[L.i];if(L.ended)return summary();
+ const top=`<div class="top"><div class="tophead"><small>${it.fac} · ${it.min} min</small>${statusChip()}</div><h1>${it.name}</h1>${it.cat?`<small>${it.cat}</small>`:''}${liveDots()}</div>`;
+ if(L.result!=null)return `${top}<div class="scroll"><div style="text-align:center;padding-top:40px"><small>Final score</small><div class="shot">${L.result}</div><div class="result">${outcome(it,L.result)}</div></div></div><div class="thumb"><button class="y" data-a="next">Next</button></div>`;
+ if(it.t!=='game')return `${top}<div class="scroll"><div class="rule">${it.sub}</div></div><div class="thumb"><button class="y" data-a="next">Done</button></div><div class="mini"><button class="link" data-a="askEnd">End session</button></div>${endSheet()}`;
+ const n=L.shots.length;
+ const pad=it.kind==='hit'?`<div class="thumb t2"><button class="n" style="min-height:150px" data-a="shot" data-v="0">Miss</button><button class="y" style="min-height:150px" data-a="shot" data-v="1">Hit</button></div>`:it.kind==='pts'?`<div class="thumb t3">${[0,1,2,3,4,5].map(p=>`<button class="${p===5?'y':''}" data-a="shot" data-v="${p}">${p}</button>`).join('')}</div>`:`<div class="thumb t4">${[1,2,3,4].map(p=>`<button class="${p<=2?'y':''}" data-a="shot" data-v="${p}">${p}${p===4?'+':''}</button>`).join('')}</div>`;
+ return `${top}<div class="scroll"><span class="lvl">Level ${it.lvl}</span> <small>${it.diff}</small><div class="rule">${it.rule}</div><div style="text-align:center"><small>${it.kind==='strokes'?'Spot':'Shot'} ${Math.min(n+1,it.n)} of ${it.n}</small><div class="shot">${L.shots.reduce((a,b)=>a+b,0)}</div><small>running total</small></div></div>
+ <div class="mini"><button class="link" data-a="undo">Undo</button><button class="link" style="color:var(--mute)" data-a="askEnd">End session</button></div>${pad}${endSheet()}`}
+function liveB(){const L=S.live;if(L.ended)return summary();
+ return `<div class="top"><div class="tophead"><h1>Practice Session</h1>${statusChip()}</div><small>Home club · 40 min</small></div><div class="scroll">
+ ${ITEMS.map((it,i)=>{const cur=i===L.i,done=i<L.i;return `<div class="tl ${done?'d':cur?'c':''}"><h4>${it.name}${done&&it.t==='game'?` <span style="float:right">${L.scores[i]}</span>`:''}</h4><small>${it.cat?it.cat+' · ':''}${it.fac} · ${it.min} min</small>
+ ${done&&it.t==='game'?`<div style="font-size:13px;margin-top:3px">${outcome(it,L.scores[i])}</div>`:''}
+ ${cur?`<div class="card" style="margin-top:8px">${it.t==='game'?`<span class="lvl">Level ${it.lvl}</span> <small>${it.diff}</small><div class="rule">${it.rule}</div><div class="stepper"><button data-a="total" data-v="-1">−</button><b>${L.total}</b><button data-a="total" data-v="1">+</button></div><button class="btn p" style="width:100%" data-a="saveTotal">Save score</button>`:`<div class="rule">${it.sub}</div><button class="btn p" style="width:100%" data-a="next">Done</button>`}</div>`:''}</div>`}).join('')}
+ <button class="link" style="color:var(--mute)" data-a="askEnd">End session</button></div>${endSheet()}`}
+function liveC(){const L=S.live,it=ITEMS[L.i];if(L.ended)return summary();
+ const hd=`<div class="hd"><b>${it.name}</b>${statusChip()}</div>`;
+ if(L.result!=null)return `<div class="dark">${hd}<div class="tap"><strong>${L.result}</strong><em style="padding:0 20px;text-align:center">${outcome(it,L.result)}</em></div><div class="low" style="grid-template-columns:1fr"><button class="go" data-a="next">Next</button></div></div>`;
+ if(it.t!=='game')return `<div class="dark">${hd}<div class="txt">${it.sub}</div><button class="tap" data-a="next"><em>Tap when done</em></button><div class="low" style="grid-template-columns:1fr"><button data-a="askEnd">End session</button></div>${endSheet()}</div>`;
+ const info=`<div class="txt">L${it.lvl} · ${it.n} ${it.kind==='strokes'?'spots':'shots'} · ${it.better==='low'?'lower is better':'higher is better'} <button class="link" data-a="rules">${L.rules?'Hide':'Rules'}</button>${L.rules?`<br>${it.rule}<br>${it.diff}`:''}</div>`;
+ if(it.kind!=='hit'){const keys=it.kind==='pts'?[0,1,2,3,4,5]:[1,2,3,4];
+  return `<div class="dark">${hd}${info}<div class="tap"><strong style="font-size:100px">${L.shots.reduce((a,b)=>a+b,0)}</strong><em>${it.kind==='strokes'?'Spot':'Shot'} ${Math.min(L.shots.length+1,it.n)} of ${it.n}</em></div>
+  <div class="keys" style="grid-template-columns:repeat(${keys.length===4?4:3},1fr)">${keys.map(p=>`<button data-a="shot" data-v="${p}">${p}${it.kind==='strokes'&&p===4?'+':''}</button>`).join('')}</div>
+  <div class="mini" style="background:#000;padding:0 16px 8px"><button class="link" data-a="undo">Undo</button><button class="link" style="color:#999" data-a="askEnd">End session</button></div>${endSheet()}</div>`}
+ return `<div class="dark">${hd}${info}
+ <button class="tap" data-a="count" data-v="1"><strong>${L.count}</strong><em>tap anywhere for +1</em></button>
+ <div class="low"><button data-a="count" data-v="-1">−1</button><button class="go" data-a="doneCount">Finish Game</button></div><div class="mini" style="background:#000;justify-content:center;padding:0 0 8px"><button class="link" style="color:#999" data-a="askEnd">End session</button></div>${endSheet()}</div>`}
+
+const VIEWS={round:{A:roundA,B:roundB,C:roundC},week:{A:weekA,B:weekB,C:weekC},unplanned:{A:unA,B:unB,C:unC},live:{A:liveA,B:liveB,C:liveC}};
+
+/* Actions */
+function advance(){const L=S.live;L.result=null;L.shots=[];L.total=0;L.rules=false;if(L.i>=ITEMS.length-1){L.ended=true}else{L.i++;L.count=ITEMS[L.i].start||0;L.total=ITEMS[L.i].start||0}}
+function record(s){S.live.scores[S.live.i]=s;if(variant==='B')advance();else S.live.result=s}
+function applyKey(p,k){let x=get(p);if(k==='⌫')x=x.slice(0,-1);else if(k==='±')x=x.startsWith('-')?x.slice(1):'-'+x;else if(k!=='.'||!x.includes('.'))x+=k;set(p,x)}
+const vis=d=>S.week.visits.find(v=>v.d===+d);
+const split=v=>{const i=v.indexOf('=');return [v.slice(0,i),v.slice(i+1)]};
+const A={
+ set(v){const[p,x]=split(v);set(p,x)},
+ pick(v){const[p,x]=split(v);set(p,x);S.ui.wiz++},
+ flip(p){const x=get(p);set(p,x.startsWith('-')?x.slice(1):'-'+x)},
+ wiz(v){S.ui.wiz=Math.max(0,Math.min(WIZ.length-1,S.ui.wiz+ +v))},
+ adv(){S.ui.adv=!S.ui.adv;S.ui.kp=null},
+ key(k){applyKey(WIZ[S.ui.wiz].p,k)},
+ kpOpen(p){S.ui.kp=p},
+ kpKey(k){applyKey(S.ui.kp,k);syncBands()},
+ kpNext(){const q=kpSeq();S.ui.kp=q[q.indexOf(S.ui.kp)+1]||null},
+ kpDone(){S.ui.kp=null},
+ details(){S.ui.details=!S.ui.details},
+ saveRound(){S.ui.saved=true},dismiss(){S.ui.saved=false},
+ go(f){setFlow(f)},
+ dayTap(v){const d=+v;if(!vis(d)&&!S.week.locked){S.week.visits.push({d,g:'Home club',m:45,f:[...GROUNDS['Home club']]})}S.ui.sel=S.ui.sel===d&&vis(d)&&variant==='A'?null:d},
+ daySel(v){S.ui.day=+v},
+ vGround(v){const[d,g]=v.split('|'),x=vis(d);x.g=g;x.f=[...GROUNDS[g]]},
+ vMin(v){const[d,m]=v.split('|');vis(d).m=+m},
+ vFac(v){const[d,f]=v.split('|'),x=vis(d);x.f=x.f.includes(f)?x.f.filter(y=>y!==f):[...x.f,f]},
+ vDel(v){S.week.visits=S.week.visits.filter(x=>x.d!==+v);S.ui.sel=null},
+ lock(){S.week.locked=true},unlock(){S.week.locked=false},
+ unMin(v){S.un.m=+v},unGround(g){S.un.g=g;S.un.f=[...GROUNDS[g]]},unFac(f){S.un.f=S.un.f.includes(f)?S.un.f.filter(x=>x!==f):[...S.un.f,f]},
+ unGen(){S.un.gen=true},unStep(v){S.un.m=Math.max(15,S.un.m+ +v)},
+ unRecent(v){const[g,m,f]=v.split('|');S.un.g=g;S.un.m=+m;S.un.f=f.split(',');S.un.gen=true},
+ swap(k){S.un.swap[k]=(S.un.swap[k]||0)+1},regen(){CATS.forEach(c=>S.un.swap[c.k]=(S.un.swap[c.k]||0)+1)},
+ next(){advance()},
+ net(){S.live.offline=!S.live.offline},
+ shot(v){const L=S.live,it=ITEMS[L.i];L.shots.push(+v);if(L.shots.length>=it.n)record(L.shots.reduce((a,b)=>a+b,0))},
+ undo(){S.live.shots.pop()},
+ total(v){S.live.total=Math.max(0,S.live.total+ +v)},saveTotal(){record(S.live.total)},
+ count(v){S.live.count=Math.max(0,S.live.count+ +v)},doneCount(){record(S.live.count)},
+ rules(){S.live.rules=!S.live.rules},
+ askEnd(){S.ui.confirmEnd=true},noEnd(){S.ui.confirmEnd=false},end(){S.ui.confirmEnd=false;S.live.ended=true},
+ restart(){const o=S.live.offline;reset();S.live.offline=o}
+};
+
+/* Rendering and the switcher */
+function refreshOuts(){document.querySelectorAll('[data-out]').forEach(e=>{const k=e.dataset.out;e.textContent=k==='total'?fmt(sgTotal()):k==='missTotal'?missTotal()+'%':k==='un.m'?S.un.m+' min':fmt(get(k))});renderPanel()}
+function renderPanel(){const slice={round:{round:S.round,saved:S.ui.saved},week:{week:S.week,plan:plan()},unplanned:{un:S.un,split:unplan()},live:{live:S.live,item:ITEMS[S.live.i].name}}[flow];
+ document.getElementById('panel').innerHTML=`<h3>${FLOWS[flow]} · ${variant}: ${NAMES[flow][variant]}</h3><p>${JUDGE[flow][variant]}</p><pre>${JSON.stringify(slice,null,1)}</pre>`}
+function renderBar(){document.getElementById('bar').innerHTML=`<select id="flow">${Object.entries(FLOWS).map(([k,n])=>`<option value="${k}" ${k===flow?'selected':''}>${n}</option>`).join('')}</select><button data-c="-1" aria-label="Previous variant">←</button><span>${variant} (${NAMES[flow][variant]})</span><button data-c="1" aria-label="Next variant">→</button>`}
+function draw(){const sc=document.querySelector('.scroll'),top=sc?sc.scrollTop:0;
+ document.getElementById('app').innerHTML=VIEWS[flow][variant]();
+ const nsc=document.querySelector('.scroll');if(nsc)nsc.scrollTop=top;
+ const active=document.querySelector('.cell.on');if(active)active.scrollIntoView({block:'nearest'});
+ renderPanel();renderBar();
+ history.replaceState(null,'',`?flow=${flow}&variant=${variant}`)}
+function setFlow(f){flow=f;reset();draw();const sc=document.querySelector('.scroll');if(sc)sc.scrollTop=0}
+function cycle(d){const v=['A','B','C'];variant=v[(v.indexOf(variant)+d+3)%3];reset();draw();const sc=document.querySelector('.scroll');if(sc)sc.scrollTop=0}
+
+document.addEventListener('click',e=>{const c=e.target.closest('[data-c]');if(c){cycle(+c.dataset.c);return}
+ const b=e.target.closest('[data-a]');if(!b)return;const before=flow;A[b.dataset.a](b.dataset.v,b);if(flow===before)draw()});
+document.addEventListener('input',e=>{const el=e.target;if(el.dataset.bind){set(el.dataset.bind,'num' in el.dataset?+el.value:el.value);refreshOuts()}});
+document.addEventListener('change',e=>{if(e.target.id==='flow'){setFlow(e.target.value);return}if('redraw' in e.target.dataset)draw()});
+document.addEventListener('keydown',e=>{const t=e.target;if(t.matches('input:not([type=range]),textarea,[contenteditable],select'))return;if(e.key==='ArrowLeft')cycle(-1);if(e.key==='ArrowRight')cycle(1)});
+reset();draw();
+</script>
+</body>
+</html>
