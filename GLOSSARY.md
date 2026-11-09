@@ -70,6 +70,10 @@ _Avoid_: Venue, club, range
 How the golfer performs on the course in an SG Category, derived from Rounds. It determines what to practise.
 _Avoid_: Ability, level
 
+**Focus**:
+The part of an SG Category the golfer should work on, worked out from their advanced Round stats. It can be a distance, a miss direction, both or neither, and it only nudges which Drills and Games are chosen and how Variations are worded.
+_Avoid_: Weakness, target
+
 **Proficiency**:
 How well the golfer performs at a specific Game, derived only from that Game's scores and expressed as a Level. It determines how hard the Game should be.
 _Avoid_: Skill, handicap, rating
