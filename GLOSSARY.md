@@ -23,8 +23,8 @@ A number expressing how many strokes better or worse a golfer performed against 
 _Avoid_: SG score, rating
 
 **SG Category**:
-One of the four parts of the game that Strokes Gained is split into: Off the Tee, Approach, Around the Green, Putting.
-_Avoid_: Area, skill area
+One of the four parts of the game that Strokes Gained is split into: Off the Tee, Approach, Short Game (shots played around the green, not including putts), Putting.
+_Avoid_: Area, skill area, Around the Green
 
 **Baseline**:
 The standard of golfer that Strokes Gained is measured against, such as Tour, scratch or a handicap level.
