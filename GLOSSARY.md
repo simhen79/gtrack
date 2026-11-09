@@ -56,6 +56,14 @@ _Avoid_: Challenge, test, Round
 A version of a Game that changes only its setup details or scenario, leaving its rules, scoring and difficulty unchanged.
 _Avoid_: Remix, new Game
 
+**Catalogue**:
+The approved set of Games and Drills that Practice Sessions are built from.
+_Avoid_: Library, template list
+
+**Draft**:
+A proposed Game that has not yet been approved into the Catalogue.
+_Avoid_: Template, candidate
+
 **Facility**:
 A type of practice area that a Drill or Game needs: range bay, chipping area, putting green or practice bunker.
 _Avoid_: Venue, location
@@ -75,7 +83,7 @@ The part of an SG Category the golfer should work on, worked out from their adva
 _Avoid_: Weakness, target
 
 **Proficiency**:
-How well the golfer performs at a specific Game, derived only from that Game's scores and expressed as a Level. It determines how hard the Game should be.
+How well the golfer performs at a specific Game that has Levels, derived only from that Game's scores and expressed as a Level. It determines how hard the Game should be.
 _Avoid_: Skill, handicap, rating
 
 **Level**:
