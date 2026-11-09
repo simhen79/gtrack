@@ -44,9 +44,17 @@ _Avoid_: Exercise
 A defined practice challenge with rules and a numeric score that can be compared over time.
 _Avoid_: Challenge, test, Round
 
+**Variation**:
+A version of a Game that changes only its setup details or scenario, leaving its rules, scoring and difficulty unchanged.
+_Avoid_: Remix, new Game
+
 **Facility**:
 A type of practice area that a Drill or Game needs: range bay, chipping area, putting green or practice bunker.
 _Avoid_: Venue, location
+
+**Practice Ground**:
+A named place where the golfer practises, defined by which Facilities it has and the features of each.
+_Avoid_: Venue, club, range
 
 ### Measuring the golfer
 
