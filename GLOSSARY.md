@@ -7,8 +7,16 @@ A personal record of on-course performance that turns strokes gained into target
 ### On the course
 
 **Round**:
-A single played round of golf, recorded with its date, course, score and Strokes Gained per SG Category.
+A single played round of golf, recorded with its date, course details, score, Handicap Index, Course Handicap and Strokes Gained per SG Category.
 _Avoid_: Game (reserved for practice), scorecard
+
+**Handicap Index**:
+The golfer's portable measure of playing ability on the day of a Round, independent of any course.
+_Avoid_: Handicap (on its own), Proficiency, Skill
+
+**Course Handicap**:
+The number of strokes the golfer receives on the course and tees of a particular Round.
+_Avoid_: Handicap (on its own), playing handicap
 
 **Strokes Gained**:
 A number expressing how many strokes better or worse a golfer performed against a baseline, entered as an already-calculated value.
@@ -63,5 +71,9 @@ How the golfer performs on the course in an SG Category, derived from Rounds. It
 _Avoid_: Ability, level
 
 **Proficiency**:
-How well the golfer performs at a specific Game, derived only from that Game's scores. It determines how hard the Game should be.
+How well the golfer performs at a specific Game, derived only from that Game's scores and expressed as a Level. It determines how hard the Game should be.
 _Avoid_: Skill, handicap, rating
+
+**Level**:
+A numbered step of difficulty for a Game, each defined by that Game's own difficulty settings and target scores.
+_Avoid_: Tier, grade, difficulty score
