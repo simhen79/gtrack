@@ -28,6 +28,14 @@ _Avoid_: Benchmark, par
 An ordered plan of Drills and Games for one visit, fitted to the golfer's available balls or time and Facilities.
 _Avoid_: Workout, plan, routine
 
+**Weekly Plan**:
+The set of Practice Sessions for a week, generated from recent Rounds and the time the golfer has available that week.
+_Avoid_: Schedule, program
+
+**Unplanned Session**:
+A Practice Session generated on the spot, outside any Weekly Plan.
+_Avoid_: Ad-hoc session, quick session
+
 **Drill**:
 Repetitive practice aimed at technique or feel, with no score.
 _Avoid_: Exercise
@@ -37,7 +45,7 @@ A defined practice challenge with rules and a numeric score that can be compared
 _Avoid_: Challenge, test, Round
 
 **Facility**:
-A type of practice area that a Drill or Game needs: range bay, chipping area or putting green.
+A type of practice area that a Drill or Game needs: range bay, chipping area, putting green or practice bunker.
 _Avoid_: Venue, location
 
 ### Measuring the golfer
