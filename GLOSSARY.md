@@ -44,6 +44,14 @@ _Avoid_: Schedule, program
 A Practice Session generated on the spot, outside any Weekly Plan.
 _Avoid_: Ad-hoc session, quick session
 
+**Session Item**:
+One entry in a Practice Session's order: a warm-up, a Drill or a Game.
+_Avoid_: Block, step
+
+**Generation**:
+One run that chooses the Drills and Games for a Weekly Plan or an Unplanned Session.
+_Avoid_: Build
+
 **Drill**:
 Repetitive practice aimed at technique or feel, with no score.
 _Avoid_: Exercise
