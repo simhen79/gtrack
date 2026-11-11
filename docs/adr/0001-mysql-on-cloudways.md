@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0002 (database engine only; hosting, ids and queue stand)
+---
+
 # MySQL 8.4 on Cloudways instead of Postgres
 
 The app, its queue workers and the database run on one Cloudways server (Vultr Johannesburg, 2 GB) with MySQL 8.4, replacing the earlier plan of Postgres in Frankfurt. Cloudways was chosen for hosting, and it offers only MySQL or MariaDB. Putting the database on the same server removed the reason for Frankfurt, which was that no managed Postgres runs in Africa. That saves about 170ms per request for golfers in South Africa at the same price.
