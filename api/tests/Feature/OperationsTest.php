@@ -13,7 +13,7 @@ it('records the scheduler heartbeat each minute', function () {
     $this->artisan('schedule:run')->assertSuccessful();
 
     $this->artisan('ops:status')
-        ->expectsOutputToContain('Heartbeat: 2026-11-16 10:15:00')
+        ->expectsOutputToContain('Heartbeat: 2026-11-16 10:15:00 UTC')
         ->assertSuccessful();
 });
 
@@ -24,6 +24,6 @@ it('records the queue check once a worker runs the job', function () {
 
     // Tests use the sync queue, so the job has already run on "sync".
     $this->artisan('ops:status')
-        ->expectsOutputToContain('Queue check: 2026-11-16 10:20:00 on sync')
+        ->expectsOutputToContain('Queue check: 2026-11-16 10:20:00 UTC on sync')
         ->assertSuccessful();
 });

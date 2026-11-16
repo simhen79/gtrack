@@ -16,6 +16,6 @@ class QueueCheck implements ShouldQueue
 
     public function handle(): void
     {
-        Cache::forever('ops:queue_check', now()->format('Y-m-d H:i:s').' on '.$this->job->getConnectionName());
+        Cache::forever('ops:queue_check', now()->format('Y-m-d H:i:s T').' on '.$this->job->getConnectionName());
     }
 }
