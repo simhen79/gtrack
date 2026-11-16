@@ -3,7 +3,9 @@
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Testing\TestResponse;
+use Spatie\OneTimePasswords\Notifications\OneTimePasswordNotification;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -11,11 +13,49 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 
 /**
- * A golfer to act as. Roles arrive with sign-in; until then any user is a golfer.
+ * A signed-up golfer to act as.
  */
 function golfer(): User
 {
-    return User::factory()->create();
+    return User::factory()->create()->assignRole('golfer');
+}
+
+function admin(): User
+{
+    return User::factory()->create()->assignRole('admin', 'golfer');
+}
+
+/**
+ * Signs in through the real email-code flow, as a browser would, and returns the
+ * session cookie that browser now holds. Fakes notifications.
+ */
+function signInWithCode(User $user): string
+{
+    forgetBrowserState();
+    Notification::fake();
+    test()->post('/login/code', ['email' => $user->email]);
+
+    $code = null;
+    Notification::assertSentTo($user, OneTimePasswordNotification::class, function ($notification) use (&$code) {
+        $code = $notification->oneTimePassword->password;
+
+        return true;
+    });
+
+    $response = test()->post('/login', ['email' => $user->email, 'code' => $code])->assertRedirect('/');
+
+    return $response->getCookie(config('session.cookie'), decrypt: false)->getValue();
+}
+
+/**
+ * The next request comes from the browser holding this session cookie, with
+ * nothing remembered in memory from earlier requests in the test.
+ */
+function fromBrowser(string $sessionCookie): TestCase
+{
+    forgetBrowserState();
+
+    return test()->withUnencryptedCookie(config('session.cookie'), $sessionCookie);
 }
 
 /**
@@ -47,4 +87,15 @@ function assertGolferIsolation(Closure $makeOwned, Closure $attempts): void
     }
 
     expect($record->fresh()?->getAttributes())->toBe($before);
+}
+
+/**
+ * The test app is one long-lived process, so it remembers the signed-in user and
+ * session between requests. A real request starts clean; this makes it so.
+ */
+function forgetBrowserState(): void
+{
+    app('auth')->forgetGuards();
+    app('session')->forgetDrivers();
+    app()->forgetInstance('session.store');
 }
