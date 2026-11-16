@@ -74,6 +74,17 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
+      # Requests during the upload get a clean 503 instead of mixed old and new
+      # files. If any later step fails, the site stays down until a deploy succeeds.
+      - name: Enter maintenance mode
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" \
+            "cd '$DEPLOY_PATH' && php artisan down --retry=15"
+
       # .env, storage and the bootstrap cache belong to the server: they are
       # excluded, so --delete leaves them alone too.
       - name: Upload the build
@@ -95,7 +106,7 @@ jobs:
       # The package manifest is rebuilt on the server, because the bootstrap
       # cache isn't uploaded and may list packages from an older build.
       # queue:restart lets each worker finish its current job before exiting.
-      - name: Migrate, optimize and restart workers
+      - name: Migrate, optimize, restart workers and go live
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -109,4 +120,5 @@ jobs:
           php artisan migrate --force
           php artisan optimize
           php artisan queue:restart
+          php artisan up
           SCRIPT
