@@ -6,6 +6,7 @@ use App\Auth\CurrentGolfer;
 use App\Models\Scopes\GolferScope;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use LogicException;
 
 trait BelongsToGolfer
 {
@@ -14,7 +15,13 @@ trait BelongsToGolfer
         static::addGlobalScope(new GolferScope);
 
         static::creating(function (self $model) {
-            $model->user_id ??= app(CurrentGolfer::class)->id();
+            $golferId = app(CurrentGolfer::class)->id();
+
+            if ($model->user_id !== null && $model->user_id !== $golferId) {
+                throw new LogicException('Golfer-owned rows can only be created for the current golfer.');
+            }
+
+            $model->user_id = $golferId;
         });
     }
 

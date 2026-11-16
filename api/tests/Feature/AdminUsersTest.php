@@ -137,3 +137,13 @@ it('lets one of two admins step down', function () {
 
     expect($admin->fresh()->hasRole('admin'))->toBeFalse();
 });
+
+it('signs a disabled user out on their next request even if their session survived', function () {
+    $golfer = golfer();
+    $session = signInWithCode($golfer);
+
+    // Disabled without the session rows being removed, as a different session driver would leave them.
+    $golfer->forceFill(['disabled_at' => now()])->save();
+
+    fromBrowser($session)->get('/')->assertRedirect('/login');
+});

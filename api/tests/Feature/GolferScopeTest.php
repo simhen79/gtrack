@@ -59,3 +59,9 @@ it('fills in the owner on create', function () {
 
     expect(ScopeFixtureNote::create(['body' => 'a note'])->user_id)->toBe($golfer->id);
 });
+
+it('refuses to create a row owned by another golfer', function () {
+    app(CurrentGolfer::class)->set(golfer());
+
+    ScopeFixtureNote::create(['body' => 'forged', 'user_id' => golfer()->id]);
+})->throws(LogicException::class);

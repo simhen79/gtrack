@@ -58,11 +58,13 @@ class UsersController extends Controller
             'roles.*' => [Rule::in(['admin', 'golfer'])],
         ])['roles'];
 
-        if (! in_array('admin', $roles) && $this->isLastAdmin($user)) {
-            throw ValidationException::withMessages(['roles' => 'This is the last admin, so the admin role stays.']);
-        }
+        DB::transaction(function () use ($user, $roles) {
+            if (! in_array('admin', $roles) && $this->isLastAdmin($user)) {
+                throw ValidationException::withMessages(['roles' => 'This is the last admin, so the admin role stays.']);
+            }
 
-        $user->syncRoles($roles);
+            $user->syncRoles($roles);
+        });
 
         return to_route('admin.users.index');
     }
@@ -72,11 +74,11 @@ class UsersController extends Controller
      */
     public function disable(User $user): RedirectResponse
     {
-        if ($this->isLastAdmin($user)) {
-            throw ValidationException::withMessages(['disable' => 'This is the last admin, so their login can\'t be disabled.']);
-        }
-
         DB::transaction(function () use ($user) {
+            if ($this->isLastAdmin($user)) {
+                throw ValidationException::withMessages(['disable' => 'This is the last admin, so their login can\'t be disabled.']);
+            }
+
             $user->forceFill(['disabled_at' => now()])->save();
             DB::table('sessions')->where('user_id', $user->id)->delete();
         });
@@ -91,10 +93,14 @@ class UsersController extends Controller
         return to_route('admin.users.index');
     }
 
+    /**
+     * Call inside a transaction: locking the enabled admins makes two admins
+     * removing each other at once wait in turn instead of both succeeding.
+     */
     private function isLastAdmin(User $user): bool
     {
-        return $user->hasRole('admin')
-            && $user->disabled_at === null
-            && User::role('admin')->whereNull('disabled_at')->count() === 1;
+        $enabledAdminIds = User::role('admin')->whereNull('disabled_at')->lockForUpdate()->pluck('id');
+
+        return $enabledAdminIds->count() === 1 && $enabledAdminIds->first() === $user->id;
     }
 }
