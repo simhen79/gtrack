@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::call(fn () => Cache::forever('ops:heartbeat', now()->format('Y-m-d H:i:s')))
+Schedule::call(fn () => Cache::forever('ops:heartbeat', now()->format('Y-m-d H:i:s T')))
     ->name('heartbeat')
     ->everyMinute();
 
