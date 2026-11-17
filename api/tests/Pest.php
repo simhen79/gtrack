@@ -1,9 +1,12 @@
 <?php
 
+use App\Auth\CurrentGolfer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Spatie\OneTimePasswords\Notifications\OneTimePasswordNotification;
 use Tests\TestCase;
@@ -13,16 +16,40 @@ pest()->extend(TestCase::class)
     ->in('Feature');
 
 /**
- * A signed-up golfer to act as.
+ * A signed-up golfer to act as: past first sign-in, so they have settings.
  */
 function golfer(): User
 {
-    return User::factory()->create()->assignRole('golfer');
+    return withSettings(newGolfer());
 }
 
 function admin(): User
 {
-    return User::factory()->create()->assignRole('admin', 'golfer');
+    return withSettings(User::factory()->create()->assignRole('admin', 'golfer'));
+}
+
+/**
+ * A golfer at their first sign-in, who hasn't given a fallback Handicap Index yet.
+ */
+function newGolfer(): User
+{
+    return User::factory()->create()->assignRole('golfer');
+}
+
+/**
+ * Written straight to the table so it leaves whatever CurrentGolfer a test has set alone.
+ */
+function withSettings(User $user, string $fallbackHandicapIndex = '18.0'): User
+{
+    DB::table('settings')->insert([
+        'id' => (string) Str::uuid7(),
+        'user_id' => $user->id,
+        'fallback_handicap_index' => $fallbackHandicapIndex,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return $user;
 }
 
 /**
@@ -63,20 +90,25 @@ function fromBrowser(string $sessionCookie): TestCase
  * nor change a record that belongs to the first.
  *
  *     assertGolferIsolation(
- *         fn (User $owner) => Round::factory()->for($owner)->create(),
+ *         fn () => Round::factory()->create(),
  *         fn (Round $round) => [
  *             test()->getJson("/api/rounds/{$round->id}"),
  *             test()->patchJson("/api/rounds/{$round->id}", ['score' => 70]),
  *         ],
  *     );
  *
- * @param  Closure(User): Model  $makeOwned  creates the record for its owner
+ * @param  Closure(): Model  $makeOwned  creates the record, run as its owner
  * @param  Closure(Model): array<int, TestResponse>  $attempts  the reads and writes the second golfer tries
  */
 function assertGolferIsolation(Closure $makeOwned, Closure $attempts): void
 {
-    $record = $makeOwned(golfer());
-    $before = $record->fresh()->getAttributes();
+    app(CurrentGolfer::class)->set(golfer());
+    $record = $makeOwned();
+    app(CurrentGolfer::class)->clear();
+
+    // Read past the golfer scope: outside a request there is no current golfer.
+    $read = fn () => $record->newQueryWithoutScopes()->find($record->getKey())?->getAttributes();
+    $before = $read();
 
     test()->actingAs(golfer());
 
@@ -86,7 +118,7 @@ function assertGolferIsolation(Closure $makeOwned, Closure $attempts): void
         $response->assertNotFound();
     }
 
-    expect($record->fresh()?->getAttributes())->toBe($before);
+    expect($read())->toBe($before);
 }
 
 /**

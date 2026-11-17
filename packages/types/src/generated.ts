@@ -9,6 +9,11 @@ export type AuthData = {
 user: SignedInUserData | null,
 permissions: string[],
 };
+export type BaselineData = {
+id: string,
+name: string,
+is_default: boolean,
+};
 export type CursorPaginatedDataCollection<TKey, TValue> = CursorPaginator<TKey, TValue>;
 export type CursorPaginator<TKey, TValue> = {
 data: TKey extends string ? Record<TKey, TValue> : TValue[],
@@ -57,6 +62,31 @@ permissions: string[],
 };
 export type PaginatedDataCollection<TKey, TValue> = LengthAwarePaginator<TKey, TValue>;
 export type Role = 'admin' | 'golfer';
+export type RoundFormData = {
+id: string | null,
+played_on: string,
+course_name: string,
+tees: string | null,
+holes: number | null,
+par: number | null,
+score: number | null,
+handicap_index: string | null,
+course_handicap: number | null,
+baseline_id: string | null,
+sg_off_the_tee: string | null,
+sg_approach: string | null,
+sg_short_game: string | null,
+sg_putting: string | null,
+};
+export type RoundSummaryData = {
+id: string,
+played_on: string,
+course_name: string,
+holes: number,
+score: number,
+baseline: string,
+sg_total: string,
+};
 export type SignedInUserData = {
 id: string,
 email: string,

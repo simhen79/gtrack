@@ -2,9 +2,19 @@
 
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\EmailCodeController;
+use App\Http\Controllers\FallbackHandicapController;
+use App\Http\Controllers\RoundsController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->middleware('auth');
+Route::middleware(['auth', 'golfer.settings'])->group(function () {
+    Route::inertia('/', 'welcome');
+    Route::resource('rounds', RoundsController::class)->except('show');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/settings/handicap', [FallbackHandicapController::class, 'edit']);
+    Route::post('/settings/handicap', [FallbackHandicapController::class, 'store']);
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [EmailCodeController::class, 'create'])->name('login');
@@ -15,7 +25,7 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [EmailCodeController::class, 'destroy'])->middleware('auth')->name('logout');
 
-Route::middleware(['auth', 'can:users.manage'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'golfer.settings', 'can:users.manage'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [UsersController::class, 'index'])->name('users.index');
     Route::post('/users', [UsersController::class, 'store'])->name('users.store');
     Route::post('/users/{user}/invite', [UsersController::class, 'resendInvite'])->name('users.invite');
