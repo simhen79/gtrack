@@ -1,0 +1,14 @@
+<!-- @dsCard group="gtrack patterns" height=220 subtitle="Chip + icon: the four SG Categories" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body>
+<div class="gt-pad" id="root"></div>
+<script>
+
+var C=[["ott","OTT","Off the Tee","M12 3a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5zM8 10.5h8M12 10.5V21"],["app","APP","Approach","M6 21V3M6 4h11l-3 4 3 4H6"],["shg","SHG","Short Game","M3 19c3-8 8-12 15-11M17 5l3 3-3 3M3 19h4"],["put","PUT","Putting","M2 17h7M15 17h7M9 17v3h6v-3M6 12.5a1.8 1.8 0 1 0 0 .01"]];
+var h='<div class="gt-row" style="gap:12px;align-items:stretch">';C.forEach(function(c){h+='<div class="gt-tile gt-col" style="width:150px;padding:16px"><span style="width:44px;height:44px;border-radius:22px;background:var(--cat-'+c[0]+');color:var(--cat-foreground);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+c[3]+'"/></svg></span><b>'+c[2]+'</b><span class="gt-cat gt-cat--'+c[0]+'" style="align-self:flex-start">'+c[1]+'</span></div>';});
+document.getElementById("root").innerHTML=h+'</div>';
+</script>
+</body>
+</html>

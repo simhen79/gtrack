@@ -1,0 +1,34 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8">
+<style>
+  .cv{position:relative;width:960px;height:288px;background:var(--background);overflow:hidden}
+  .cv svg{position:absolute;left:0;top:0}
+  .t{rx:var(--radius-card);ry:var(--radius-card)}
+  .accent{fill:var(--accent)} .hl{fill:var(--highlight)} .t3{fill:var(--surface-tertiary)}
+  .fg{fill:var(--foreground)} .put{fill:var(--cat-put)}
+  .name{position:absolute;left:40px;bottom:58px;margin:0;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:120px;line-height:.92;color:var(--foreground)}
+  .tag{position:absolute;left:44px;bottom:30px;margin:0;max-width:420px;font-family:Manrope,system-ui,sans-serif;font-size:14px;font-weight:500;color:var(--muted)}
+</style></head>
+<body>
+<div class="cv">
+  <!--
+    blocks: accent 2x2 (232x187), highlight 108x85, surface-tertiary tall 108x187 and wide 356x86, foreground 108x85, cat-put 108x86
+    arrangement: a flush bento grid, 4 columns x 3 rows from x=480, gaps space-4 (16px), the way gtrack's home screen composes
+    pattern: "geometric, modular, dense UI": tiles cut by radius-card, some merged two- and three-wide like the cards
+    scales: space-4 gaps, radius-card (24px) corners on every tile
+  -->
+  <svg width="960" height="288" viewBox="0 0 960 288" aria-hidden="true">
+    <rect class="t accent" x="480" y="0" width="232" height="187"/>
+    <rect class="t hl" x="728" y="0" width="108" height="85"/>
+    <rect class="t t3" x="852" y="0" width="108" height="187"/>
+    <rect class="t fg" x="728" y="101" width="108" height="86"/>
+    <rect class="t t3" x="480" y="203" width="356" height="85"/>
+    <rect class="t put" x="852" y="203" width="108" height="85"/>
+  </svg>
+  <h1 class="name">gtrack</h1>
+  <p class="tag">Rounds say what to practise. Sessions say how.</p>
+</div>
+</body>
+</html>

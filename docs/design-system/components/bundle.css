@@ -1,0 +1,61 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif&display=swap");
+/* gtrack preview stylesheet. These classes copy what the HeroUI components look like under the
+   gtrack theme so the previews here can render without React. In the apps, use the HeroUI components
+   themselves with code/gtrack-theme.css (web) or code/global.css (phone). */
+html,body{margin:0;background:var(--background);color:var(--foreground);font-family:Manrope,system-ui,sans-serif;font-feature-settings:"tnum" 1}
+*{box-sizing:border-box}
+.gt-pad{padding:20px;display:flex;flex-direction:column;gap:16px}
+.gt-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.gt-col{display:flex;flex-direction:column;gap:10px}
+.gt-muted{color:var(--muted)}
+.gt-small{font-size:13px;font-weight:500;color:var(--muted)}
+.gt-label{font-size:13px;font-weight:700;color:var(--muted)}
+.gt-title{font-size:18px;font-weight:700;margin:0}
+.gt-hero{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:46px;line-height:1.05;margin:0}
+.gt-num{font-variant-numeric:tabular-nums;font-weight:800}
+.sg-pos{color:var(--sg-positive)}.sg-neg{color:var(--sg-negative)}.sg-zero{color:var(--sg-zero)}
+
+/* Button (HeroUI Button) */
+.gt-btn{height:44px;padding:0 18px;border-radius:12px;border:0;font:inherit;font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.gt-btn--primary{background:var(--accent);color:var(--accent-foreground);font-weight:800}
+.gt-btn--secondary{background:var(--default);color:var(--default-foreground)}
+.gt-btn--ghost{background:transparent;color:var(--foreground);box-shadow:inset 0 0 0 1px var(--border)}
+.gt-btn--white{background:var(--segment);color:var(--segment-foreground);font-weight:800}
+.gt-btn--danger{background:var(--danger);color:var(--danger-foreground);font-weight:800}
+.gt-btn--lg{height:52px;padding:0 26px;font-size:16px}
+.gt-btn--sm{height:32px;padding:0 12px;font-size:13px;border-radius:10px}
+.gt-btn--icon{width:44px;padding:0}
+.gt-btn--icon.gt-btn--sm{width:32px}
+.gt-btn[disabled]{opacity:.4;cursor:not-allowed}
+.gt-btn:focus-visible,.gt-field:focus-visible,.gt-field:focus-within{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Tabs / ToggleButtonGroup */
+.gt-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.gt-tab{height:40px;padding:0 18px;border-radius:12px;background:var(--surface);color:var(--foreground);font-size:14px;font-weight:600;display:inline-flex;align-items:center;border:0;font-family:inherit}
+.gt-tab[aria-selected="true"]{background:var(--segment);color:var(--segment-foreground);font-weight:800}
+.gt-tab--sub{height:34px;padding:0 14px;border-radius:10px;font-size:13px;background:transparent;box-shadow:inset 0 0 0 1px var(--border);color:var(--foreground)}
+.gt-tab--sub[aria-selected="true"]{background:var(--highlight);color:var(--highlight-foreground);box-shadow:none}
+.gt-seg{display:inline-flex;gap:4px;padding:4px;border-radius:14px;background:var(--surface-secondary)}
+.gt-seg button{height:38px;padding:0 16px;border-radius:10px;border:0;background:transparent;color:var(--foreground);font:inherit;font-size:14px;font-weight:600}
+.gt-seg button[aria-pressed="true"]{background:var(--segment);color:var(--segment-foreground);font-weight:800}
+
+/* Fields */
+.gt-field{height:52px;padding:0 16px;border-radius:12px;background:var(--field-background);color:var(--field-foreground);border:1px solid var(--field-border);font:inherit;font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;width:100%}
+.gt-field::placeholder{color:var(--field-placeholder)}
+.gt-field--invalid{border-color:var(--danger)}
+.gt-fieldwrap{display:flex;flex-direction:column;gap:8px}
+.gt-error{font-size:13px;font-weight:600;color:var(--danger)}
+
+/* Card / Surface */
+.gt-card{background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.gt-tile{background:var(--surface-secondary);border-radius:18px;padding:12px 14px}
+.gt-more{width:32px;height:32px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--foreground);font:inherit;font-weight:800;letter-spacing:1px}
+
+/* Chips */
+.gt-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:6px;font-size:12px;font-weight:700;background:var(--surface-tertiary);color:var(--foreground)}
+.gt-cat{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:24px;padding:0 8px;border-radius:6px;color:var(--cat-foreground);font-size:11px;font-weight:800;letter-spacing:.04em}
+.gt-cat--ott{background:var(--cat-ott)}.gt-cat--app{background:var(--cat-app)}.gt-cat--shg{background:var(--cat-shg)}.gt-cat--put{background:var(--cat-put)}
+
+/* Overlay */
+.gt-overlay{background:var(--overlay);color:var(--overlay-foreground);border-radius:24px;box-shadow:var(--overlay-shadow)}
+.gt-kbd{padding:3px 10px;border-radius:6px;background:var(--surface-tertiary);font-weight:700;font-size:13px}

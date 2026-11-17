@@ -1,0 +1,15 @@
+<!-- @dsCard group="Forms" height=330 subtitle="HeroUI DatePicker · Calendar · DateField · RangeCalendar · TimeField" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body>
+<div class="gt-pad" style="max-width:340px" id="root"></div>
+<script>
+
+var r=document.getElementById("root");var html='<div class="gt-overlay" style="padding:16px"><div class="gt-row" style="justify-content:space-between;margin-bottom:10px"><b>November 2026</b><span class="gt-row" style="gap:6px"><button class="gt-more">‹</button><button class="gt-more">›</button></span></div><div style="display:grid;grid-template-columns:repeat(7,40px);gap:2px;font-size:13px">';
+"MTWTFSS".split("").forEach(function(d){html+='<span class="gt-small" style="text-align:center;font-weight:700">'+d+'</span>';});
+for(var i=0;i<35;i++){var day=i-5;var t=day<1?(31+day):day>30?day-30:day;var st="height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-weight:600;";if(day<1||day>30)st+="color:var(--muted);";if(day===14)st+="background:var(--segment);color:var(--segment-foreground);font-weight:800;";if(day===17)st+="box-shadow:inset 0 0 0 2px var(--highlight);";html+='<span class="gt-num" style="'+st+'">'+t+'</span>';}
+r.innerHTML=html+'</div></div>';
+</script>
+</body>
+</html>
