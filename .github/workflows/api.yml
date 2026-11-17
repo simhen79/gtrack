@@ -36,10 +36,21 @@ jobs:
           cache: npm
           cache-dependency-path: api/package-lock.json
       - run: composer install --no-interaction --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      # The web and the phone import types generated from the data objects.
+      # Fails when a data object changed without regenerating them.
+      - name: Check generated types are up to date
+        run: |
+          php artisan typescript:transform
+          if [ -n "$(git status --porcelain -- ../packages/types)" ]; then
+            git status --porcelain -- ../packages/types
+            git diff -- ../packages/types
+            echo "::error::Generated types are out of date. Run 'php artisan typescript:transform' in api/ and commit packages/types."
+            exit 1
+          fi
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
-      - run: cp .env.example .env && php artisan key:generate
       - run: vendor/bin/pest
 
   deploy:

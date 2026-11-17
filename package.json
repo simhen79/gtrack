@@ -1,0 +1,5 @@
+{
+  "name": "gtrack",
+  "private": true,
+  "packageManager": "pnpm@11.28.12"
+}

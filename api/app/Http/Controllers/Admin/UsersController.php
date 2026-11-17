@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Data\AdminUserData;
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Mail\Invitation;
 use App\Models\User;
@@ -19,13 +21,7 @@ class UsersController extends Controller
     public function index(): Response
     {
         return Inertia::render('admin/users', [
-            'users' => User::with('roles')->orderBy('email')->get()->map(fn (User $user) => [
-                'id' => $user->id,
-                'email' => $user->email,
-                'roles' => $user->roles->pluck('name')->sort()->values()->all(),
-                'last_signed_in_at' => $user->last_signed_in_at?->toIso8601String(),
-                'disabled_at' => $user->disabled_at?->toIso8601String(),
-            ]),
+            'users' => User::with('roles')->orderBy('email')->get()->map(AdminUserData::fromUser(...)),
         ]);
     }
 
@@ -55,7 +51,7 @@ class UsersController extends Controller
     {
         $roles = $request->validate([
             'roles' => ['present', 'array'],
-            'roles.*' => [Rule::in(['admin', 'golfer'])],
+            'roles.*' => [Rule::enum(Role::class)],
         ])['roles'];
 
         DB::transaction(function () use ($user, $roles) {
@@ -81,6 +77,7 @@ class UsersController extends Controller
 
             $user->forceFill(['disabled_at' => now()])->save();
             DB::table('sessions')->where('user_id', $user->id)->delete();
+            $user->tokens()->delete();
         });
 
         return to_route('admin.users.index');

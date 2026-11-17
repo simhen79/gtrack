@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Auth\SendSignInCode;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,23 +19,9 @@ class EmailCodeController extends Controller
         return Inertia::render('auth/login');
     }
 
-    public function send(Request $request): RedirectResponse
+    public function send(Request $request, SendSignInCode $sendSignInCode): RedirectResponse
     {
-        $email = strtolower(trim($request->validate(['email' => ['required', 'email']])['email']));
-
-        // Counted whether or not the email is invited, so the limit reveals nothing.
-        $limits = ["login-code:email:{$email}" => 3, "login-code:ip:{$request->ip()}" => 10];
-        foreach ($limits as $key => $max) {
-            if (RateLimiter::tooManyAttempts($key, $max)) {
-                $minutes = (int) ceil(RateLimiter::availableIn($key) / 60);
-                throw ValidationException::withMessages(['email' => "Too many codes requested. Try again in {$minutes} minutes."]);
-            }
-        }
-        foreach (array_keys($limits) as $key) {
-            RateLimiter::hit($key, 15 * 60);
-        }
-
-        User::where('email', $email)->whereNull('disabled_at')->first()?->sendOneTimePassword();
+        $email = $sendSignInCode($request->validate(['email' => ['required', 'email']])['email'], $request->ip());
 
         // Kept until sign-in, not flashed, so a wrong code can come back to this page.
         $request->session()->put('login.email', $email);

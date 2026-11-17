@@ -8,7 +8,18 @@
         "noEmit": true,
         "skipLibCheck": true,
         "isolatedModules": true,
-        "types": ["vite/client"]
+        "types": [
+            "vite/client"
+        ],
+        "paths": {
+            "@gtrack/types": [
+                "../packages/types/src/index.ts"
+            ]
+        }
     },
-    "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx"]
+    "include": [
+        "resources/js/**/*.ts",
+        "resources/js/**/*.tsx",
+        "../packages/types/src/**/*.ts"
+    ]
 }
