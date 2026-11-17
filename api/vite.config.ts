@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -12,6 +13,10 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    resolve: {
+        // The generated types package lives in the pnpm workspace, which this app sits outside.
+        alias: { '@gtrack/types': fileURLToPath(new URL('../packages/types/src/index.ts', import.meta.url)) },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

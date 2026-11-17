@@ -1,15 +1,16 @@
 import { Alert, Button, Card, Checkbox, Chip, FieldError, Form, Input, Label, TextField } from '@heroui/react';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import type { AdminUser, Role, SharedProps } from '../../types';
+import type { AdminUserData, Role } from '@gtrack/types';
+import type { SharedProps } from '../../types';
 
 const ROLES: Role[] = ['admin', 'golfer'];
 
-export default function Users({ users }: { users: AdminUser[] }) {
+export default function Users({ users }: { users: AdminUserData[] }) {
     const { errors } = usePage<SharedProps>().props;
     const invite = useForm({ email: '' });
     const actionError = errors.roles ?? errors.disable ?? errors.invite;
 
-    const toggleRole = (user: AdminUser, role: Role, on: boolean) => {
+    const toggleRole = (user: AdminUserData, role: Role, on: boolean) => {
         const roles = on ? [...user.roles, role] : user.roles.filter((r) => r !== role);
         router.put(`/admin/users/${user.id}/roles`, { roles }, { preserveScroll: true });
     };
@@ -131,7 +132,7 @@ export default function Users({ users }: { users: AdminUser[] }) {
     );
 }
 
-function Status({ user }: { user: AdminUser }) {
+function Status({ user }: { user: AdminUserData }) {
     if (user.disabled_at) {
         return <Chip color="danger">Disabled</Chip>;
     }

@@ -1,0 +1,15 @@
+# The Laravel app in api/ sits outside this workspace, with its own npm lockfile.
+packages:
+  - apps/*
+  - packages/*
+
+# React is pinned to the version Expo SDK 58 expects.
+catalog:
+  react: 19.3.0
+  react-dom: 19.3.0
+  '@types/react': ~19.3.0
+  typescript: ~6.0.3
+
+# Jest's file watcher ships prebuilt binaries, so its build script isn't needed.
+allowBuilds:
+  '@parcel/watcher': false
