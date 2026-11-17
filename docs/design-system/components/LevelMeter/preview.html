@@ -1,0 +1,13 @@
+<!-- @dsCard group="gtrack patterns" height=160 subtitle="Meter: a Game's Level 1 to 5" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body>
+<div class="gt-pad" id="root"></div>
+<script>
+
+var h='';for(var n=1;n<=5;n++){h+='<div class="gt-row" style="gap:12px" role="meter" aria-valuemin="1" aria-valuemax="5" aria-valuenow="'+n+'" aria-label="Level"><span style="display:flex;gap:4px">';for(var i=1;i<=5;i++)h+='<span style="width:16px;height:8px;border-radius:4px;background:'+(i<=n?'var(--highlight)':'var(--surface-tertiary)')+'"></span>';h+='</span><b style="font-size:14px">Level '+n+'</b></div>';}
+document.getElementById("root").innerHTML='<div class="gt-row" style="gap:28px">'+h+'</div>';
+</script>
+</body>
+</html>

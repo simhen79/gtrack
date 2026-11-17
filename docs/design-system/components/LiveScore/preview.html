@@ -1,0 +1,16 @@
+<!-- @dsCard group="gtrack patterns" height=560 width=390 subtitle="Range theme: one Session Item at a time" -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"></head>
+<body>
+<div id="root" data-theme="range" style="width:390px;height:560px;background:var(--background);color:var(--foreground);display:flex;flex-direction:column;font-family:Manrope,system-ui,sans-serif"></div>
+<script>
+
+var hits=7,balls=10;
+function render(){var segs="";for(var i=0;i<9;i++)segs+='<span style="height:6px;border-radius:3px;background:'+(i<3?"var(--foreground)":i===3?"var(--highlight)":"var(--border)")+'"></span>';
+document.getElementById("root").innerHTML='<div style="padding:16px;display:flex;flex-direction:column;gap:12px"><div class="gt-row" style="justify-content:space-between;flex-wrap:nowrap"><button class="gt-btn gt-btn--ghost">End</button><span class="gt-num" style="font-size:14px;color:var(--muted)">Item 4 of 9</span><span style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:16px;border:1.5px solid var(--success);font-size:13px;font-weight:700"><span style="width:9px;height:9px;border-radius:5px;background:var(--success)"></span>Online</span></div><div style="display:grid;grid-template-columns:repeat(9,1fr);gap:4px">'+segs+'</div><div class="gt-row" style="flex-wrap:nowrap"><span class="gt-cat gt-cat--ott">OTT</span><span style="flex:1;font-size:14px;font-weight:600;color:var(--muted)">Game · Level 3</span><button class="gt-btn gt-btn--ghost">Rules</button></div><b style="font-size:30px;font-weight:800">Fairway corridor</b></div><button id="tap" style="flex:1;margin:0 16px;border:0;border-radius:20px;background:var(--surface);color:var(--foreground);font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer"><span class="gt-num" style="font-size:120px;line-height:1">'+hits+'</span><span class="gt-num" style="font-size:18px;color:var(--muted)">hits · ball '+balls+' of 12</span></button><div style="display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:10px;padding:14px 16px 20px"><button id="m" class="gt-btn" style="height:64px;border-radius:14px;background:transparent;color:var(--foreground);box-shadow:inset 0 0 0 2px var(--foreground);font-size:24px">−1</button><button id="x" class="gt-btn" style="height:64px;border-radius:14px;background:transparent;color:var(--foreground);box-shadow:inset 0 0 0 2px var(--border);font-size:18px">Miss</button><button class="gt-btn" style="height:64px;border-radius:14px;background:var(--accent);color:var(--accent-foreground);font-size:18px">Done</button></div>';
+document.getElementById("tap").onclick=function(){if(balls<12){hits++;balls++;render();}};document.getElementById("m").onclick=function(){if(hits>0){hits--;balls--;render();}};document.getElementById("x").onclick=function(){if(balls<12){balls++;render();}};}
+render();
+</script>
+</body>
+</html>
