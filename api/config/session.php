@@ -32,7 +32,8 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // 90 days from last activity, by decision (spec: Login). Not read from .env.
+    'lifetime' => 90 * 24 * 60,
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 

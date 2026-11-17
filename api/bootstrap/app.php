@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SetCurrentGolfer;
+use App\Http\Middleware\SignOutDisabledUsers;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,8 +16,13 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            SignOutDisabledUsers::class,
+            SetCurrentGolfer::class,
             HandleInertiaRequests::class,
         ]);
+
+        // Before `auth`, which Laravel's priority list would otherwise run first.
+        $middleware->prependToPriorityList(before: AuthenticatesRequests::class, prepend: SignOutDisabledUsers::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
