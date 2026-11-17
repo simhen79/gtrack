@@ -99,7 +99,7 @@ it('disables a golfer, ending their web sessions at once and keeping their data'
 });
 
 it('re-enables a disabled golfer so they can sign in again', function () {
-    $golfer = User::factory()->disabled()->create()->assignRole('golfer');
+    $golfer = withSettings(User::factory()->disabled()->create()->assignRole('golfer'));
 
     $this->actingAs(admin())->post("/admin/users/{$golfer->id}/enable")->assertRedirect('/admin/users');
 

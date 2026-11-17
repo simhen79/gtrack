@@ -15,6 +15,7 @@ export default function Welcome() {
                 </Card.Header>
                 <Card.Content className="flex flex-col gap-3">
                     <p className="text-sm break-all">Signed in as {auth.user?.email}</p>
+                    <Link href="/rounds">Rounds</Link>
                     {auth.permissions.includes('users.manage') && <Link href="/admin/users">Manage users</Link>}
                 </Card.Content>
                 <Card.Footer>
