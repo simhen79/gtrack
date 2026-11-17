@@ -103,8 +103,10 @@ jobs:
             --exclude=/public/hot \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
 
-      # The package manifest is rebuilt on the server, because the bootstrap
-      # cache isn't uploaded and may list packages from an older build.
+      # Every bootstrap cache file is deleted before migrating. The cache isn't
+      # uploaded, so the server's copies come from the previous build: a stale
+      # config cache hides new config files from migrations, and a stale package
+      # manifest lists old packages. optimize rebuilds them all after migrating.
       # queue:restart lets each worker finish its current job before exiting.
       - name: Migrate, optimize, restart workers and go live
         env:
@@ -115,7 +117,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" bash -se <<SCRIPT
           set -euo pipefail
           cd "$DEPLOY_PATH"
-          rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
+          rm -f bootstrap/cache/*.php
           php artisan package:discover
           php artisan migrate --force
           php artisan optimize
