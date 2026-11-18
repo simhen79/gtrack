@@ -21,12 +21,12 @@ Platform: **W** = `@heroui/react` (web), **P** = `heroui-native` (phone). A dash
 
 | Component | W | P | gtrack use | Styling |
 | --- | --- | --- | --- | --- |
-| Tabs | ✓ | ✓ | Top nav pills (web); admin sub-nav; Unplanned Session SG Category preview | Each tab a 40px pill on `surface`, selected = `segment` white with `segment-foreground`. Admin sub-nav: 34px, selected = `highlight` |
+| Tabs | ✓ | ✓ | In-page switches: Unplanned Session SG Category preview, Day/Week. Not the app nav (sidebar on web, Expo Router tabs on phone) | Each tab a 40px pill on `surface`, selected = `segment` white with `segment-foreground` |
 | Link | ✓ | – (LinkButton) | Inline links in copy | `link` + underline |
 | Breadcrumbs | ✓ | – | Rounds / New Round, Catalogue / Games | `small`, muted, current item foreground |
 | Pagination | ✓ | – | Rounds list, past Practice Sessions | 32px square-ish pills, current = `segment` |
 | Menu | – (Dropdown) | ✓ | ··· on cards, avatar menu | `overlay`, 12px item corners |
-| Dropdown | ✓ | – (Menu) | ··· on cards, avatar menu, Admin pill on narrow web | `overlay` + `overlay-shadow`, items 40px |
+| Dropdown | ✓ | – (Menu) | ··· on cards; avatar menu (theme choice, Sign out, plus Practice Grounds and Admin at phone width) | `overlay` + `overlay-shadow`, items 40px |
 
 ## Forms
 
@@ -73,7 +73,7 @@ Platform: **W** = `@heroui/react` (web), **P** = `heroui-native` (phone). A dash
 | Accordion / Disclosure / DisclosureGroup | ✓ | ✓ (Accordion) | Advanced Round stats, Game rules on web, Level details | `surface-secondary`, 18px corners, 56px header |
 | Kbd | ✓ | – | Keyboard hints on desktop Round entry | `surface-tertiary`, 6px corners |
 | Typography | ✓ | ✓ | All text: `hero`, `title`, `card-title`, `body`, `label`, `small`, number styles | Fonts Manrope / Instrument Serif, tabular figures |
-| ScrollShadow | ✓ | ✓ | Long Session Item lists, horizontal nav pills at narrow widths | Fade to `surface` |
+| ScrollShadow | ✓ | ✓ | Long Session Item lists | Fade to `surface` |
 
 ## Feedback
 
@@ -86,7 +86,7 @@ Platform: **W** = `@heroui/react` (web), **P** = `heroui-native` (phone). A dash
 | Meter | ✓ | – | Level 1–5 as pips; Proficiency; LLM monthly usage | Level: 5 pips filled `highlight` (see Patterns) |
 | Skeleton / SkeletonGroup | ✓ | ✓ | Loading cards, charts and lists | `surface-tertiary` shimmer, same corners as the content |
 | Spinner | ✓ | ✓ | Generation running, saving | `accent` on dark, 20/32px |
-| Tooltip | ✓ | – | Chart values, truncated names, icon-only buttons | White pill tooltip (`segment` + `segment-foreground`), 800 weight |
+| Tooltip | ✓ | – | Chart values, truncated names, icon-only buttons, page names on the collapsed sidebar | White pill tooltip (`segment` + `segment-foreground`), 800 weight |
 
 ## Overlays
 
@@ -95,7 +95,7 @@ Platform: **W** = `@heroui/react` (web), **P** = `heroui-native` (phone). A dash
 | Modal | ✓ | – (Dialog) | Change carried-over Round details, swap a Session Item | `overlay`, 24px corners, `overlay-shadow`, `backdrop` |
 | AlertDialog | ✓ | – (Dialog) | Delete Round, Abandon session, delete account, Publish new version | Confirm button `danger` or `primary` |
 | Dialog | – (Modal) | ✓ | End session early, confirm swap | As Modal |
-| Drawer | ✓ | – | Narrow-web menu (nav pills stacked) | From the left, `surface` |
+| Drawer | ✓ | – | Not used in v1: phone-width web navigates with the bottom tab bar | From the left, `surface` |
 | Sheet | ✓ | – (BottomSheet) | Rules on the web session view, filters on narrow web | 24px top corners |
 | BottomSheet | – (Sheet) | ✓ | Rules in a live session (Range), swap Session Item, Facility picker | `overlay` (Range: `surface` #141414), 24px top corners, big type |
 | Popover | ✓ | ✓ | Select lists, date pickers, "why picked" detail | `overlay`, 18px corners |

@@ -19,9 +19,11 @@ npm i @gravity-ui/icons
 
 ## 3. Pick the theme on `<html>`
 
+The golfer chooses System (default), Dark or Light in the avatar menu; the browser remembers it. Resolve System with `prefers-color-scheme` and follow its changes.
+
 ```html
-<html data-theme="dark" class="dark">   <!-- default -->
-<html data-theme="light">                <!-- system light -->
+<html data-theme="dark" class="dark">   <!-- Dark, or System on a dark device -->
+<html data-theme="light">                <!-- Light, or System on a light device -->
 ```
 
 `range` is phone-only, but it exists on the web too, so the read-only "Session in progress" page can show the live screen exactly.
@@ -64,7 +66,9 @@ Recharts colours read the same variables: `stroke="var(--cat-app)"`, `fill="var(
     --surface: #262626;
     --surface-foreground: #FFFFFF;
     --surface-secondary: #2E2E2E;
+    --surface-secondary-foreground: #FFFFFF;
     --surface-tertiary: #333333;
+    --surface-tertiary-foreground: #FFFFFF;
     --overlay: #2A2A2A;
     --overlay-foreground: #FFFFFF;
     --muted: #A3A3A3;
@@ -122,7 +126,9 @@ Recharts colours read the same variables: `stroke="var(--cat-app)"`, `fill="var(
     --surface: #F4F4EE;
     --surface-foreground: #161616;
     --surface-secondary: #FFFFFF;
+    --surface-secondary-foreground: #161616;
     --surface-tertiary: #ECEDE4;
+    --surface-tertiary-foreground: #161616;
     --overlay: #FFFFFF;
     --overlay-foreground: #161616;
     --muted: #5A5A55;
@@ -173,7 +179,9 @@ Recharts colours read the same variables: `stroke="var(--cat-app)"`, `fill="var(
     --surface: #141414;
     --surface-foreground: #FFFFFF;
     --surface-secondary: #1E1E1E;
+    --surface-secondary-foreground: #FFFFFF;
     --surface-tertiary: #262626;
+    --surface-tertiary-foreground: #FFFFFF;
     --overlay: #141414;
     --overlay-foreground: #FFFFFF;
     --muted: #C7C7C7;

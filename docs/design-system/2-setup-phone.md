@@ -38,7 +38,7 @@ import { HeroUINativeProvider } from "heroui-native";
 import { Uniwind } from "uniwind";
 import { Stack } from "expo-router";
 
-Uniwind.setTheme("dark"); // follow the system with Appearance if you prefer; "range" only during a live session
+Uniwind.setTheme("system"); // then the golfer's saved choice: "system" (default), "dark" or "light"; "range" only during a live session
 
 export default function RootLayout() {
   const [loaded] = useFonts({ Manrope: Manrope_500Medium, "Manrope-Bold": Manrope_700Bold,
@@ -103,7 +103,9 @@ export const parseSG = (s: string) => {
       --surface: #262626;
       --surface-foreground: #FFFFFF;
       --surface-secondary: #2E2E2E;
+      --surface-secondary-foreground: #FFFFFF;
       --surface-tertiary: #333333;
+      --surface-tertiary-foreground: #FFFFFF;
       --overlay: #2A2A2A;
       --overlay-foreground: #FFFFFF;
       --muted: #A3A3A3;
@@ -141,6 +143,10 @@ export const parseSG = (s: string) => {
       --cat-put: #3EC1B0;
       --cat-foreground: #161616;
       --chart-bar: #4A4A4A;
+      --backdrop: rgba(0, 0, 0, 0.6);
+      --overlay-shadow: 0 16px 48px rgba(0,0,0,0.55);
+      --surface-shadow: 0 0 0 0 transparent;
+      --field-shadow: 0 0 0 0 transparent;
       --radius: 8px;
       --field-radius: 12px;
       --field-border-width: 1px;
@@ -151,7 +157,9 @@ export const parseSG = (s: string) => {
       --surface: #F4F4EE;
       --surface-foreground: #161616;
       --surface-secondary: #FFFFFF;
+      --surface-secondary-foreground: #161616;
       --surface-tertiary: #ECEDE4;
+      --surface-tertiary-foreground: #161616;
       --overlay: #FFFFFF;
       --overlay-foreground: #161616;
       --muted: #5A5A55;
@@ -189,6 +197,10 @@ export const parseSG = (s: string) => {
       --cat-put: #16806F;
       --cat-foreground: #FFFFFF;
       --chart-bar: #C9CCBD;
+      --backdrop: rgba(22, 22, 22, 0.4);
+      --overlay-shadow: 0 12px 32px rgba(22,22,22,0.14);
+      --surface-shadow: 0 0 0 0 transparent;
+      --field-shadow: 0 0 0 0 transparent;
       --radius: 8px;
       --field-radius: 12px;
       --field-border-width: 1px;
@@ -199,7 +211,9 @@ export const parseSG = (s: string) => {
       --surface: #141414;
       --surface-foreground: #FFFFFF;
       --surface-secondary: #1E1E1E;
+      --surface-secondary-foreground: #FFFFFF;
       --surface-tertiary: #262626;
+      --surface-tertiary-foreground: #FFFFFF;
       --overlay: #141414;
       --overlay-foreground: #FFFFFF;
       --muted: #C7C7C7;
@@ -237,6 +251,10 @@ export const parseSG = (s: string) => {
       --cat-put: #3EC1B0;
       --cat-foreground: #000000;
       --chart-bar: #3A3A3A;
+      --backdrop: rgba(0, 0, 0, 0.6);
+      --overlay-shadow: 0 0 0 1px #3A3A3A;
+      --surface-shadow: 0 0 0 0 transparent;
+      --field-shadow: 0 0 0 0 transparent;
       --radius: 8px;
       --field-radius: 12px;
       --field-border-width: 1px;
