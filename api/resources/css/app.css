@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import '@heroui/styles';
+/* PROTOTYPE (#51): theme straight from the design system; #51 copies it in properly. */
+@import '../../../docs/design-system/code/gtrack-theme.css' layer(theme);
 
 @source '../**/*.blade.php';
 @source '../**/*.tsx';

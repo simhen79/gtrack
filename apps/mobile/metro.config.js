@@ -6,4 +6,5 @@ const { withUniwindConfig } = require('uniwind/metro');
 module.exports = withUniwindConfig(getDefaultConfig(__dirname), {
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
+  extraThemes: ['range'], // PROTOTYPE (#51): the design-system CSS defines it
 });

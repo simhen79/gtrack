@@ -1,8 +1,8 @@
-import { Button, Card, Chip, Typography } from 'heroui-native';
+import { Card, Chip } from 'heroui-native';
 import { useEffect } from 'react';
-import { AppState, View } from 'react-native';
-import { SafeAreaView } from '@/components/safe-area-view';
+import { AppState, Text, View } from 'react-native';
 import { useSession } from '@/lib/session';
+import { PhoneShellPrototype } from '@/prototype/app-shell/phone-shell';
 
 export default function Home() {
   const { me, refresh, signOut } = useSession();
@@ -18,25 +18,29 @@ export default function Home() {
 
   if (!me) return null;
 
+  // PROTOTYPE (#51): the Home content inside the shell variants. Sign out moved into the shell.
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <View className="flex-1 gap-6 p-6">
-        <Typography.Heading type="h2">Signed in</Typography.Heading>
-        <Card>
-          <Card.Body className="gap-3">
-            <Card.Title>{me.email}</Card.Title>
-            <Card.Description>Permissions</Card.Description>
-            <View className="flex-row flex-wrap gap-2">
-              {me.permissions.map((permission) => (
-                <Chip key={permission}>{permission}</Chip>
-              ))}
-            </View>
-          </Card.Body>
-        </Card>
-        <Button variant="secondary" onPress={signOut}>
-          Sign out
-        </Button>
+    <PhoneShellPrototype email={me.email} isAdmin={me.permissions.includes('users.manage')} onSignOut={signOut}>
+      <View className="rounded-[24px] bg-surface p-5">
+        <Text className="text-[13px] font-bold text-muted">Last Round · sample</Text>
+        <Text className="mt-1 text-[32px] font-extrabold text-sg-negative">−2.10</Text>
+        <Text className="text-[13px] text-muted">Strokes Gained vs Scratch</Text>
       </View>
-    </SafeAreaView>
+      <View className="rounded-[24px] bg-surface p-5">
+        <Text className="text-[13px] font-bold text-muted">This week · sample</Text>
+        <Text className="mt-1 text-[18px] font-bold text-foreground">2 Practice Sessions planned</Text>
+      </View>
+      <Card>
+        <Card.Body className="gap-3">
+          <Card.Title>{me.email}</Card.Title>
+          <Card.Description>Permissions</Card.Description>
+          <View className="flex-row flex-wrap gap-2">
+            {me.permissions.map((permission) => (
+              <Chip key={permission}>{permission}</Chip>
+            ))}
+          </View>
+        </Card.Body>
+      </Card>
+    </PhoneShellPrototype>
   );
 }
