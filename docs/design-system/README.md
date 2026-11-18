@@ -1,6 +1,6 @@
 # gtrack
 
-gtrack is a golf practice app. Golfers log Rounds with Strokes Gained, see where they lose strokes, and run Practice Sessions of Drills and Games at the range. This system is its look: a dark charcoal dashboard with flat rounded cards, a row of nav pills along the top, warm orange for actions, lime for selection and big bold numbers. One set of tokens feeds both **HeroUI v3** on the web (`@heroui/react`, Tailwind CSS v4) and **HeroUI Native** on the phone (`heroui-native`, Uniwind).
+gtrack is a golf practice app. Golfers log Rounds with Strokes Gained, see where they lose strokes, and run Practice Sessions of Drills and Games at the range. This system is its look: a dark charcoal dashboard with flat rounded cards, a sidebar for navigation (a tab bar on phones), warm orange for actions, lime for selection and big bold numbers. One set of tokens feeds both **HeroUI v3** on the web (`@heroui/react`, Tailwind CSS v4) and **HeroUI Native** on the phone (`heroui-native`, Uniwind).
 
 Start here, then read the sections in order: **Setup: web**, **Setup: phone**, **HeroUI component map** (every HeroUI component and how gtrack uses it). Components then shows each HeroUI family themed, plus **gtrack patterns**: SGValue, SGCategory, SGInput, LevelMeter, ConnectionChip, WeekStrip, TrendChart and LiveScore, gtrack's own pieces built from HeroUI parts.
 
@@ -9,7 +9,7 @@ Ready-to-use files are in `code/`: `gtrack-theme.css` (web), `global.css`, `metr
 ## Principles
 
 1. **Numbers first.** A Strokes Gained number, a score or a clock is the biggest thing on its card. Labels sit small and muted beside it.
-2. **One action, one orange.** Each view has at most one `accent` button. Everything selected but not an action (today's day, Level up, the active sub-nav) is `highlight` lime. The current page in the top nav is a white `segment` pill.
+2. **One action, one orange.** Each view has at most one `accent` button. Everything selected but not an action (today's day, Level up, the current admin page) is `highlight` lime. The current page in the sidebar or tab bar is white `segment`.
 3. **Flat, tonal depth.** No borders or shadows on cards. Depth is three steps of grey: `background` → `surface` → `surface-secondary` → `surface-tertiary`. Shadows appear only on overlays.
 4. **Square-ish controls, round cards.** Controls use 12px corners (`radius-control`, HeroUI `--field-radius`), cards 24px, tiles inside cards 18px, badges 6px. Full circles only for avatars, status dots and Level pips.
 5. **The sun decides the live screen.** The live Practice Session uses the **Range** theme: pure black, white, one lime action, and targets of 64px or more.
@@ -19,17 +19,19 @@ Ready-to-use files are in `code/`: `gtrack-theme.css` (web), `global.css`, `metr
 
 | Theme id | When | Notes |
 | --- | --- | --- |
-| `dark` (default) | Web and phone, all screens outside a live session | The designed look. |
-| `light` | When the system setting is light | Sage ground `#E4E8D8`, off-white cards. Same structure, darker accents for 4.5:1. |
-| `range` | Phone, live Practice Session only | Black ground, lime `accent`, orange `highlight`. Not the phone's dark mode: it is switched on when a session starts and off when it ends. |
+| `dark` | Web and phone outside a live session, when the golfer picks Dark, or System on a dark device | The designed look. |
+| `light` | When the golfer picks Light, or System on a light device | Sage ground `#E4E8D8`, off-white cards. Same structure, darker accents for 4.5:1. |
+| `range` | Phone, live Practice Session only | Black ground, lime `accent`, orange `highlight`. Not the phone's dark mode: it is switched on when a session starts and off when it ends, whatever the golfer's choice. |
 
-On the web set `data-theme` on `<html>` (`dark`, `light`, `range`). On the phone call `Uniwind.setTheme('dark' | 'light' | 'range')`.
+Golfers choose **System**, **Dark** or **Light** in the avatar menu. System is the default, and the choice is remembered per device (browser storage on the web, device storage on the phone), not on the account.
+
+On the web set `data-theme` on `<html>` (`dark`, `light`, `range`), resolving System with `prefers-color-scheme`. On the phone call `Uniwind.setTheme('system' | 'dark' | 'light' | 'range')`.
 
 ## Colour
 
 - `accent` is the primary button and nothing else. Text on it is `accent-foreground` (dark on orange).
-- `highlight` marks selection: today in the Weekly Plan strip, a Level that went up, the active admin sub-nav pill, filled Level pips.
-- `segment` / `segment-foreground` is the selected pill in Tabs and ToggleButtonGroup: white with dark text in dark mode.
+- `highlight` marks selection: today in the Weekly Plan strip, a Level that went up, the current admin page in the sidebar, filled Level pips.
+- `segment` / `segment-foreground` is the current sidebar item and tab, and the selected pill in Tabs and ToggleButtonGroup: white with dark text in dark mode.
 - Status: `success` (Online, saved), `warning` (Offline, rules changed, LLM cap reached), `danger` (delete, Abandon, errors).
 - Strokes Gained: `sg-positive` mint, `sg-negative` coral, `sg-zero` muted.
 - SG Categories, always in this order with their code: OTT `cat-ott` amber · APP `cat-app` orange · SHG `cat-shg` lime · PUT `cat-put` teal, text `cat-foreground`.
@@ -61,8 +63,12 @@ export const sgTone = (n: number) =>
 
 ## Layout
 
-- **Web shell**: a top bar with the wordmark, the nav pills (Home, Rounds, Trends, Practice, Practice Grounds, plus Admin for admins), then search, Enter a Round and the avatar on the right. Admin pages add a second row of smaller sub-nav pills. Pages are a bento grid of cards with 16px gaps and 28px side padding. Cards flex-wrap so the grid stacks into one column at phone width, where the nav collapses into a menu button.
-- **Phone app**: top row of menu button, wordmark and avatar; stacked cards with 14–16px page padding; the live session takes the whole screen in Range.
+- **Web shell**: a sidebar on the left, 256px on `surface`. From the top: the wordmark, Enter a Round (the view's one `accent` button), then the nav, 44px rows with 20px icons: Home, Rounds, Trends, Practice, Practice Grounds. Admins get an Admin section under a small caps label with its pages (Users, Catalogue, Drafts) as 40px rows. The account sits at the bottom: avatar and email, with a menu for the theme choice and Sign out. The current page is `segment`; the current admin page is `highlight`.
+- **Collapsed sidebar**: a 76px icon rail with the ring mark, a square `accent` **+**, icons only (names in a Tooltip) and the avatar. The golfer toggles it with the « / » button or `[`; the browser remembers it.
+- **Pages**: each page starts with its title as an Instrument Serif `hero` heading, set by the shell, then a bento grid of cards with 16px gaps and 28px side padding.
+- **Web at phone width**: the sidebar gives way to a bottom tab bar on `surface`: Home, Rounds, a raised round `accent` **+** for Enter a Round, Trends, Practice. A top row holds the wordmark, the page name and the avatar, whose menu adds Practice Grounds and Admin. Cards stack into one column.
+- **Phone app**: the same tab bar, built with Expo Router tabs, under a top row of wordmark and avatar; stacked cards with 14–16px page padding; the live session takes the whole screen in Range, without the tab bar.
+- **Why this shape**: one nav model everywhere (a sidebar where there's room, tabs on phones) instead of pills that fold into a menu. Chosen by prototyping three shells against the real pages in [#51](https://github.com/simhen79/gtrack/issues/51); the variants live on the `prototype/51-app-shell` branch.
 
 ## Iconography
 

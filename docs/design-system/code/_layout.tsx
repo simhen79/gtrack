@@ -7,7 +7,7 @@ import { HeroUINativeProvider } from "heroui-native";
 import { Uniwind } from "uniwind";
 import { Stack } from "expo-router";
 
-Uniwind.setTheme("dark"); // follow the system with Appearance if you prefer; "range" only during a live session
+Uniwind.setTheme("system"); // then the golfer's saved choice: "system" (default), "dark" or "light"; "range" only during a live session
 
 export default function RootLayout() {
   const [loaded] = useFonts({ Manrope: Manrope_500Medium, "Manrope-Bold": Manrope_700Bold,
