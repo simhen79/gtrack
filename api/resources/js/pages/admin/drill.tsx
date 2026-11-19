@@ -111,7 +111,7 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                                 selectionMode="single"
                                 disallowEmptySelection
                                 isDetached
-                                className="flex-wrap"
+                                className="flex-wrap justify-start"
                                 selectedKeys={[form.data.sg_category]}
                                 onSelectionChange={(keys) => pickCategory([...keys][0] as SgCategory)}
                             >
