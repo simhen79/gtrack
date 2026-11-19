@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'golfer.settings'])->group(function () {
     Route::inertia('/', 'home');
     Route::resource('rounds', RoundsController::class)->except('show');
+
+    // PROTOTYPE (#50): wide-screen layout variants. Only on prototype/50-wide-screen, only locally.
+    if (app()->isLocal()) {
+        Route::inertia('/prototype/wide', 'prototype/wide');
+    }
 });
 
 Route::middleware('auth')->group(function () {
