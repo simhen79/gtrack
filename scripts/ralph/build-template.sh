@@ -2,7 +2,7 @@
 # One-off, per machine: snapshot a sandbox holding what every ralph ticket sandbox needs, so a
 # ticket run does not download it first:
 #   - PHP 8.4 or later with the extensions CI uses (pdo_mysql, redis) and Laravel's usual ones,
-#     plus Composer
+#     plus Composer, all from Ubuntu's packages
 #   - Node 24, as CI uses, with pnpm through corepack
 #   - agent-browser and a Chromium it can drive, for the browser check. Chrome for Testing has
 #     no Linux ARM64 build and Playwright does not list Ubuntu 26.04, so Playwright's Chromium
@@ -21,10 +21,13 @@ WORKSPACE="$(mktemp -d)"
 sbx create --name "$BUILDER" --no-progress claude "$WORKSPACE" </dev/null
 sbx exec -w "$WORKSPACE" "$BUILDER" bash -c "
   set -euo pipefail
+  # A new sandbox runs apt-get itself as it boots; wait for it rather than race its lock.
+  while pgrep -x apt-get >/dev/null || pgrep -x dpkg >/dev/null; do sleep 2; done
   sudo apt-get update -qq
-  sudo apt-get install -y -qq php-cli php-mysql php-redis php-mbstring php-xml php-curl php-zip php-intl php-bcmath unzip
+  # Composer from Ubuntu, not getcomposer.org: the sandbox network policy blocks that host, and
+  # the apt package comes signed.
+  sudo apt-get install -y -qq php-cli php-mysql php-redis php-mbstring php-xml php-curl php-zip php-intl php-bcmath unzip composer
   php -r 'exit(PHP_VERSION_ID >= 80400 ? 0 : 1);' || { echo 'PHP 8.4 or later is needed; this image has '\$(php -r 'echo PHP_VERSION;'); exit 1; }
-  curl -fsSL https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
   composer --version
   v=\$(curl -fsSL https://nodejs.org/dist/index.json | jq -r '[.[] | select(.version | startswith(\"v24.\"))][0].version')
   curl -fsSL https://nodejs.org/dist/\$v/node-\$v-linux-\$(uname -m | sed 's/aarch64/arm64/; s/x86_64/x64/').tar.xz |
