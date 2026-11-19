@@ -1,36 +1,8 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Support\Facades\Notification;
-use Spatie\OneTimePasswords\Notifications\OneTimePasswordNotification;
-use Tests\TestCase;
 
 beforeEach(fn () => Notification::fake());
-
-/** Signs in through the phone's email-code flow and returns the bearer token. */
-function phoneToken(User $user): string
-{
-    test()->postJson('/api/login/code', ['email' => $user->email])->assertNoContent();
-
-    $code = null;
-    Notification::assertSentTo($user, OneTimePasswordNotification::class, function ($notification) use (&$code) {
-        $code = $notification->oneTimePassword->password;
-
-        return true;
-    });
-
-    return test()->postJson('/api/login', ['email' => $user->email, 'code' => $code, 'device_name' => 'iPhone'])
-        ->assertOk()
-        ->json('token');
-}
-
-/** The next request comes from a phone holding this token, and nothing else. */
-function fromPhone(string $token): TestCase
-{
-    forgetBrowserState();
-
-    return test()->withToken($token);
-}
 
 it('signs a golfer in with an emailed code and shows who they are', function () {
     $golfer = golfer();

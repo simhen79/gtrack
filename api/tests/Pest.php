@@ -86,6 +86,34 @@ function fromBrowser(string $sessionCookie): TestCase
 }
 
 /**
+ * Signs in through the phone's email-code flow and returns the bearer token.
+ * Needs notifications faked.
+ */
+function phoneToken(User $user): string
+{
+    test()->postJson('/api/login/code', ['email' => $user->email])->assertNoContent();
+
+    $code = null;
+    Notification::assertSentTo($user, OneTimePasswordNotification::class, function ($notification) use (&$code) {
+        $code = $notification->oneTimePassword->password;
+
+        return true;
+    });
+
+    return test()->postJson('/api/login', ['email' => $user->email, 'code' => $code, 'device_name' => 'iPhone'])
+        ->assertOk()
+        ->json('token');
+}
+
+/** The next request comes from a phone holding this token, and nothing else. */
+function fromPhone(string $token): TestCase
+{
+    forgetBrowserState();
+
+    return test()->withToken($token);
+}
+
+/**
  * Every golfer-data endpoint gets one of these: a second golfer must neither see
  * nor change a record that belongs to the first.
  *
@@ -128,6 +156,7 @@ function assertGolferIsolation(Closure $makeOwned, Closure $attempts): void
 function forgetBrowserState(): void
 {
     app('auth')->forgetGuards();
+    app()->forgetInstance('auth.driver');
     app('session')->forgetDrivers();
     app()->forgetInstance('session.store');
 }
