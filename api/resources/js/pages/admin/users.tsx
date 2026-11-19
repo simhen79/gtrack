@@ -1,6 +1,7 @@
 import { Alert, Button, Card, Checkbox, Chip, FieldError, Form, Input, Label, TextField } from '@heroui/react';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { AdminUserData, Role } from '@gtrack/types';
+import { AdminTabs } from '../../components/admin-tabs';
 import type { ShellProps } from '../../layouts/app-shell';
 import type { SharedProps } from '../../types';
 
@@ -17,8 +18,9 @@ export default function Users({ users }: { users: AdminUserData[] }) {
     };
 
     return (
-        <div className="flex max-w-3xl flex-col gap-6">
+        <div className="flex max-w-3xl flex-col gap-4">
             <Head title="Users" />
+            <AdminTabs />
 
             <Card>
                 <Card.Header>
@@ -80,10 +82,10 @@ export default function Users({ users }: { users: AdminUserData[] }) {
                                             isSelected={user.roles.includes(role)}
                                             onChange={(on) => toggleRole(user, role, on)}
                                         >
-                                            <Checkbox.Control>
-                                                <Checkbox.Indicator />
-                                            </Checkbox.Control>
                                             <Checkbox.Content>
+                                                <Checkbox.Control>
+                                                    <Checkbox.Indicator />
+                                                </Checkbox.Control>
                                                 <Label className="capitalize">{role}</Label>
                                             </Checkbox.Content>
                                         </Checkbox>

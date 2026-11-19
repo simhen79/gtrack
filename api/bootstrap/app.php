@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
         ]);
 
+        $middleware->api(append: [SetCurrentGolfer::class]);
+
         $middleware->alias(['golfer.settings' => EnsureGolferSettings::class]);
 
         // Before `auth`, which Laravel's priority list would otherwise run first.

@@ -2,6 +2,7 @@
 
 use App\Auth\CurrentGolfer;
 use App\Models\Baseline;
+use App\Models\GameVersion;
 use App\Models\Round;
 use App\Models\Setting;
 use App\Models\SgBand;
@@ -35,13 +36,19 @@ function rowsOwnedBy(User $user): array
         ->all();
 }
 
-/** A Baseline, a Round on it with advanced stats, and settings defaulting to it, as a golfer builds them up. */
+/**
+ * A Baseline, a Round on it with advanced stats, settings defaulting to it, and a
+ * Variation written for them, as a golfer builds them up.
+ */
 function withGolferData(User $user): User
 {
     app(CurrentGolfer::class)->set($user);
     $baseline = Baseline::factory()->create();
     Round::factory()->for($baseline)->create()->saveAdvancedStats(['penalties' => 1], [SgBand::value('id') => '-0.25']);
     Setting::sole()->forceFill(['default_baseline_id' => $baseline->id])->save();
+    GameVersion::factory()->published()->create()->variations()->make(['wording' => 'Aim at the left flag', 'is_plain' => false])
+        ->forceFill(['user_id' => $user->id])
+        ->save();
     app(CurrentGolfer::class)->clear();
 
     return $user;
@@ -59,7 +66,7 @@ it('deletes every row the golfer owns and leaves shared rows and other golfers a
     $session = signInWithCode($golfer);
     phoneToken($golfer);
     $this->postJson('/api/login/code', ['email' => $golfer->email]); // a code they never used
-    expect(rowsOwnedBy($golfer))->toHaveKeys(['rounds', 'round_stats', 'round_sg_bands', 'baselines', 'settings', 'sessions', 'personal_access_tokens', 'one_time_passwords', 'model_has_roles']);
+    expect(rowsOwnedBy($golfer))->toHaveKeys(['rounds', 'round_stats', 'round_sg_bands', 'baselines', 'settings', 'sessions', 'personal_access_tokens', 'one_time_passwords', 'model_has_roles', 'variations']);
     $otherRows = rowsOwnedBy($other);
 
     fromBrowser($session)->delete('/settings/account', ['confirm' => true])->assertRedirect('/login');

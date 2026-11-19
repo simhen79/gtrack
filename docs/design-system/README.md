@@ -66,9 +66,20 @@ export const sgTone = (n: number) =>
 - **Web shell**: a sidebar on the left, 256px on `surface`. From the top: the wordmark, Enter a Round (the view's one `accent` button), then the nav, 44px rows with 20px icons: Home, Rounds, Trends, Practice, Practice Grounds. Admins get an Admin section under a small caps label with its pages (Users, Catalogue, Drafts) as 40px rows. The account sits at the bottom: avatar and email, with a menu for the theme choice and Sign out. The current page is `segment`; the current admin page is `highlight`.
 - **Collapsed sidebar**: a 76px icon rail with the ring mark, a square `accent` **+**, icons only (names in a Tooltip) and the avatar. The golfer toggles it with the « / » button or `[`; the browser remembers it.
 - **Pages**: each page starts with its title as an Instrument Serif `hero` heading, set by the shell, then a bento grid of cards with 16px gaps and 28px side padding.
+- **Page actions**: a page's create action (Add a Drill, and every future "Add …" or "New …") sits at the **top right of the page, on the title's line**, never inside a card. On the web, pass it as `action` in the page's `layout` (`ShellProps` in `api/resources/js/layouts/app-shell.tsx`) and the shell places it: beside the title at desktop width, beside the avatar in the top row at phone width. It's a `secondary` button with a **+** icon, because Enter a Round is the view's one `accent` button.
+- **Forms keep their save action in view**: a form page is a focused column of cards beside a sticky rail holding its one action (Save Round, Save Drill) and Cancel, per [How should the web pages use a wide screen?](https://github.com/simhen79/gtrack/issues/50). Below desktop width the rail becomes a bar stuck to the bottom of the screen, above the tab bar. A golfer or admin never scrolls to find Save.
 - **Web at phone width**: the sidebar gives way to a bottom tab bar on `surface`: Home, Rounds, a raised round `accent` **+** for Enter a Round, Trends, Practice. A top row holds the wordmark, the page name and the avatar, whose menu adds Practice Grounds and Admin. Cards stack into one column.
 - **Phone app**: the same tab bar, built with Expo Router tabs, under a top row of wordmark and avatar; stacked cards with 14–16px page padding; the live session takes the whole screen in Range, without the tab bar.
 - **Why this shape**: one nav model everywhere (a sidebar where there's room, tabs on phones) instead of pills that fold into a menu. Chosen by prototyping three shells against the real pages in [#51](https://github.com/simhen79/gtrack/issues/51); the variants live on the `prototype/51-app-shell` branch.
+
+## Confirming
+
+Every destructive or irreversible action (delete, retire, delete my account) asks first in the **same dialog**. On the web that's `ConfirmDialog` in `api/resources/js/components/confirm-dialog.tsx`: never `window.confirm`, and never a hand-built AlertDialog. The phone's Dialog follows the same layout and wording.
+
+- **Heading**: "<Verb> this <thing>?", such as "Delete this Round?" or "Retire this Game?", with the `danger` icon on its right, on the same line.
+- **Body**: names the thing in bold (`ConfirmName`), says what goes and what stays, and ends with whether it can be undone.
+- **Buttons**: "Keep <thing>" (`tertiary`, closes) then the `danger` confirm, which repeats the trigger's words ("Delete Round"). The confirm shows progress while the request runs.
+- **Trigger**: `danger-soft` beside other actions; `danger` when it's the only action on its card.
 
 ## Iconography
 

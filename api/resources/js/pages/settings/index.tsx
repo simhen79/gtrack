@@ -1,6 +1,6 @@
-import { Alert, AlertDialog, Button, Card } from '@heroui/react';
+import { Alert, Card } from '@heroui/react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { ConfirmDialog } from '../../components/confirm-dialog';
 import type { ShellProps } from '../../layouts/app-shell';
 import type { SharedProps } from '../../types';
 
@@ -17,16 +17,6 @@ export default function Settings() {
 function DeleteAccount() {
     const { errors } = usePage<SharedProps>().props;
     const error = errors.account ?? errors.confirm;
-    const [open, setOpen] = useState(false);
-    const [deleting, setDeleting] = useState(false);
-
-    const destroy = () =>
-        router.delete('/settings/account', {
-            data: { confirm: true },
-            onStart: () => setDeleting(true),
-            onError: () => setOpen(false),
-            onFinish: () => setDeleting(false),
-        });
 
     return (
         <Card className="w-full max-w-sm">
@@ -44,35 +34,17 @@ function DeleteAccount() {
                         </Alert.Content>
                     </Alert>
                 )}
-                <AlertDialog isOpen={open} onOpenChange={setOpen}>
-                    <Button variant="danger" className="self-start">
-                        Delete my account
-                    </Button>
-                    <AlertDialog.Backdrop>
-                        <AlertDialog.Container>
-                            <AlertDialog.Dialog className="sm:max-w-[420px]">
-                                <AlertDialog.Header>
-                                    <AlertDialog.Icon status="danger" />
-                                    <AlertDialog.Heading>Delete your account?</AlertDialog.Heading>
-                                </AlertDialog.Header>
-                                <AlertDialog.Body>
-                                    <p className="text-muted">
-                                        This deletes every Round and Baseline you've entered, your settings and your
-                                        account, and signs you out on the web and the phone. It can't be undone.
-                                    </p>
-                                </AlertDialog.Body>
-                                <AlertDialog.Footer>
-                                    <Button slot="close" variant="tertiary">
-                                        Keep my account
-                                    </Button>
-                                    <Button variant="danger" isPending={deleting} onPress={destroy}>
-                                        Delete my account
-                                    </Button>
-                                </AlertDialog.Footer>
-                            </AlertDialog.Dialog>
-                        </AlertDialog.Container>
-                    </AlertDialog.Backdrop>
-                </AlertDialog>
+                <ConfirmDialog
+                    trigger="Delete my account"
+                    triggerVariant="danger"
+                    className="self-start"
+                    heading="Delete your account?"
+                    keep="Keep my account"
+                    onConfirm={(visit) => router.delete('/settings/account', { data: { confirm: true }, ...visit })}
+                >
+                    This deletes every Round and Baseline you've entered, your settings and your account, and signs you out on the web and the
+                    phone. It can't be undone.
+                </ConfirmDialog>
             </Card.Content>
         </Card>
     );

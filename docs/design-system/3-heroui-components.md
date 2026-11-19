@@ -93,7 +93,7 @@ Platform: **W** = `@heroui/react` (web), **P** = `heroui-native` (phone). A dash
 | Component | W | P | gtrack use | Styling |
 | --- | --- | --- | --- | --- |
 | Modal | ✓ | – (Dialog) | Change carried-over Round details, swap a Session Item | `overlay`, 24px corners, `overlay-shadow`, `backdrop` |
-| AlertDialog | ✓ | – (Dialog) | Delete Round, Abandon session, delete account, Publish new version | Confirm button `danger` or `primary` |
+| AlertDialog | ✓ | – (Dialog) | Delete Round, Abandon session, delete account, Publish new version | Destructive confirms go through `ConfirmDialog` (see *Confirming* in the README): heading with the `danger` icon on its right, "Keep <thing>", confirm `danger`. Non-destructive confirms (Publish new version) use `primary` |
 | Dialog | – (Modal) | ✓ | End session early, confirm swap | As Modal |
 | Drawer | ✓ | – | Not used in v1: phone-width web navigates with the bottom tab bar | From the left, `surface` |
 | Sheet | ✓ | – (BottomSheet) | Rules on the web session view, filters on narrow web | 24px top corners |

@@ -5,19 +5,24 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AccountMenu } from '../components/account-menu';
 import { Wordmark } from '../components/wordmark';
 import type { SharedProps } from '../types';
-import { adminNav, ENTER_A_ROUND, golferNav, isCurrent, type NavItem } from './nav';
+import { adminPagesFor, ENTER_A_ROUND, golferNav, isCurrent, type NavItem } from './nav';
 
-/** What a page tells the shell, through its `layout`. */
-export type ShellProps = { title: string };
+/**
+ * What a page tells the shell, through its `layout`. `action` is the page's create action,
+ * such as Add a Drill: the shell puts it at the top right, on the title's line.
+ */
+export type ShellProps = { title: string; action?: PageAction };
+
+export type PageAction = { label: string; href: string };
 
 /**
  * Every signed-in page sits in this persistent layout: a sidebar where there's room, which
  * collapses to an icon rail, and at phone width a top row over a bottom tab bar.
  */
-export default function AppShell({ title, children }: ShellProps & { children: ReactNode }) {
+export default function AppShell({ title, action, children }: ShellProps & { children: ReactNode }) {
     const { url, props } = usePage<SharedProps>();
     const email = props.auth.user?.email ?? '';
-    const isAdmin = props.auth.permissions.includes('users.manage');
+    const adminPages = adminPagesFor(props.auth.permissions);
     const [collapsed, toggleCollapsed] = useCollapsed();
 
     return (
@@ -61,7 +66,7 @@ export default function AppShell({ title, children }: ShellProps & { children: R
                     ))}
                 </nav>
 
-                {isAdmin && (
+                {adminPages.length > 0 && (
                     <nav aria-label="Admin" className="flex flex-col gap-1">
                         {collapsed ? (
                             <hr className="mx-2 my-4 border-separator" />
@@ -70,7 +75,7 @@ export default function AppShell({ title, children }: ShellProps & { children: R
                                 Admin
                             </p>
                         )}
-                        {adminNav.map((item) => (
+                        {adminPages.map((item) => (
                             <SidebarLink key={item.href} item={item} url={url} collapsed={collapsed} admin />
                         ))}
                     </nav>
@@ -88,18 +93,30 @@ export default function AppShell({ title, children }: ShellProps & { children: R
                         /
                     </span>
                     <h1 className="truncate font-bold">{title}</h1>
-                    <div className="ml-auto">
-                        <AccountMenu email={email} admin={isAdmin ? adminNav : []} />
+                    <div className="ml-auto flex shrink-0 items-center gap-2">
+                        {action && <PageActionLink action={action} size="sm" />}
+                        <AccountMenu email={email} admin={adminPages} />
                     </div>
                 </header>
-                <header className="hidden px-7 pt-8 pb-4 md:block">
+                <header className="hidden items-end justify-between gap-4 px-7 pt-8 pb-4 md:flex">
                     <h1 className="font-serif text-[46px] leading-none font-normal">{title}</h1>
+                    {action && <PageActionLink action={action} />}
                 </header>
                 <main className="px-4 pb-32 md:px-7 md:pb-12">{children}</main>
             </div>
 
             <TabBar url={url} />
         </div>
+    );
+}
+
+/** A page's create action, top right: secondary, because Enter a Round is the view's one accent button. */
+function PageActionLink({ action, size = 'md' }: { action: PageAction; size?: 'sm' | 'md' }) {
+    return (
+        <Link href={action.href} className={buttonVariants({ variant: 'secondary', size, className: 'gap-1.5 bg-surface no-underline hover:no-underline' })}>
+            <Plus className="size-4" />
+            {action.label}
+        </Link>
     );
 }
 

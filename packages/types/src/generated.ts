@@ -14,6 +14,10 @@ id: string,
 name: string,
 is_default: boolean,
 };
+export type CatalogueData = {
+games: GameVersionData[],
+drills: DrillData[],
+};
 export type CourseData = {
 name: string,
 tees: string[],
@@ -36,6 +40,65 @@ prev_page_url: string | null,
 },
 };
 export type CursorPaginatorInterface<TKey, TValue> = CursorPaginator<TKey, TValue>;
+export type DistanceGroupData = {
+id: string,
+sg_category: SgCategory,
+label: string,
+};
+export type DrillData = {
+id: string,
+name: string,
+sg_category: SgCategory,
+balls: number | null,
+estimated_minutes: number | null,
+seconds_per_ball: number | null,
+setup: string,
+source_concept: string | null,
+source_url: string | null,
+facility_ids: string[],
+feature_ids: string[],
+distance_group_ids: string[],
+retired_at: string | null,
+};
+export type FacilityData = {
+id: string,
+key: string,
+name: string,
+features: FeatureData[],
+};
+export type FeatureData = {
+id: string,
+key: string,
+name: string,
+};
+export type GameOrigin = 'llm' | 'hand_written' | 'first_load';
+export type GameStatus = 'draft' | 'published' | 'retired';
+export type GameVersionData = {
+id: string,
+game_id: string,
+version: number,
+status: GameStatus,
+origin: GameOrigin,
+name: string,
+sg_category: SgCategory,
+balls: number | null,
+estimated_minutes: number | null,
+seconds_per_ball: number | null,
+rules: string,
+scoring: string,
+score_better: ScoreBetter,
+score_entry: ScoreEntry,
+source_concept: string | null,
+source_url: string | null,
+facility_ids: string[],
+feature_ids: string[],
+distance_group_ids: string[],
+open: string[],
+pad_values: number[],
+variations: VariationData[],
+published_at: string | null,
+retired_at: string | null,
+};
 export type LengthAwarePaginator<TKey, TValue> = {
 data: TKey extends string ? Record<TKey, TValue> : TValue[],
 links: {
@@ -111,6 +174,8 @@ sg_putting: string,
 stats: RoundStatsData,
 bands: Record<string, string>,
 };
+export type ScoreBetter = 'higher' | 'lower';
+export type ScoreEntry = 'counter' | 'pad' | 'timer';
 export type SgBandData = {
 id: string,
 sg_category: SgCategory,
@@ -121,4 +186,10 @@ export type SgCategory = 'off_the_tee' | 'approach' | 'short_game' | 'putting';
 export type SignedInUserData = {
 id: string,
 email: string,
+};
+export type VariationData = {
+id: string,
+wording: string,
+miss_direction: string | null,
+is_plain: boolean,
 };
