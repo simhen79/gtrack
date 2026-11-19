@@ -1,12 +1,16 @@
 <?php
 
 use App\Models\Concerns\BelongsToGolfer;
+use App\Models\DistanceGroup;
+use App\Models\SgBand;
 use App\Models\User;
 
 // Fail closed: a new model is golfer-owned unless it's added here as shared,
 // on purpose (spec: Access).
 $shared = [
     User::class,
+    DistanceGroup::class,
+    SgBand::class,
 ];
 
 arch('every golfer-owned model uses BelongsToGolfer')

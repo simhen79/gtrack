@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Data\BaselineData;
+use App\Data\CourseData;
 use App\Data\RoundFormData;
 use App\Data\RoundSummaryData;
+use App\Data\SgBandData;
 use App\Http\Requests\RoundRequest;
 use App\Models\Baseline;
 use App\Models\Round;
 use App\Models\Setting;
+use App\Models\SgBand;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +23,8 @@ class RoundsController extends Controller
     public function index(): Response
     {
         return Inertia::render('rounds/index', [
-            'rounds' => Round::with('baseline')->latest('played_on')->latest()->get()->map(RoundSummaryData::fromRound(...)),
+            'rounds' => Round::with('baseline', 'stats', 'sgBands')->latest('played_on')->latest()->get()->map(RoundSummaryData::fromRound(...)),
+            'sg_bands' => $this->sgBands(),
         ]);
     }
 
@@ -36,7 +41,8 @@ class RoundsController extends Controller
 
     public function store(RoundRequest $request): RedirectResponse
     {
-        DB::transaction(fn () => Round::create($this->roundAttributes($request)));
+        DB::transaction(fn () => Round::create($this->roundAttributes($request))
+            ->saveAdvancedStats($request->validated('stats') ?? [], $request->validated('bands') ?? []));
 
         return to_route('rounds.index');
     }
@@ -48,7 +54,10 @@ class RoundsController extends Controller
 
     public function update(RoundRequest $request, Round $round): RedirectResponse
     {
-        DB::transaction(fn () => $round->update($this->roundAttributes($request)));
+        DB::transaction(function () use ($request, $round) {
+            $round->update($this->roundAttributes($request));
+            $round->saveAdvancedStats($request->validated('stats') ?? [], $request->validated('bands') ?? []);
+        });
 
         return to_route('rounds.index');
     }
@@ -69,7 +78,15 @@ class RoundsController extends Controller
                 $baseline->name,
                 $baseline->id === $settings->default_baseline_id,
             )),
+            'courses' => CourseData::played(),
+            'sg_bands' => $this->sgBands(),
         ]);
+    }
+
+    /** @return Collection<int, SgBandData> */
+    private function sgBands(): Collection
+    {
+        return SgBand::with('distanceGroup')->inOrder()->get()->map(SgBandData::fromBand(...));
     }
 
     /**
@@ -80,7 +97,7 @@ class RoundsController extends Controller
      */
     private function roundAttributes(RoundRequest $request): array
     {
-        $attributes = $request->safe()->except('new_baseline');
+        $attributes = $request->safe()->except('new_baseline', 'stats', 'bands');
 
         if ($request->filled('new_baseline')) {
             $baseline = Baseline::create(['name' => $request->string('new_baseline')->trim()->value()]);

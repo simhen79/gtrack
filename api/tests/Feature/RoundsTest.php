@@ -2,31 +2,6 @@
 
 use App\Models\Round;
 
-/**
- * A complete Round as the entry form posts it.
- *
- * @param  array<string, mixed>  $overrides
- * @return array<string, mixed>
- */
-function roundFields(array $overrides = []): array
-{
-    return [
-        'played_on' => '2026-11-15',
-        'course_name' => 'Royal Johannesburg East',
-        'tees' => 'White',
-        'holes' => 18,
-        'par' => 72,
-        'score' => 84,
-        'handicap_index' => '12.4',
-        'course_handicap' => 14,
-        'sg_off_the_tee' => '-1.25',
-        'sg_approach' => '-2.10',
-        'sg_short_game' => '0.40',
-        'sg_putting' => '1.05',
-        ...$overrides,
-    ];
-}
-
 it('lets a golfer with no Baselines add one inline at their first Round, and makes it their default', function () {
     $this->actingAs(golfer())
         ->post('/rounds', roundFields(['new_baseline' => 'Scratch']))
@@ -123,14 +98,6 @@ it('refuses a Baseline that belongs to another golfer', function () {
         ->assertSessionHasErrors('baseline_id');
 });
 
-/** Saves a Round through the form and returns its id, as the list shows it. */
-function enterRound(array $overrides = []): string
-{
-    test()->post('/rounds', roundFields(['new_baseline' => 'Scratch', ...$overrides]))->assertSessionHasNoErrors();
-
-    return test()->get('/rounds')->inertiaProps('rounds.0.id');
-}
-
 it('opens a saved Round for editing and saves the change', function () {
     $this->actingAs(golfer());
     $id = enterRound();
@@ -170,4 +137,27 @@ it('never shows, opens, changes or deletes another golfer\'s Round', function ()
     );
 
     $this->get('/rounds')->assertInertia(fn ($page) => $page->has('rounds', 0));
+});
+
+it('offers the courses of the golfer\'s earlier Rounds, newest first, with the tees played at each', function () {
+    $this->actingAs(golfer());
+    enterRound(['played_on' => '2026-10-01', 'course_name' => 'Houghton', 'tees' => 'Blue']);
+    $baseline = $this->get('/rounds/create')->inertiaProps('round.baseline_id');
+    foreach ([
+        ['played_on' => '2026-10-08', 'course_name' => 'Royal Johannesburg East', 'tees' => 'White'],
+        ['played_on' => '2026-10-15', 'course_name' => 'Houghton', 'tees' => 'White'],
+        ['played_on' => '2026-10-22', 'course_name' => 'Houghton', 'tees' => null],
+        ['played_on' => '2026-10-29', 'course_name' => 'Houghton', 'tees' => 'Blue'],
+    ] as $round) {
+        $this->post('/rounds', roundFields(['baseline_id' => $baseline, ...$round]))->assertSessionHasNoErrors();
+    }
+
+    $this->get('/rounds/create')->assertInertia(fn ($page) => $page->where('courses', [
+        ['name' => 'Houghton', 'tees' => ['Blue', 'White']],
+        ['name' => 'Royal Johannesburg East', 'tees' => ['White']],
+    ]));
+    $id = $this->get('/rounds')->inertiaProps('rounds.0.id');
+    $this->get("/rounds/{$id}/edit")->assertInertia(fn ($page) => $page->has('courses', 2));
+
+    $this->actingAs(golfer())->get('/rounds/create')->assertInertia(fn ($page) => $page->where('courses', []));
 });

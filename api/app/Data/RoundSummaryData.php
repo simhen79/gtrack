@@ -6,7 +6,7 @@ use App\Models\Round;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
-/** A row on the golfer's list of Rounds. */
+/** A row on the golfer's list of Rounds, with what its detail shows. */
 #[TypeScript]
 class RoundSummaryData extends Data
 {
@@ -18,6 +18,13 @@ class RoundSummaryData extends Data
         public int $score,
         public string $baseline,
         public string $sg_total,
+        public string $sg_off_the_tee,
+        public string $sg_approach,
+        public string $sg_short_game,
+        public string $sg_putting,
+        public RoundStatsData $stats,
+        /** @var array<string, string> Strokes Gained by SG band id, only the bands entered */
+        public array $bands,
     ) {}
 
     public static function fromRound(Round $round): self
@@ -30,6 +37,12 @@ class RoundSummaryData extends Data
             $round->score,
             $round->baseline->name,
             $round->sgTotal(),
+            $round->sg_off_the_tee,
+            $round->sg_approach,
+            $round->sg_short_game,
+            $round->sg_putting,
+            RoundStatsData::fromStats($round->stats),
+            $round->sgBands->pluck('value', 'sg_band_id')->all(),
         );
     }
 }
