@@ -29,6 +29,7 @@ class AccountController extends Controller
             $user->oneTimePasswords()->delete();
 
             // A Round holds its Baseline back from the cascade, so Rounds go first.
+            // The golfer scope keeps this to the current golfer's Rounds.
             Round::query()->delete();
 
             // Golfer-owned tables cascade from the user; HasRoles detaches the roles.
