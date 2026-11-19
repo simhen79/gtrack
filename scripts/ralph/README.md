@@ -77,7 +77,8 @@ host will later execute:
 scripts/ralph/build-template.sh   # PHP 8.4, Composer, Node 24, pnpm, agent-browser, Chromium → gtrack-ralph:1
 ```
 
-You also need `sbx`, `jq`, and `gh` signed in as `RALPH_GH_USER` (default `simhen79`).
+You also need `sbx`, `jq`, and `gh` signed in as `RALPH_GH_USER` (default `simhen79`) with the
+`project` scope for the board moves (`gh auth refresh -s project`).
 
 ## Running a map: the sequence
 
@@ -125,7 +126,7 @@ apart in `~/.ralph/gtrack/map-<N>/`.
 
 | Command | What it does |
 |---|---|
-| `queue <MAP>` | Reads the map's child issues from GitHub, with their state, labels, assignees and blocking links, finds the spec issue, and writes `queue.tsv` in blocking order. Shows the spec and what `build` would do. Stops when no spec is found. Changes no code and nothing on GitHub. |
+| `queue <MAP>` | Reads the map's child issues from GitHub, with their state, labels, assignees and blocking links, finds the spec issue, and writes `queue.tsv` in blocking order. Shows the spec and what `build` would do. Stops when no spec is found. Changes no code; on GitHub it only moves the tickets the loop could start now to Selected For Development on the board. |
 | `build <MAP> [max]` | Refreshes the queue (or reuses one read under 10 minutes ago, unless `RALPH_REFRESH=1`), then works down it. A closed ticket is skipped. An open ticket with the `ready-for-agent` label, unassigned, and with its prototype when its Design section asks for one, is built: claimed (assigned), set up, implemented, browser-checked when it has a web page, reviewed, gated by the loop, opened as a draft PR, and commented on. The chain stops at the first ticket that isn't ready, or that fails. `max` caps how many tickets this run builds. Tickets the loop already finished are skipped, so a second run carries on. Ends with the retro whenever it attempted a ticket. |
 | `ticket <NUM>` | Builds one ticket on its own, map or not, then runs the retro. See *Building one ticket*. |
 | `retry <MAP> <NUM>...` | Lets `build` try a `failed` ticket again, or one stuck at `built`. Its assignment no longer matters, since the build itself claimed it. |
@@ -151,6 +152,7 @@ Settings, as environment variables:
 | `RALPH_SPEC` | the issue the map links as "Spec: ..." | Overrides the spec issue, by number |
 | `RALPH_READY_LABEL` | `ready-for-agent` | The label that approves a ticket |
 | `RALPH_GH_USER` | `simhen79` | The `gh` account the host claims, pushes, opens PRs and comments as |
+| `RALPH_PROJECT` | `2` | The project board ("gtrack v1") whose Status the loop moves. Set it empty to turn board moves off |
 | `RALPH_STATE` | `~/.ralph/gtrack` | Where each map's state folder lives |
 | `RALPH_TEMPLATE` | `gtrack-ralph:1` | The sandbox template `build-template.sh` saved |
 | `RALPH_MAX_TURNS` | `200` | The turn limit for each agent session |
@@ -161,6 +163,7 @@ Settings, as environment variables:
 | Where | Holds |
 |---|---|
 | **GitHub issues** | What to build (the map's tickets, their order, their approval label) and what the loop did (the assignee claim, then a comment with the PR link) |
+| **Project board** | The `gtrack v1` board's Status, for people to look at. Each queue refresh moves every ticket the loop could start now (open, labelled `ready-for-agent`, unassigned, no open blocker) to Selected For Development; a claim moves it to In Progress, and the draft PR to In Review. A ticket not on the board is added. A failed move is logged and the run carries on. The PR body's `Closes #NUM` closes the ticket on merge, and the board's own workflow moves a closed item to Done. The loop never moves a ticket back, so one that loses its label or fails stays where it was |
 | `queue.tsv` | The loop's own progress per ticket, the branch it made, and the ticket's `prototype/` branch |
 | `spec`, `context/` | The spec issue's number; the spec and each ticket as passed to the sessions |
 | `reports/` | What each phase did, why a session was blocked, and `retro.md` |
