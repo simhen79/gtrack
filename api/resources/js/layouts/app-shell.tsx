@@ -5,7 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AccountMenu } from '../components/account-menu';
 import { Wordmark } from '../components/wordmark';
 import type { SharedProps } from '../types';
-import { adminNav, ENTER_A_ROUND, golferNav, isCurrent, type NavItem } from './nav';
+import { adminPagesFor, ENTER_A_ROUND, golferNav, isCurrent, type NavItem } from './nav';
 
 /** What a page tells the shell, through its `layout`. */
 export type ShellProps = { title: string };
@@ -17,7 +17,7 @@ export type ShellProps = { title: string };
 export default function AppShell({ title, children }: ShellProps & { children: ReactNode }) {
     const { url, props } = usePage<SharedProps>();
     const email = props.auth.user?.email ?? '';
-    const isAdmin = props.auth.permissions.includes('users.manage');
+    const adminPages = adminPagesFor(props.auth.permissions);
     const [collapsed, toggleCollapsed] = useCollapsed();
 
     return (
@@ -61,7 +61,7 @@ export default function AppShell({ title, children }: ShellProps & { children: R
                     ))}
                 </nav>
 
-                {isAdmin && (
+                {adminPages.length > 0 && (
                     <nav aria-label="Admin" className="flex flex-col gap-1">
                         {collapsed ? (
                             <hr className="mx-2 my-4 border-separator" />
@@ -70,7 +70,7 @@ export default function AppShell({ title, children }: ShellProps & { children: R
                                 Admin
                             </p>
                         )}
-                        {adminNav.map((item) => (
+                        {adminPages.map((item) => (
                             <SidebarLink key={item.href} item={item} url={url} collapsed={collapsed} admin />
                         ))}
                     </nav>
@@ -89,7 +89,7 @@ export default function AppShell({ title, children }: ShellProps & { children: R
                     </span>
                     <h1 className="truncate font-bold">{title}</h1>
                     <div className="ml-auto">
-                        <AccountMenu email={email} admin={isAdmin ? adminNav : []} />
+                        <AccountMenu email={email} admin={adminPages} />
                     </div>
                 </header>
                 <header className="hidden px-7 pt-8 pb-4 md:block">

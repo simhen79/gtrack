@@ -1,5 +1,6 @@
 import { SG_CATEGORIES } from '@gtrack/design';
 import { Chip } from '@heroui/react';
+import type { SgCategory } from '@gtrack/types';
 
 export type SgCategoryKey = (typeof SG_CATEGORIES)[number]['key'];
 
@@ -30,4 +31,16 @@ export function SgCategoryBadge({ category, long = false }: { category: SgCatego
             {name}
         </span>
     );
+}
+
+const KEYS: Record<SgCategory, SgCategoryKey> = {
+    off_the_tee: 'ott',
+    approach: 'app',
+    short_game: 'shg',
+    putting: 'put',
+};
+
+/** The badge key for an SG Category as the server names it. */
+export function sgCategoryKey(category: SgCategory): SgCategoryKey {
+    return KEYS[category];
 }
