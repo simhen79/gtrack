@@ -11,11 +11,11 @@ class RoundStats extends Model
 {
     use BelongsToGolfer, HasUuids;
 
-    /** The counts, then the Approach miss percentages, then up and downs. */
+    /** Off the Tee, then the Approach miss cross, then Short Game. Penalties is the one count; the rest are percentages. */
     public const FIELDS = [
-        'fairways_hit', 'fairways_missed_left', 'fairways_missed_right', 'penalties',
+        'fairways_hit_percent', 'fairways_missed_left_percent', 'fairways_missed_right_percent', 'penalties',
         'approach_miss_long_percent', 'approach_miss_short_percent', 'approach_miss_left_percent', 'approach_miss_right_percent',
-        'up_and_downs_made', 'up_and_downs_attempted',
+        'up_and_downs_percent', 'sand_saves_percent',
     ];
 
     protected $fillable = self::FIELDS;

@@ -1,7 +1,7 @@
 import { SG_CATEGORIES, parseSG, sgTone } from '@gtrack/design';
 import { Button, InputGroup } from '@heroui/react';
 import type { KeyboardEvent, Ref } from 'react';
-import { flipSg, typeSg } from '../lib/strokes-gained';
+import { flipSg, signSg, typeSg } from '../lib/strokes-gained';
 import { SgCategoryBadge, type SgCategoryKey } from './sg-category';
 import { SgValue } from './sg-value';
 
@@ -18,8 +18,8 @@ type Props = {
 };
 
 /**
- * One SG Category's Strokes Gained, typed with a keyboard: + or − sets the sign,
- * and so does the ± button.
+ * One SG Category's Strokes Gained, typed with a keyboard. It's negative unless
+ * + or the ± button makes it positive; − sets it back.
  */
 export function SgInput({ category, value, onChange, onEnter, invalid = false, locked = false, inputRef }: Props) {
     const { name } = SG_CATEGORIES.find(({ key }) => key === category)!;
@@ -73,10 +73,7 @@ export function SignedInput(props: {
     const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === '+' || event.key === '-') {
             event.preventDefault();
-            const negative = props.value.startsWith('-');
-            if (negative !== (event.key === '-')) {
-                props.onChange(flipSg(props.value));
-            }
+            props.onChange(signSg(props.value, event.key));
         } else if (event.key === 'Enter' && props.onEnter) {
             event.preventDefault();
             props.onEnter();

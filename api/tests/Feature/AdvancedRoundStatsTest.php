@@ -12,16 +12,16 @@ use Illuminate\Support\Facades\DB;
 function advancedStats(array $overrides = []): array
 {
     return [
-        'fairways_hit' => 8,
-        'fairways_missed_left' => 4,
-        'fairways_missed_right' => 2,
+        'fairways_hit_percent' => 57,
+        'fairways_missed_left_percent' => 29,
+        'fairways_missed_right_percent' => 14,
         'penalties' => 1,
         'approach_miss_long_percent' => 12,
         'approach_miss_short_percent' => 31,
         'approach_miss_left_percent' => 18,
         'approach_miss_right_percent' => 9,
-        'up_and_downs_made' => 3,
-        'up_and_downs_attempted' => 7,
+        'up_and_downs_percent' => 43,
+        'sand_saves_percent' => 25,
         ...$overrides,
     ];
 }
@@ -69,11 +69,11 @@ it('records advanced stats with a Round and opens them for editing', function ()
     $this->get("/rounds/{$id}/edit")->assertInertia(fn ($page) => $page->where('round.stats', advancedStats()));
 
     $baseline = $this->get("/rounds/{$id}/edit")->inertiaProps('round.baseline_id');
-    $this->put("/rounds/{$id}", roundFields(['baseline_id' => $baseline, 'stats' => advancedStats(['penalties' => null, 'fairways_hit' => 10])]))
+    $this->put("/rounds/{$id}", roundFields(['baseline_id' => $baseline, 'stats' => advancedStats(['penalties' => null, 'fairways_hit_percent' => 64])]))
         ->assertSessionHasNoErrors();
 
     $this->get("/rounds/{$id}/edit")->assertInertia(fn ($page) => $page
-        ->where('round.stats', advancedStats(['penalties' => null, 'fairways_hit' => 10])));
+        ->where('round.stats', advancedStats(['penalties' => null, 'fairways_hit_percent' => 64])));
 });
 
 /**
@@ -150,7 +150,9 @@ it('refuses advanced stats out of range, and keeps the Round unsaved', function 
 })->with([
     'a negative count' => [['penalties' => -1], 'stats.penalties', 'Penalties can’t be negative.'],
     'a percentage above 100' => [['approach_miss_short_percent' => 101], 'stats.approach_miss_short_percent', 'Approach misses short can’t be more than 100%.'],
-    'up and downs made above attempts' => [['up_and_downs_made' => 8], 'stats.up_and_downs_made', 'Up and downs made can’t be more than up and downs attempted.'],
+    'up and downs above 100%' => [['up_and_downs_percent' => 101], 'stats.up_and_downs_percent', 'Up and downs can’t be more than 100%.'],
+    'sand saves above 100%' => [['sand_saves_percent' => 101], 'stats.sand_saves_percent', 'Sand saves can’t be more than 100%.'],
+    'fairways hit above 100%' => [['fairways_hit_percent' => 101], 'stats.fairways_hit_percent', 'Fairways hit can’t be more than 100%.'],
 ]);
 
 it('refuses a band value past two decimals, and a band that doesn\'t exist', function () {
@@ -207,4 +209,14 @@ it('shows each Round\'s SG Categories and advanced stats on the Rounds list', fu
         ->where('rounds.0.sg_short_game', '0.40')
         ->where('rounds.0.sg_putting', '1.05')
         ->where('rounds.0.stats', advancedStats(['penalties' => null])));
+});
+
+it('shows each Round\'s Strokes Gained by distance band on the Rounds list, with the bands to name them', function () {
+    $this->actingAs(golfer());
+    ['approach' => $approach, 'putting' => $putting] = bandIds();
+    enterRound(['bands' => [$approach['100–125 m'] => '-0.42', $putting['1–2 m'] => '0.25']]);
+
+    $this->get('/rounds')->assertInertia(fn ($page) => $page
+        ->where('rounds.0.bands', [$approach['100–125 m'] => '-0.42', $putting['1–2 m'] => '0.25'])
+        ->has('sg_bands', 18));
 });

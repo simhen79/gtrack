@@ -2,27 +2,31 @@ import {
     Alert,
     Button,
     Card,
+    ComboBox,
     FieldError,
     Input,
     Label,
     Link,
+    ListBox,
     NumberField,
     TextField,
     ToggleButton,
     ToggleButtonGroup,
 } from '@heroui/react';
 import { parseSG } from '@gtrack/design';
-import type { BaselineData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
-import { Head, router, useForm } from '@inertiajs/react';
+import type { BaselineData, CourseData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
+import { Head, useForm } from '@inertiajs/react';
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { AdvancedStats } from '../../components/advanced-stats';
+import { DeleteRound } from '../../components/delete-round';
+import { RoundDate } from '../../components/round-date';
 import { SgCategoryBadge, type SgCategoryKey } from '../../components/sg-category';
 import { SgInput } from '../../components/sg-input';
 import { SgKeypad } from '../../components/sg-keypad';
 import { SgValue } from '../../components/sg-value';
 import type { ShellProps } from '../../layouts/app-shell';
 import { useMediaQuery } from '../../lib/media';
-import { sumSg } from '../../lib/strokes-gained';
+import { sgForServer, sumSg } from '../../lib/strokes-gained';
 
 const SG_CATEGORIES = [
     { field: 'sg_off_the_tee', key: 'ott', category: 'off_the_tee', label: 'Off the Tee' },
@@ -38,13 +42,23 @@ const DETAIL_FIELDS = ['played_on', 'course_name', 'tees', 'holes', 'par', 'hand
 /** Picks the new-Baseline text field instead of an existing Baseline. */
 const NEW_BASELINE = 'new';
 
-/** HeroUI selects a ToggleButton in accent-soft; the design system selects it on segment. */
+/**
+ * HeroUI selects a ToggleButton in accent-soft; the design system selects it on segment,
+ * over a surface-secondary track so the unselected options still read as buttons.
+ */
 const SELECTED_SEGMENT = 'data-[selected=true]:bg-segment data-[selected=true]:text-segment-foreground';
+const TRACK = 'w-max rounded-full bg-surface-secondary p-1';
+
+/**
+ * Holes is one control sized like the inputs beside it: 36px with a 12px corner. Its two
+ * halves meet edge to edge, unselected on the field background, selected on segment.
+ */
+const HOLE = 'h-full w-full min-w-0 rounded-none bg-transparent';
 
 /** From here the page has room for the focused column and the side rail, typed on a keyboard. */
 const WIDE = '(min-width: 80rem)';
 
-type Props = { round: RoundFormData; baselines: BaselineData[]; sg_bands: SgBandData[] };
+type Props = { round: RoundFormData; baselines: BaselineData[]; courses: CourseData[]; sg_bands: SgBandData[] };
 
 type RoundForm = ReturnType<typeof useRoundForm>;
 
@@ -54,9 +68,9 @@ type RoundForm = ReturnType<typeof useRoundForm>;
  * Strokes Gained on the keypad, with the carried-over details folded under one line.
  * Advanced stats are folded away below either.
  */
-export default function EditRound({ round, baselines, sg_bands }: Props) {
+export default function EditRound({ round, baselines, courses, sg_bands }: Props) {
     const wide = useMediaQuery(WIDE);
-    const form = useRoundForm(round, baselines, sg_bands);
+    const form = useRoundForm(round, baselines, courses, sg_bands);
 
     return (
         <>
@@ -73,7 +87,7 @@ EditRound.layout = ({ round }: Props) => ({ title: round.id === null ? 'Enter a 
  * Putting is entered, that SG Category's value is the sum of its bands, as the server
  * will save it.
  */
-function useRoundForm(round: RoundFormData, baselines: BaselineData[], sgBands: SgBandData[]) {
+function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: CourseData[], sgBands: SgBandData[]) {
     const editing = round.id !== null;
     const form = useForm({
         played_on: round.played_on,
@@ -111,12 +125,12 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], sgBands: 
         event?.preventDefault();
         form.transform(({ baseline_id, new_baseline, ...data }) => ({
             ...data,
-            ...Object.fromEntries(SG_CATEGORIES.map(({ field }) => [field, sg(field)])),
+            ...Object.fromEntries(SG_CATEGORIES.map(({ field }) => [field, sgForServer(sg(field))])),
             baseline_id: baseline_id === NEW_BASELINE ? null : baseline_id,
             new_baseline: baseline_id === NEW_BASELINE ? new_baseline : null,
             tees: data.tees || null,
             par: data.par || null,
-            bands: Object.fromEntries(enteredBands),
+            bands: Object.fromEntries(enteredBands.map(([id, value]) => [id, sgForServer(value)])),
         }));
         if (editing) {
             form.put(`/rounds/${round.id}`, { preserveScroll: true });
@@ -125,22 +139,17 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], sgBands: 
         }
     };
 
-    const destroy = () => {
-        if (window.confirm('Delete this Round? This can’t be undone.')) {
-            router.delete(`/rounds/${round.id}`);
-        }
-    };
-
     return {
         ...form,
         errors,
         editing,
+        courses,
         sgBands,
         locked,
         sg,
         total: sumSg(SG_CATEGORIES.map(({ field }) => sg(field))),
         submit,
-        destroy,
+        deletable: editing ? { id: round.id!, course_name: round.course_name, played_on: round.played_on } : null,
         advanced: (
             <AdvancedStats
                 stats={form.data.stats}
@@ -197,12 +206,12 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
 
                 <Section n={3} title="Details">
                     <div className="grid grid-cols-3 items-start gap-4">
-                        <Field form={form} name="played_on" label="Date" type="date" isRequired />
+                        <RoundDate value={form.data.played_on} onChange={(value) => form.setData('played_on', value)} error={form.errors.played_on} />
                         <div className="col-span-2">
-                            <Field form={form} name="course_name" label="Course" isRequired />
+                            <CoursePicker form={form} />
                         </div>
                         <NumberInput form={form} name="handicap_index" label="Handicap Index" decimals={1} isRequired />
-                        <Field form={form} name="tees" label="Tees (optional)" />
+                        <TeesPicker form={form} />
                         <NumberInput form={form} name="par" label="Par (optional)" />
                         <div className="col-span-3">
                             <BaselinePicker form={form} baselines={baselines} />
@@ -232,11 +241,7 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                 <Button type="submit" size="lg" fullWidth isPending={form.processing}>
                     Save Round
                 </Button>
-                {form.editing && (
-                    <Button variant="danger-soft" fullWidth onPress={form.destroy}>
-                        Delete Round
-                    </Button>
-                )}
+                {form.deletable && <DeleteRound round={form.deletable} fullWidth />}
             </aside>
         </form>
     );
@@ -323,19 +328,19 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                                 <Label>Score</Label>
                                 <Input />
                             </TextField>
-                            <BaselinePicker form={form} baselines={baselines} />
+                            <BaselinePicker form={form} baselines={baselines} compact />
                         </div>
 
                         {showDetails || detailsHaveErrors ? (
                             <Card>
                                 <Card.Content className="flex flex-col gap-3">
-                                    <Field form={form} name="played_on" label="Date" type="date" isRequired />
-                                    <Field form={form} name="course_name" label="Course" isRequired />
+                                    <RoundDate value={form.data.played_on} onChange={(value) => form.setData('played_on', value)} error={form.errors.played_on} />
+                                    <CoursePicker form={form} />
                                     <HolesPicker form={form} />
                                     <div className="grid grid-cols-2 gap-3">
                                         <Field form={form} name="handicap_index" label="Handicap Index" inputMode="decimal" isRequired />
                                         <Field form={form} name="course_handicap" label="Course Handicap" inputMode="numeric" isRequired />
-                                        <Field form={form} name="tees" label="Tees (optional)" />
+                                        <TeesPicker form={form} />
                                         <Field form={form} name="par" label="Par (optional)" inputMode="numeric" />
                                     </div>
                                 </Card.Content>
@@ -365,11 +370,7 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                         <Button type="submit" size="lg" isPending={form.processing}>
                             Save Round
                         </Button>
-                        {form.editing && (
-                            <Button variant="danger-soft" onPress={form.destroy}>
-                                Delete Round
-                            </Button>
-                        )}
+                        {form.deletable && <DeleteRound round={form.deletable} />}
                     </>
                 )}
             </form>
@@ -379,9 +380,9 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
 
 function Section({ n, title, children }: { n: number; title: string; children: ReactNode }) {
     return (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-4 rounded-[24px] bg-surface p-5">
             <h2 className="flex items-center gap-3 text-[20px] font-extrabold">
-                <span className="flex size-7 items-center justify-center rounded-full bg-surface-secondary text-[13px]">{n}</span>
+                <span className="flex size-7 items-center justify-center rounded-full bg-segment text-[13px] text-segment-foreground">{n}</span>
                 {title}
             </h2>
             {children}
@@ -420,7 +421,7 @@ function SgRow(props: {
     invalid: boolean;
     onPress: () => void;
 }) {
-    const border = props.active ? 'border-highlight border-2' : props.invalid ? 'border-danger' : 'border-field-border';
+    const border = props.active ? 'border-highlight border-2' : props.invalid ? 'border-danger' : 'border-(--field-border)';
 
     return (
         <div className="flex items-center justify-between gap-3">
@@ -439,7 +440,7 @@ function SgRow(props: {
                     aria-label={`${props.label} Strokes Gained`}
                     aria-pressed={props.active}
                     onClick={props.onPress}
-                    className={`h-12 min-w-24 rounded-[12px] border bg-field-background px-3 text-right ${border}`}
+                    className={`h-12 min-w-24 rounded-[12px] border bg-(--field-background) px-3 text-right ${border}`}
                 >
                     {props.active ? (
                         <span className="text-xl font-extrabold tabular-nums">{(props.value || '0').replace('-', '−')}</span>
@@ -460,14 +461,14 @@ function HolesPicker({ form }: { form: RoundForm }) {
                 aria-label="Holes"
                 selectionMode="single"
                 disallowEmptySelection
+                className="grid h-9 w-full grid-cols-2 overflow-hidden rounded-[12px] border border-(--field-border) bg-(--field-background)"
                 selectedKeys={[String(form.data.holes)]}
                 onSelectionChange={(keys) => form.setData('holes', Number([...keys][0]))}
             >
-                <ToggleButton id="9" className={SELECTED_SEGMENT}>
+                <ToggleButton id="9" className={`${HOLE} ${SELECTED_SEGMENT}`}>
                     9
                 </ToggleButton>
-                <ToggleButton id="18" className={SELECTED_SEGMENT}>
-                    <ToggleButtonGroup.Separator />
+                <ToggleButton id="18" className={`${HOLE} ${SELECTED_SEGMENT}`}>
                     18
                 </ToggleButton>
             </ToggleButtonGroup>
@@ -475,16 +476,23 @@ function HolesPicker({ form }: { form: RoundForm }) {
     );
 }
 
-function BaselinePicker({ form, baselines }: { form: RoundForm; baselines: BaselineData[] }) {
+/** `compact` shortens the hint, for the phone layout where it sits beside Score. */
+function BaselinePicker({ form, baselines, compact = false }: { form: RoundForm; baselines: BaselineData[]; compact?: boolean }) {
     return (
         <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Baseline</span>
+            <div className="flex flex-col">
+                <span className="text-sm font-medium">Baseline</span>
+                <span className="text-[13px] text-muted">
+                    {compact
+                        ? 'What your Strokes Gained is measured against.'
+                        : 'Who your Strokes Gained is measured against, such as Tour, scratch or a 10 handicap. Trends only compare Rounds on the same Baseline.'}
+                </span>
+            </div>
             <ToggleButtonGroup
                 aria-label="Baseline"
                 selectionMode="single"
                 disallowEmptySelection
-                className="flex-wrap"
-                isDetached
+                className={`flex-wrap ${TRACK}`}
                 selectedKeys={form.data.baseline_id ? [form.data.baseline_id] : []}
                 onSelectionChange={(keys) => form.setData('baseline_id', String([...keys][0]))}
             >
@@ -514,13 +522,67 @@ function BaselinePicker({ form, baselines }: { form: RoundForm; baselines: Basel
     );
 }
 
-type TextFieldName = 'played_on' | 'course_name' | 'tees' | 'handicap_index' | 'course_handicap' | 'par';
+/** The course, typed or picked from the golfer's earlier Rounds. */
+function CoursePicker({ form }: { form: RoundForm }) {
+    return (
+        <SuggestField
+            form={form}
+            name="course_name"
+            label="Course"
+            options={form.courses.map((course) => course.name)}
+            isRequired
+        />
+    );
+}
+
+/** The tees, typed or picked from those the golfer played the chosen course from. */
+function TeesPicker({ form }: { form: RoundForm }) {
+    const tees = form.courses.find((course) => course.name === form.data.course_name)?.tees ?? [];
+
+    // Keyed by course: the suggestions are read when the field mounts, so a new course remounts it.
+    return <SuggestField key={form.data.course_name} form={form} name="tees" label="Tees (optional)" options={tees} />;
+}
+
+/** A text field that suggests earlier values as it's typed into, and takes a new one too. */
+function SuggestField(props: { form: RoundForm; name: 'course_name' | 'tees'; label: string; options: string[]; isRequired?: boolean }) {
+    const { form, name } = props;
+
+    return (
+        <ComboBox
+            name={name}
+            allowsCustomValue
+            menuTrigger="focus"
+            isRequired={props.isRequired}
+            isInvalid={name in form.errors}
+            inputValue={form.data[name]}
+            onInputChange={(value) => form.setData(name, value)}
+            defaultItems={props.options.map((option) => ({ id: option, name: option }))}
+        >
+            <Label>{props.label}</Label>
+            <ComboBox.InputGroup>
+                <Input />
+                {props.options.length > 0 && <ComboBox.Trigger />}
+            </ComboBox.InputGroup>
+            <ComboBox.Popover>
+                <ListBox>
+                    {(item: { id: string; name: string }) => (
+                        <ListBox.Item id={item.id} textValue={item.name}>
+                            {item.name}
+                        </ListBox.Item>
+                    )}
+                </ListBox>
+            </ComboBox.Popover>
+            <FieldError>{form.errors[name]}</FieldError>
+        </ComboBox>
+    );
+}
+
+type TextFieldName = 'course_name' | 'tees' | 'handicap_index' | 'course_handicap' | 'par';
 
 function Field(props: {
     form: RoundForm;
     name: TextFieldName;
     label: string;
-    type?: string;
     inputMode?: 'decimal' | 'numeric';
     isRequired?: boolean;
 }) {
@@ -529,7 +591,6 @@ function Field(props: {
     return (
         <TextField
             name={name}
-            type={props.type}
             inputMode={props.inputMode}
             isRequired={props.isRequired}
             isInvalid={name in form.errors}

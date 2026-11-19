@@ -14,6 +14,10 @@ id: string,
 name: string,
 is_default: boolean,
 };
+export type CourseData = {
+name: string,
+tees: string[],
+};
 export type CursorPaginatedDataCollection<TKey, TValue> = CursorPaginator<TKey, TValue>;
 export type CursorPaginator<TKey, TValue> = {
 data: TKey extends string ? Record<TKey, TValue> : TValue[],
@@ -81,16 +85,16 @@ stats: RoundStatsData,
 bands: Record<string, string>,
 };
 export type RoundStatsData = {
-fairways_hit: number | null,
-fairways_missed_left: number | null,
-fairways_missed_right: number | null,
+fairways_hit_percent: number | null,
+fairways_missed_left_percent: number | null,
+fairways_missed_right_percent: number | null,
 penalties: number | null,
 approach_miss_long_percent: number | null,
 approach_miss_short_percent: number | null,
 approach_miss_left_percent: number | null,
 approach_miss_right_percent: number | null,
-up_and_downs_made: number | null,
-up_and_downs_attempted: number | null,
+up_and_downs_percent: number | null,
+sand_saves_percent: number | null,
 };
 export type RoundSummaryData = {
 id: string,
@@ -105,6 +109,7 @@ sg_approach: string,
 sg_short_game: string,
 sg_putting: string,
 stats: RoundStatsData,
+bands: Record<string, string>,
 };
 export type SgBandData = {
 id: string,

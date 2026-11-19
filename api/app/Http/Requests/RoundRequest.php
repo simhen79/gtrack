@@ -76,12 +76,6 @@ class RoundRequest extends FormRequest
             if ($unknown !== []) {
                 $validator->errors()->add('bands', 'That distance band doesn’t exist.');
             }
-
-            $made = $this->input('stats.up_and_downs_made');
-            $attempted = $this->input('stats.up_and_downs_attempted');
-            if (is_numeric($made) && $made > 0 && (! is_numeric($attempted) || $made > $attempted) && ! $validator->errors()->has('stats.*')) {
-                $validator->errors()->add('stats.up_and_downs_made', 'Up and downs made can’t be more than up and downs attempted.');
-            }
         }];
     }
 
@@ -116,16 +110,16 @@ class RoundRequest extends FormRequest
             'sg_approach' => 'Approach',
             'sg_short_game' => 'Short Game',
             'sg_putting' => 'Putting',
-            'stats.fairways_hit' => 'fairways hit',
-            'stats.fairways_missed_left' => 'fairways missed left',
-            'stats.fairways_missed_right' => 'fairways missed right',
+            'stats.fairways_hit_percent' => 'fairways hit',
+            'stats.fairways_missed_left_percent' => 'fairways missed left',
+            'stats.fairways_missed_right_percent' => 'fairways missed right',
             'stats.penalties' => 'penalties',
             'stats.approach_miss_long_percent' => 'Approach misses long',
             'stats.approach_miss_short_percent' => 'Approach misses short',
             'stats.approach_miss_left_percent' => 'Approach misses left',
             'stats.approach_miss_right_percent' => 'Approach misses right',
-            'stats.up_and_downs_made' => 'up and downs made',
-            'stats.up_and_downs_attempted' => 'up and downs attempted',
+            'stats.up_and_downs_percent' => 'up and downs',
+            'stats.sand_saves_percent' => 'sand saves',
         ];
     }
 }
