@@ -27,6 +27,7 @@ export function SgInput({ category, value, onChange, onEnter, invalid = false, l
     return (
         <div className="flex items-center gap-3 rounded-[16px] bg-surface-secondary p-3 focus-within:ring-2 focus-within:ring-highlight focus-within:ring-inset">
             <SgCategoryBadge category={category} long />
+            {/* 228px holds the 48px ± button and the 180px value field. */}
             <div className="ml-auto">
                 {locked ? (
                     <div
@@ -44,8 +45,9 @@ export function SgInput({ category, value, onChange, onEnter, invalid = false, l
                         onEnter={onEnter}
                         invalid={invalid}
                         inputRef={inputRef}
-                        className="h-14 w-[228px]"
+                        className="h-14 w-[228px] rounded-[12px] bg-background"
                         inputClassName="text-[24px]"
+                        buttonClassName="size-12"
                     />
                 )}
             </div>
@@ -64,6 +66,7 @@ export function SignedInput(props: {
     placeholder?: string;
     className?: string;
     inputClassName?: string;
+    buttonClassName?: string;
 }) {
     const number = props.value ? parseSG(props.value) : null;
 
@@ -87,6 +90,7 @@ export function SignedInput(props: {
                     isIconOnly
                     size="sm"
                     variant="ghost"
+                    className={props.buttonClassName}
                     aria-label={`Flip the sign of ${props.label}`}
                     excludeFromTabOrder
                     onPress={() => props.onChange(flipSg(props.value))}
