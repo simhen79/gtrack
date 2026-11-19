@@ -22,7 +22,7 @@ export function TopRow() {
   const email = me?.email ?? '';
 
   return (
-    <View className="flex-row items-center bg-background px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
+    <View className="flex-row items-center justify-between bg-background px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
       <Wordmark />
       <BottomSheet isOpen={open} onOpenChange={setOpen}>
         <BottomSheet.Trigger asChild>
