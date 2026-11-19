@@ -14,7 +14,8 @@ import type { BaselineData, RoundFormData } from '@gtrack/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import { SgKeypad } from '../../components/sg-keypad';
-import { formatSg, sumSg } from '../../lib/strokes-gained';
+import type { ShellProps } from '../../layouts/app-shell';
+import { displaySg, sumSg } from '../../lib/strokes-gained';
 
 const SG_CATEGORIES = [
     { field: 'sg_off_the_tee', label: 'Off the Tee' },
@@ -85,7 +86,7 @@ export default function EditRound({ round, baselines }: Props) {
     const sgField = activeSg === null ? null : SG_CATEGORIES[activeSg].field;
 
     return (
-        <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-4">
+        <div className="flex max-w-md flex-col gap-4">
             <Head title={editing ? 'Edit Round' : 'Enter a Round'} />
 
             <div className="flex items-center justify-between">
@@ -101,9 +102,9 @@ export default function EditRound({ round, baselines }: Props) {
             </div>
 
             <div className="flex items-end justify-between">
-                <h1 className="text-2xl font-semibold">Strokes Gained</h1>
+                <h2 className="text-2xl font-semibold">Strokes Gained</h2>
                 <span className="text-3xl font-semibold tabular-nums" aria-label="Total Strokes Gained">
-                    {formatSg(sumSg(SG_CATEGORIES.map(({ field }) => form.data[field])))}
+                    {displaySg(sumSg(SG_CATEGORIES.map(({ field }) => form.data[field])))}
                 </span>
             </div>
 
@@ -230,9 +231,11 @@ export default function EditRound({ round, baselines }: Props) {
                     </>
                 )}
             </form>
-        </main>
+        </div>
     );
 }
+
+EditRound.layout = ({ round }: Props) => ({ title: round.id === null ? 'Enter a Round' : 'Edit Round' }) satisfies ShellProps;
 
 function SgRow(props: { label: string; value: string; active: boolean; invalid: boolean; onPress: () => void }) {
     const border = props.active ? 'border-accent border-2 bg-accent-soft' : props.invalid ? 'border-danger' : 'border-border';
@@ -247,7 +250,7 @@ function SgRow(props: { label: string; value: string; active: boolean; invalid: 
                 onClick={props.onPress}
                 className={`h-12 min-w-24 rounded-xl border px-3 text-right text-xl font-semibold tabular-nums ${border}`}
             >
-                {props.active ? props.value || '0' : formatSg(props.value)}
+                {props.active ? props.value || '0' : displaySg(props.value)}
             </button>
         </div>
     );

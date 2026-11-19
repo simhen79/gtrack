@@ -14,6 +14,7 @@ A golf practice app: golfers log Rounds with Strokes Gained and get Practice Ses
 
 - `api/`: Laravel 12 with Inertia and React for the web, plus the JSON API the phone uses. It has its own npm lockfile and sits **outside** the pnpm workspace, so run its commands from `api/`.
 - `apps/mobile/`: the Expo app. Read `apps/mobile/AGENTS.md` before touching Expo or React Native APIs.
+- `packages/design/`: design-system helpers both apps import, such as `formatSG` from `docs/design-system/code/sg.ts`. The web reaches it through an alias in `api/vite.config.ts` and `api/tsconfig.json`, as it does `packages/types`.
 - `packages/types/`: TypeScript generated from the laravel-data DTOs in `api/app/Data`. Regenerate it with `php artisan typescript:transform` in `api/` after changing a DTO, and commit the result: CI fails on drift.
 
 ## Golfer-owned data

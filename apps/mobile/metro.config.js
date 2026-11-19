@@ -6,4 +6,6 @@ const { withUniwindConfig } = require('uniwind/metro');
 module.exports = withUniwindConfig(getDefaultConfig(__dirname), {
   cssEntryFile: './global.css',
   dtsFile: './uniwind-types.d.ts',
+  // gtrack's live Practice Session theme, defined in global.css beside dark and light.
+  extraThemes: ['range'],
 });
