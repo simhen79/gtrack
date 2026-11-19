@@ -23,6 +23,8 @@ class GameVersionData extends Data
      * @param  list<string>  $facility_ids
      * @param  list<string>  $feature_ids
      * @param  list<string>  $distance_group_ids
+     * @param  list<string>  $open
+     * @param  list<int>  $pad_values
      * @param  list<VariationData>  $variations
      */
     public function __construct(
@@ -45,13 +47,15 @@ class GameVersionData extends Data
         public array $facility_ids,
         public array $feature_ids,
         public array $distance_group_ids,
+        public array $open,
+        public array $pad_values,
         public array $variations,
         public ?string $published_at,
         public ?string $retired_at,
     ) {}
 
     /** The relations `fromVersion` reads, to load up front. */
-    public const WITH = ['facilities', 'features', 'distanceGroups', 'variations'];
+    public const WITH = ['facilities', 'features', 'distanceGroups', 'openFields', 'padValues', 'variations'];
 
     public static function fromVersion(GameVersion $version): self
     {
@@ -75,6 +79,8 @@ class GameVersionData extends Data
             $version->facilities->modelKeys(),
             $version->features->modelKeys(),
             $version->distanceGroups->modelKeys(),
+            $version->openFields->pluck('name')->all(),
+            $version->padValues->pluck('value')->all(),
             $version->variations
                 ->filter(fn (Variation $variation) => $variation->retired_at === null)
                 ->map(VariationData::fromVariation(...))

@@ -18,7 +18,7 @@ class CatalogueController extends Controller
         return new CatalogueData(
             GameVersion::with(GameVersionData::WITH)->status(GameStatus::Published)->orderBy('name')->get()
                 ->map(GameVersionData::fromVersion(...))->all(),
-            Drill::with('facilities', 'features', 'distanceGroups')->whereNull('retired_at')->orderBy('name')->get()
+            Drill::with(DrillData::WITH)->whereNull('retired_at')->orderBy('name')->get()
                 ->map(DrillData::fromDrill(...))->all(),
         );
     }

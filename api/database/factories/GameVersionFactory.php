@@ -36,4 +36,20 @@ class GameVersionFactory extends Factory
     {
         return $this->state(['status' => GameStatus::Published, 'published_at' => now()]);
     }
+
+    /** @param  list<string>  $names */
+    public function withOpen(array $names): static
+    {
+        return $this->afterCreating(fn (GameVersion $version) => $version->openFields()->createMany(
+            collect($names)->map(fn (string $name, int $position) => ['position' => $position, 'name' => $name])->all(),
+        ));
+    }
+
+    /** @param  list<int>  $values */
+    public function withPadValues(array $values): static
+    {
+        return $this->afterCreating(fn (GameVersion $version) => $version->padValues()->createMany(
+            collect($values)->map(fn (int $value, int $position) => ['position' => $position, 'value' => $value])->all(),
+        ));
+    }
 }

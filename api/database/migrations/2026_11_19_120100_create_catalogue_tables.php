@@ -73,6 +73,25 @@ return new class extends Migration
             }
         }
 
+        // A Game version's Open fields (what its Variations may change) and its pad's values, in order.
+        Schema::create('open_fields', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('game_version_id')->constrained()->cascadeOnDelete();
+            $table->unsignedTinyInteger('position');
+            $table->string('name');
+
+            $table->unique(['game_version_id', 'position']);
+        });
+
+        Schema::create('pad_values', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('game_version_id')->constrained()->cascadeOnDelete();
+            $table->unsignedTinyInteger('position');
+            $table->smallInteger('value');
+
+            $table->unique(['game_version_id', 'position']);
+        });
+
         Schema::create('variations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('game_version_id')->constrained()->restrictOnDelete();
@@ -89,6 +108,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('variations');
+        Schema::dropIfExists('pad_values');
+        Schema::dropIfExists('open_fields');
 
         foreach (['game_version', 'drill'] as $owner) {
             foreach (['facility', 'feature', 'distance_group'] as $link) {

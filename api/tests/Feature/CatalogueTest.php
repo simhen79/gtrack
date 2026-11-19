@@ -166,3 +166,14 @@ it('shows a golfer the plain Variation and their own, never another golfer\'s', 
     $this->actingAs($mine)->getJson('/api/catalogue')
         ->assertJsonPath('games.0.variations.*.wording', [$draft->rules, "Written for {$mine->email}"]);
 });
+
+it('keeps a Game version\'s Open fields and pad values in order', function () {
+    GameVersion::factory()->published()
+        ->withOpen(['target order', 'scenario wording'])
+        ->withPadValues([1, 2, 3, 5])
+        ->create(['score_entry' => 'pad']);
+
+    $this->actingAs(golfer())->getJson('/api/catalogue')
+        ->assertJsonPath('games.0.open', ['target order', 'scenario wording'])
+        ->assertJsonPath('games.0.pad_values', [1, 2, 3, 5]);
+});

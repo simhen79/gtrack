@@ -32,7 +32,7 @@ class CatalogueController extends Controller
                 ->values()
                 ->map(GameVersionData::fromVersion(...)),
             'drafts' => $request->user()->can('drafts.manage') ? $drafts->values()->map(GameVersionData::fromVersion(...)) : [],
-            'drills' => Drill::with('facilities', 'features', 'distanceGroups')->orderBy('name')->get()->map(DrillData::fromDrill(...)),
+            'drills' => Drill::with(DrillData::WITH)->orderBy('name')->get()->map(DrillData::fromDrill(...)),
             'facilities' => FacilityData::list(),
             'distance_groups' => DistanceGroupData::list(),
         ]);

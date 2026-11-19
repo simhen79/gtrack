@@ -7,6 +7,8 @@ use App\Models\Facility;
 use App\Models\Feature;
 use App\Models\Game;
 use App\Models\GameVersion;
+use App\Models\OpenField;
+use App\Models\PadValue;
 use App\Models\SgBand;
 use App\Models\User;
 use App\Models\Variation;
@@ -21,6 +23,8 @@ $shared = [
     Feature::class,
     Game::class,
     GameVersion::class,
+    OpenField::class,
+    PadValue::class,
     Drill::class,
     // Plain Variations are shared and LLM-written ones are a golfer's, so its own
     // MineOrPlainScope stands in for BelongsToGolfer.

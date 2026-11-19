@@ -32,6 +32,9 @@ class DrillData extends Data
         public ?string $retired_at,
     ) {}
 
+    /** The relations `fromDrill` reads, to load up front. */
+    public const WITH = ['facilities', 'features', 'distanceGroups'];
+
     public static function fromDrill(Drill $drill): self
     {
         return new self(

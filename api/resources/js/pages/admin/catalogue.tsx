@@ -190,7 +190,7 @@ function DraftCard({ draft, selected, onSelect }: { draft: GameVersionData; sele
             type="button"
             aria-current={selected}
             onClick={onSelect}
-            className={`flex w-full flex-col gap-2 rounded-[18px] bg-surface-secondary p-4 text-left ${selected ? 'outline-2 outline-accent' : ''}`}
+            className={`flex w-full flex-col gap-2 rounded-[18px] bg-surface-secondary p-4 text-left ${selected ? 'outline-2 outline-highlight' : ''}`}
         >
             <span className="flex items-center gap-2">
                 <SgCategoryBadge category={sgCategoryKey(draft.sg_category)} />
@@ -247,6 +247,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
                 {item.kind === 'Game' && (
                     <Tile label="Score">
                         {item.game.score_better === 'higher' ? 'Higher' : 'Lower'} is better · {ENTRIES[item.game.score_entry]}
+                        {item.game.pad_values.length > 0 && ` (${item.game.pad_values.join(', ')})`}
                     </Tile>
                 )}
             </div>
@@ -255,6 +256,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
                 <>
                     <Text label="Rules">{item.game.rules}</Text>
                     <Text label="Scoring">{item.game.scoring}</Text>
+                    {item.game.open.length > 0 && <Text label="Open fields">{item.game.open.join(', ')}</Text>}
                 </>
             ) : (
                 <Text label="Setup">{item.drill.setup}</Text>
@@ -282,7 +284,7 @@ function Actions({ item }: { item: Item }) {
         return (
             <div className="flex gap-2">
                 <Confirm
-                    trigger="Delete"
+                    trigger="Delete Draft"
                     heading={`Delete the Draft “${name(item)}”?`}
                     body="It’s removed for good. This can’t be undone."
                     confirm="Delete Draft"
@@ -294,7 +296,7 @@ function Actions({ item }: { item: Item }) {
                         router.post(`/admin/drafts/${item.id}/approve`, {}, { ...done, onStart: () => setApproving(true), onFinish: () => setApproving(false) })
                     }
                 >
-                    Approve
+                    Approve Draft
                 </Button>
             </div>
         );
@@ -306,12 +308,12 @@ function Actions({ item }: { item: Item }) {
         <div className="flex gap-2">
             {item.kind === 'Drill' && (
                 <Link href={`/admin/drills/${item.id}/edit`} className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}>
-                    Edit
+                    Edit Drill
                 </Link>
             )}
             {item.status === 'published' && (
                 <Confirm
-                    trigger="Retire"
+                    trigger={`Retire ${item.kind}`}
                     heading={`Retire “${name(item)}”?`}
                     body={
                         item.kind === 'Game'

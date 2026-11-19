@@ -81,6 +81,22 @@ class GameVersion extends Model
     }
 
     /**
+     * @return HasMany<OpenField, $this>
+     */
+    public function openFields(): HasMany
+    {
+        return $this->hasMany(OpenField::class)->orderBy('position');
+    }
+
+    /**
+     * @return HasMany<PadValue, $this>
+     */
+    public function padValues(): HasMany
+    {
+        return $this->hasMany(PadValue::class)->orderBy('position');
+    }
+
+    /**
      * @return HasMany<Variation, $this>
      */
     public function variations(): HasMany
