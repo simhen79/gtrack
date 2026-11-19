@@ -116,6 +116,38 @@ ensure_sandbox() {   # ensure_sandbox NAME
   fi
 }
 
+# The skills the implement, review and PR prompts call. A sandbox has none of the host's skills,
+# so each ticket run copies these in from this machine: ~/.claude/skills first, then the newest
+# mattpocock-skills plugin. tdd names codebase-design, so it comes too. A skill that cannot be
+# found or copied stops the ticket rather than letting a session carry on without it.
+SKILLS="tdd codebase-design code-review pr"
+
+skill_source() {   # skill_source NAME: the real directory holding NAME's SKILL.md on this machine
+  local dir
+  for dir in "$HOME/.claude/skills/$1" \
+    "$(ls -d "$HOME"/.claude/plugins/cache/*/mattpocock-skills/*/skills/*/"$1" 2>/dev/null | sort -V | tail -n 1)"; do
+    if [ -n "$dir" ] && [ -f "$dir/SKILL.md" ]; then
+      (cd "$dir" && pwd -P)   # sbx cp copies a symlink as a link, which dangles in the sandbox
+      return 0
+    fi
+  done
+  return 1
+}
+
+install_skills() {   # install_skills SANDBOX
+  local skill src dest
+  dest="$(sandbox_exec "$1" bash -c 'mkdir -p ~/.claude/skills && cd ~/.claude/skills && pwd')" || return 1
+  for skill in $SKILLS; do
+    src="$(skill_source "$skill")" ||
+      { log "skill $skill is not in ~/.claude/skills or the mattpocock-skills plugin"; return 1; }
+    # sbx cp leaves the files owned by the host's uid, which the sandbox user cannot delete.
+    sbx exec -u root "$1" rm -rf "$dest/$skill" </dev/null || return 1
+    sbx cp "$src" "$1:$dest/$skill" </dev/null >&2 || return 1
+    sandbox_exec "$1" test -f "$dest/$skill/SKILL.md" ||
+      { log "skill $skill did not reach the sandbox"; return 1; }
+  done
+}
+
 # checkout_in_sandbox SANDBOX BASE_BRANCH [BRANCH]: the clone's origin is GitHub, which the
 # sandbox has no credentials for, but sbx mounts the host repo read-only at /run/sandbox/source,
 # so a branch the host just created is one fetch from the `host` remote. Without BRANCH,
@@ -321,6 +353,7 @@ build_ticket() {
 
   git branch -q -f --no-track "$base" "$base_commit" || return 1
   ensure_sandbox "$sandbox" || return 1
+  install_skills "$sandbox" || { log "#$num: could not give the sandbox its skills"; return 1; }
   checkout_in_sandbox "$sandbox" "$base" "$branch" || return 1
   log "#$num: setting up the sandbox"
   sandbox_exec "$sandbox" bash -c "$(cat "$RALPH_DIR/sandbox-setup.sh")" setup "$MAIN_TREE" \

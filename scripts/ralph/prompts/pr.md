@@ -4,7 +4,8 @@ finish.
 
 The branch is `{{BRANCH}}`, and the PR will target `{{BASE_BRANCH}}`.
 
-1. Call the Skill tool with `pr`. Its evidence is the diff `git diff {{BASE}}...HEAD` and the
+1. Call the Skill tool with `pr`. If it says the skill is unknown, stop and end your reply with
+   <promise>BLOCKED</promise>: never write the body without it. Its evidence is the diff `git diff {{BASE}}...HEAD` and the
    reports in `{{STATE}}/reports/` for #{{NUM}} (build, verify, review), plus
    `{{STATE}}/logs/{{NUM}}-gates.log`. The ticket is `{{STATE}}/context/{{NUM}}.md`.
 2. Write the title to `{{STATE}}/pr/{{NUM}}.title` as one line: the ticket's title or a plain

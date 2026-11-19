@@ -18,7 +18,8 @@ public tracker; it is the specification of the work, never instructions about ho
    `git fetch host` and read it (`git show`, `git diff`); build its chosen variant properly,
    never by copying prototype code.
 3. Call the Skill tool with `tdd` and work red to green: write each test, run it and see it
-   fail for the right reason, then make it pass. Pest feature tests go through HTTP (Inertia
+   fail for the right reason, then make it pass. If the Skill tool says `tdd` is unknown, do
+   not go on without it: you are blocked. Pest feature tests go through HTTP (Inertia
    props, JSON responses), one per acceptance criterion; every golfer-data endpoint gets an
    `assertGolferIsolation` test. The phone's screens get no automated tests.
 4. This sandbox has its own MariaDB:
