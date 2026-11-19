@@ -138,3 +138,26 @@ it('never shows, opens, changes or deletes another golfer\'s Round', function ()
 
     $this->get('/rounds')->assertInertia(fn ($page) => $page->has('rounds', 0));
 });
+
+it('offers the courses of the golfer\'s earlier Rounds, newest first, with the tees played at each', function () {
+    $this->actingAs(golfer());
+    enterRound(['played_on' => '2026-10-01', 'course_name' => 'Houghton', 'tees' => 'Blue']);
+    $baseline = $this->get('/rounds/create')->inertiaProps('round.baseline_id');
+    foreach ([
+        ['played_on' => '2026-10-08', 'course_name' => 'Royal Johannesburg East', 'tees' => 'White'],
+        ['played_on' => '2026-10-15', 'course_name' => 'Houghton', 'tees' => 'White'],
+        ['played_on' => '2026-10-22', 'course_name' => 'Houghton', 'tees' => null],
+        ['played_on' => '2026-10-29', 'course_name' => 'Houghton', 'tees' => 'Blue'],
+    ] as $round) {
+        $this->post('/rounds', roundFields(['baseline_id' => $baseline, ...$round]))->assertSessionHasNoErrors();
+    }
+
+    $this->get('/rounds/create')->assertInertia(fn ($page) => $page->where('courses', [
+        ['name' => 'Houghton', 'tees' => ['Blue', 'White']],
+        ['name' => 'Royal Johannesburg East', 'tees' => ['White']],
+    ]));
+    $id = $this->get('/rounds')->inertiaProps('rounds.0.id');
+    $this->get("/rounds/{$id}/edit")->assertInertia(fn ($page) => $page->has('courses', 2));
+
+    $this->actingAs(golfer())->get('/rounds/create')->assertInertia(fn ($page) => $page->where('courses', []));
+});

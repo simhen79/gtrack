@@ -23,6 +23,8 @@ class RoundSummaryData extends Data
         public string $sg_short_game,
         public string $sg_putting,
         public RoundStatsData $stats,
+        /** @var array<string, string> Strokes Gained by SG band id, only the bands entered */
+        public array $bands,
     ) {}
 
     public static function fromRound(Round $round): self
@@ -40,6 +42,7 @@ class RoundSummaryData extends Data
             $round->sg_short_game,
             $round->sg_putting,
             RoundStatsData::fromStats($round->stats),
+            $round->sgBands->pluck('value', 'sg_band_id')->all(),
         );
     }
 }

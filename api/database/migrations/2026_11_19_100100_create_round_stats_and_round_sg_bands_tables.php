@@ -5,7 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * A Round's optional advanced stats: one row of counts and percentages, and its
+ * A Round's optional advanced stats: one row of percentages and a penalty count, and its
  * Strokes Gained by distance band. Both go when the Round does.
  */
 return new class extends Migration
@@ -16,16 +16,16 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('round_id')->unique()->constrained()->cascadeOnDelete();
-            $table->unsignedTinyInteger('fairways_hit')->nullable();
-            $table->unsignedTinyInteger('fairways_missed_left')->nullable();
-            $table->unsignedTinyInteger('fairways_missed_right')->nullable();
+            $table->unsignedTinyInteger('fairways_hit_percent')->nullable();
+            $table->unsignedTinyInteger('fairways_missed_left_percent')->nullable();
+            $table->unsignedTinyInteger('fairways_missed_right_percent')->nullable();
             $table->unsignedTinyInteger('penalties')->nullable();
             $table->unsignedTinyInteger('approach_miss_long_percent')->nullable();
             $table->unsignedTinyInteger('approach_miss_short_percent')->nullable();
             $table->unsignedTinyInteger('approach_miss_left_percent')->nullable();
             $table->unsignedTinyInteger('approach_miss_right_percent')->nullable();
-            $table->unsignedTinyInteger('up_and_downs_made')->nullable();
-            $table->unsignedTinyInteger('up_and_downs_attempted')->nullable();
+            $table->unsignedTinyInteger('up_and_downs_percent')->nullable();
+            $table->unsignedTinyInteger('sand_saves_percent')->nullable();
             $table->timestamps();
         });
 

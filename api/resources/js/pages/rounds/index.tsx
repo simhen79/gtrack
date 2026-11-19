@@ -1,7 +1,8 @@
 import { Button, buttonVariants, Link } from '@heroui/react';
-import type { RoundStatsData, RoundSummaryData } from '@gtrack/types';
-import { Head, router } from '@inertiajs/react';
+import type { RoundStatsData, RoundSummaryData, SgBandData } from '@gtrack/types';
+import { Head } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
+import { DeleteRound } from '../../components/delete-round';
 import { SgCategoryBadge, type SgCategoryKey } from '../../components/sg-category';
 import { SgValue } from '../../components/sg-value';
 import type { ShellProps } from '../../layouts/app-shell';
@@ -22,7 +23,7 @@ const WIDE = '(min-width: 64rem)';
  * The golfer's Rounds, newest first and grouped by month. At desktop width, the list
  * sits beside the selected Round; narrower, a Round opens straight into editing.
  */
-export default function Rounds({ rounds }: { rounds: RoundSummaryData[] }) {
+export default function Rounds({ rounds, sg_bands }: { rounds: RoundSummaryData[]; sg_bands: SgBandData[] }) {
     const wide = useMediaQuery(WIDE);
     const [selectedId, setSelectedId] = useState(rounds[0]?.id);
     const selected = rounds.find((round) => round.id === selectedId) ?? rounds[0];
@@ -76,7 +77,7 @@ export default function Rounds({ rounds }: { rounds: RoundSummaryData[] }) {
                 <div className="grid h-[calc(100vh-140px)] grid-cols-[360px_1fr] gap-4">
                     <div className="flex flex-col gap-2 overflow-y-auto rounded-[24px] bg-surface p-3">{list}</div>
                     <div className="overflow-y-auto rounded-[24px] bg-surface p-7">
-                        <RoundDetail round={selected} />
+                        <RoundDetail round={selected} sgBands={sg_bands} />
                     </div>
                 </div>
             ) : (
@@ -107,13 +108,7 @@ function RoundLine({ round, selected = false }: { round: RoundSummaryData; selec
     );
 }
 
-function RoundDetail({ round }: { round: RoundSummaryData }) {
-    const destroy = () => {
-        if (window.confirm('Delete this Round? This can’t be undone.')) {
-            router.delete(`/rounds/${round.id}`);
-        }
-    };
-    const stats = statTiles(round.stats);
+function RoundDetail({ round, sgBands }: { round: RoundSummaryData; sgBands: SgBandData[] }) {
 
     return (
         <div className="flex max-w-4xl flex-col gap-6">
@@ -139,24 +134,13 @@ function RoundDetail({ round }: { round: RoundSummaryData }) {
                 ))}
             </div>
 
-            {stats.length > 0 && (
-                <div className="grid grid-cols-3 gap-3">
-                    {stats.map(([label, value]) => (
-                        <Tile key={label}>
-                            <p className="text-[13px] font-bold text-muted">{label}</p>
-                            <p className="text-[20px] font-extrabold tabular-nums">{value}</p>
-                        </Tile>
-                    ))}
-                </div>
-            )}
+            <AdvancedDetail stats={round.stats} bands={round.bands} sgBands={sgBands} />
 
             <div className="flex gap-2">
                 <Link href={`/rounds/${round.id}/edit`} className={buttonVariants({ variant: 'secondary', className: 'no-underline hover:no-underline' })}>
                     Edit Round
                 </Link>
-                <Button variant="danger-soft" onPress={destroy}>
-                    Delete Round
-                </Button>
+                <DeleteRound round={round} />
             </div>
         </div>
     );
@@ -166,27 +150,80 @@ function Tile({ children }: { children: ReactNode }) {
     return <div className="rounded-[18px] bg-surface-secondary p-4">{children}</div>;
 }
 
-/** The advanced stats worth a glance, each only when entered. */
-function statTiles(stats: RoundStatsData): [string, string][] {
-    const tiles: [string, string][] = [];
-    const teeShots = [stats.fairways_hit, stats.fairways_missed_left, stats.fairways_missed_right];
-    if (stats.fairways_hit !== null) {
-        tiles.push(['Fairways', `${stats.fairways_hit} / ${teeShots.reduce<number>((sum, n) => sum + (n ?? 0), 0)}`]);
+type Stat = [label: string, value: string];
+
+/** A Round's advanced stats, one tile per SG Category that has any. Only what was entered is shown. */
+function AdvancedDetail({ stats, bands, sgBands }: { stats: RoundStatsData; bands: Record<string, string>; sgBands: SgBandData[] }) {
+    const percent = (label: string, value: number | null): Stat[] => (value === null ? [] : [[label, `${value}%`]]);
+    const bandsOf = (category: SgBandData['sg_category']): Stat[] =>
+        sgBands.filter((band) => band.sg_category === category && bands[band.id] !== undefined).map((band) => [band.label, bands[band.id]]);
+
+    const groups: { key: SgCategoryKey; stats: Stat[]; bands: Stat[] }[] = [
+        {
+            key: 'ott',
+            stats: [
+                ...percent('Fairways hit', stats.fairways_hit_percent),
+                ...percent('Missed left', stats.fairways_missed_left_percent),
+                ...percent('Missed right', stats.fairways_missed_right_percent),
+                ...(stats.penalties === null ? [] : [['Penalties', String(stats.penalties)] as Stat]),
+            ],
+            bands: [],
+        },
+        {
+            key: 'app',
+            stats: (['long', 'short', 'left', 'right'] as const).flatMap((side) =>
+                percent(`Missed ${side}`, stats[`approach_miss_${side}_percent`]),
+            ),
+            bands: bandsOf('approach'),
+        },
+        {
+            key: 'shg',
+            stats: [...percent('Up and downs', stats.up_and_downs_percent), ...percent('Sand saves', stats.sand_saves_percent)],
+            bands: [],
+        },
+        { key: 'put', stats: [], bands: bandsOf('putting') },
+    ];
+    const entered = groups.filter((group) => group.stats.length > 0 || group.bands.length > 0);
+
+    if (entered.length === 0) {
+        return null;
     }
 
-    const misses = (['long', 'short', 'left', 'right'] as const)
-        .map((side) => [side, stats[`approach_miss_${side}_percent`]] as const)
-        .filter((miss): miss is readonly [typeof miss[0], number] => miss[1] !== null);
-    if (misses.length > 0) {
-        const [side, percent] = misses.reduce((most, miss) => (miss[1] > most[1] ? miss : most));
-        tiles.push(['Approach miss', `${side[0].toUpperCase()}${side.slice(1)} ${percent}%`]);
-    }
-
-    if (stats.up_and_downs_attempted !== null) {
-        tiles.push(['Up and downs', `${stats.up_and_downs_made ?? 0} / ${stats.up_and_downs_attempted}`]);
-    }
-
-    return tiles;
+    return (
+        <section className="flex flex-col gap-3">
+            <h3 className="text-[18px] font-extrabold">Advanced stats</h3>
+            {entered.map((group) => (
+                <Tile key={group.key}>
+                    <SgCategoryBadge category={group.key} long />
+                    {group.stats.length > 0 && (
+                        <dl className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(8rem,1fr))] gap-3">
+                            {group.stats.map(([label, value]) => (
+                                <div key={label}>
+                                    <dt className="text-[13px] font-bold text-muted">{label}</dt>
+                                    <dd className="text-[20px] font-extrabold tabular-nums">{value}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    )}
+                    {group.bands.length > 0 && (
+                        <div className="mt-3 flex flex-col gap-2">
+                            <p className="text-[13px] font-bold text-muted">Strokes Gained by distance</p>
+                            <dl className="grid grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-2">
+                                {group.bands.map(([label, value]) => (
+                                    <div key={label} className="rounded-[12px] bg-surface px-3 py-2">
+                                        <dt className="text-[11px] font-bold text-muted">{label}</dt>
+                                        <dd>
+                                            <SgValue value={value} className="text-[16px]" />
+                                        </dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        </div>
+                    )}
+                </Tile>
+            ))}
+        </section>
+    );
 }
 
 function byMonth(rounds: RoundSummaryData[]): [string, RoundSummaryData[]][] {

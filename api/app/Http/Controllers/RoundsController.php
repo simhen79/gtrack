@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Data\BaselineData;
+use App\Data\CourseData;
 use App\Data\RoundFormData;
 use App\Data\RoundSummaryData;
 use App\Data\SgBandData;
@@ -12,6 +13,7 @@ use App\Models\Round;
 use App\Models\Setting;
 use App\Models\SgBand;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,7 +23,8 @@ class RoundsController extends Controller
     public function index(): Response
     {
         return Inertia::render('rounds/index', [
-            'rounds' => Round::with('baseline', 'stats')->latest('played_on')->latest()->get()->map(RoundSummaryData::fromRound(...)),
+            'rounds' => Round::with('baseline', 'stats', 'sgBands')->latest('played_on')->latest()->get()->map(RoundSummaryData::fromRound(...)),
+            'sg_bands' => $this->sgBands(),
         ]);
     }
 
@@ -75,8 +78,15 @@ class RoundsController extends Controller
                 $baseline->name,
                 $baseline->id === $settings->default_baseline_id,
             )),
-            'sg_bands' => SgBand::with('distanceGroup')->inOrder()->get()->map(SgBandData::fromBand(...)),
+            'courses' => CourseData::played(),
+            'sg_bands' => $this->sgBands(),
         ]);
+    }
+
+    /** @return Collection<int, SgBandData> */
+    private function sgBands(): Collection
+    {
+        return SgBand::with('distanceGroup')->inOrder()->get()->map(SgBandData::fromBand(...));
     }
 
     /**

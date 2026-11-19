@@ -1,6 +1,6 @@
 import { Button } from '@heroui/react';
 import { useEffect, useState } from 'react';
-import { applySgKey, type SgKey } from '../lib/strokes-gained';
+import { applySgKey, signSg, type SgKey } from '../lib/strokes-gained';
 
 const KEYS: SgKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '±', '0', '.'];
 
@@ -32,13 +32,13 @@ export function SgKeypad({ value, onChange, onNext, isLast }: Props) {
             if (event.metaKey || event.ctrlKey || event.altKey) {
                 return;
             }
-            const key = /^[0-9.]$/.test(event.key)
-                ? (event.key as SgKey)
-                : event.key === '-' || event.key === '+'
-                  ? '±'
-                  : event.key === 'Backspace'
-                    ? '⌫'
-                    : null;
+            if (event.key === '-' || event.key === '+') {
+                event.preventDefault();
+                onChange(signSg(fresh ? '' : value, event.key));
+                setFresh(false);
+                return;
+            }
+            const key = /^[0-9.]$/.test(event.key) ? (event.key as SgKey) : event.key === 'Backspace' ? '⌫' : null;
 
             if (key) {
                 event.preventDefault();
