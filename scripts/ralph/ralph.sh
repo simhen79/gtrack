@@ -46,6 +46,7 @@ GH_TOKEN="$(gh auth token --user "$GH_USER")" || { echo "ralph: gh has no token 
 export GH_TOKEN
 OWNER="$(gh repo view --json owner -q .owner.login)"
 NAME="$(gh repo view --json name -q .name)"
+PROJECT="${RALPH_PROJECT-2}"   # the "gtrack v1" board; RALPH_PROJECT= turns board moves off
 
 # use_state NUMBER: the state folder of a map, or of a ticket that has no map.
 # queue.tsv: NUM <tab> LOCAL <tab> STATE <tab> APPROVED <tab> ASSIGNED <tab> SLUG <tab> UI <tab> NEEDS_PROTO <tab> BRANCH <tab> PROTOTYPE
@@ -91,6 +92,40 @@ push() {
 }
 
 pr_state() { gh pr view "$1" --json state -q .state 2>/dev/null || true; }
+
+# move_on_board NUM STATUS: sets the ticket's Status on the project board, adding the ticket to
+# the board first when it isn't on it. Needs the token's `project` scope.
+BOARD_ID=""
+BOARD_FIELDS=""
+move_on_board() {
+  [ -n "$PROJECT" ] || return 0
+  local ids item_id
+  if [ -z "$BOARD_ID" ]; then   # read once per run
+    BOARD_ID="$(gh project view "$PROJECT" --owner "$OWNER" --format json -q .id)" || return 1
+    BOARD_FIELDS="$(gh project field-list "$PROJECT" --owner "$OWNER" --format json)" || { BOARD_ID=""; return 1; }
+  fi
+  ids="$(printf '%s' "$BOARD_FIELDS" |
+    jq -r --arg s "$2" '.fields[] | select(.name == "Status") | "\(.id) \(.options[] | select(.name == $s) | .id)"')"
+  [ -n "$ids" ] || { log "project $PROJECT has no Status option '$2'"; return 1; }
+  item_id="$(gh project item-add "$PROJECT" --owner "$OWNER" \
+    --url "https://github.com/$OWNER/$NAME/issues/$1" --format json -q .id)" || return 1
+  gh project item-edit --id "$item_id" --project-id "$BOARD_ID" \
+    --field-id "${ids% *}" --single-select-option-id "${ids#* }" >/dev/null
+}
+
+# select_on_board JSON: moves every ticket the loop could start now (open, approved, unassigned,
+# no open blocker) to Selected For Development. JSON is the map query refresh_queue made.
+select_on_board() {
+  [ -n "$PROJECT" ] || return 0
+  local num
+  for num in $(printf '%s' "$1" | jq -r --arg ready "$READY" '.data.repository.issue.subIssues.nodes[]
+      | select(.state == "OPEN" and .assignees.totalCount == 0
+               and any(.labels.nodes[]; .name == $ready)
+               and all(.blockedBy.nodes[]; .state != "OPEN")) | .number'); do
+    move_on_board "$num" "Selected For Development" ||
+      log "#$num: could not move it to Selected For Development on project $PROJECT"
+  done
+}
 
 # Commits in the sandbox carry the repo's own identity, passed in rather than configured.
 GIT_NAME="$(git config user.name)"
@@ -284,6 +319,7 @@ refresh_queue() {
       fi
     done
   mv "$new" "$QUEUE"
+  select_on_board "$json"
 }
 
 # needs_prototype NUM: true (and says why) when NUM's Design section asks for a prototype
@@ -343,6 +379,8 @@ build_ticket() {
 
   # The Wayfinder claim: an assigned ticket is taken, so other sessions skip it.
   gh issue edit "$num" --add-assignee "$GH_USER" >/dev/null || return 1
+  # The board is for people to look at, so a failed move doesn't stop the build.
+  move_on_board "$num" "In Progress" || log "#$num: could not move it to In Progress on project $PROJECT"
   write_context "$num" "$STATE/context/$num.md" || return 1
   if [ -n "$proto" ]; then
     git fetch -q origin "+refs/heads/$proto:refs/heads/ralph-proto/$num" || return 1
@@ -397,6 +435,7 @@ build_ticket() {
     --title "$title" --body "$body")" || return 1
   set_field "$num" 2 pr-open
   log "#$num: draft PR $url"
+  move_on_board "$num" "In Review" || log "#$num: could not move it to In Review on project $PROJECT"
   { printf 'The Ralph loop built this ticket: draft PR %s, on branch `%s`.\n\nThe loop'"'"'s own gates:\n\n' "$url" "$branch"
     gate_summary "$num"
     printf '\nWhat the reviews left unfixed is in the PR body.\n'; } |
