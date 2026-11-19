@@ -12,6 +12,12 @@ what approves a ticket. The spec is the issue the map's body links as "Spec: ...
 Decisions" name the seams, and each ticket's acceptance criteria say what to test at them.
 Together they are the pre-agreed seams `tdd` needs.
 
+**Skills come from the host.** A sandbox has none of your skills, so before each ticket the loop
+copies in the ones the prompts call (`tdd`, `codebase-design`, `code-review`, `pr`), from
+`~/.claude/skills` or else the newest `mattpocock-skills` plugin. If one is missing, the ticket
+stops before any session runs; a session that still finds a skill unknown ends blocked rather
+than working without it.
+
 ```
 queue ─► build, per approved ticket in blocking order:
            setup ─► implement ─► verify* ─► review ─► gates ─► PR ─► issue comment
