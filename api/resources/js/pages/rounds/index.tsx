@@ -6,6 +6,7 @@ import { SgCategoryBadge, type SgCategoryKey } from '../../components/sg-categor
 import { SgValue } from '../../components/sg-value';
 import type { ShellProps } from '../../layouts/app-shell';
 import { useMediaQuery } from '../../lib/media';
+import { displaySg } from '../../lib/strokes-gained';
 
 const SG_CATEGORIES: { field: 'sg_off_the_tee' | 'sg_approach' | 'sg_short_game' | 'sg_putting'; key: SgCategoryKey }[] = [
     { field: 'sg_off_the_tee', key: 'ott' },
@@ -52,7 +53,7 @@ export default function Rounds({ rounds }: { rounds: RoundSummaryData[] }) {
                                     round.id === selected.id ? 'bg-segment text-segment-foreground' : 'hover:bg-surface-secondary'
                                 }`}
                             >
-                                <RoundLine round={round} />
+                                <RoundLine round={round} selected={round.id === selected.id} />
                             </button>
                         ) : (
                             <Link
@@ -87,7 +88,7 @@ export default function Rounds({ rounds }: { rounds: RoundSummaryData[] }) {
 
 Rounds.layout = { title: 'Rounds' } satisfies ShellProps;
 
-function RoundLine({ round }: { round: RoundSummaryData }) {
+function RoundLine({ round, selected = false }: { round: RoundSummaryData; selected?: boolean }) {
     return (
         <>
             <span>
@@ -96,7 +97,12 @@ function RoundLine({ round }: { round: RoundSummaryData }) {
                     {shortDate(round.played_on)} · {round.holes} holes · {round.score}
                 </span>
             </span>
-            <SgValue value={round.sg_total} className="text-[16px]" />
+            {/* Mint and coral are too faint on segment, so the selected Round's total takes its text colour. */}
+            {selected ? (
+                <span className="text-[16px] font-extrabold tabular-nums">{displaySg(round.sg_total)}</span>
+            ) : (
+                <SgValue value={round.sg_total} className="text-[16px]" />
+            )}
         </>
     );
 }

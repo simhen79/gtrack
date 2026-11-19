@@ -38,6 +38,9 @@ const DETAIL_FIELDS = ['played_on', 'course_name', 'tees', 'holes', 'par', 'hand
 /** Picks the new-Baseline text field instead of an existing Baseline. */
 const NEW_BASELINE = 'new';
 
+/** HeroUI selects a ToggleButton in accent-soft; the design system selects it on segment. */
+const SELECTED_SEGMENT = 'data-[selected=true]:bg-segment data-[selected=true]:text-segment-foreground';
+
 /** From here the page has room for the focused column and the side rail, typed on a keyboard. */
 const WIDE = '(min-width: 80rem)';
 
@@ -460,8 +463,10 @@ function HolesPicker({ form }: { form: RoundForm }) {
                 selectedKeys={[String(form.data.holes)]}
                 onSelectionChange={(keys) => form.setData('holes', Number([...keys][0]))}
             >
-                <ToggleButton id="9">9</ToggleButton>
-                <ToggleButton id="18">
+                <ToggleButton id="9" className={SELECTED_SEGMENT}>
+                    9
+                </ToggleButton>
+                <ToggleButton id="18" className={SELECTED_SEGMENT}>
                     <ToggleButtonGroup.Separator />
                     18
                 </ToggleButton>
@@ -484,11 +489,13 @@ function BaselinePicker({ form, baselines }: { form: RoundForm; baselines: Basel
                 onSelectionChange={(keys) => form.setData('baseline_id', String([...keys][0]))}
             >
                 {baselines.map((baseline) => (
-                    <ToggleButton key={baseline.id} id={baseline.id}>
+                    <ToggleButton key={baseline.id} id={baseline.id} className={SELECTED_SEGMENT}>
                         {baseline.name}
                     </ToggleButton>
                 ))}
-                <ToggleButton id={NEW_BASELINE}>+ New</ToggleButton>
+                <ToggleButton id={NEW_BASELINE} className={SELECTED_SEGMENT}>
+                    + New
+                </ToggleButton>
             </ToggleButtonGroup>
             {form.data.baseline_id === NEW_BASELINE && (
                 <TextField
