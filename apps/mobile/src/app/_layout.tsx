@@ -14,14 +14,15 @@ SplashScreen.preventAutoHideAsync();
 
 function Screens() {
   const { me } = useSession();
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     [fonts.body]: Manrope_500Medium,
     [fonts.bold]: Manrope_700Bold,
     [fonts.extraBold]: Manrope_800ExtraBold,
     [fonts.serif]: InstrumentSerif_400Regular,
   });
   const [themeLoaded, setThemeLoaded] = useState(false);
-  const ready = me !== undefined && fontsLoaded && themeLoaded;
+  // A font that fails to load falls back to the system font rather than holding the splash screen.
+  const ready = me !== undefined && (fontsLoaded || fontError !== null) && themeLoaded;
 
   useEffect(() => {
     loadThemeChoice().finally(() => setThemeLoaded(true));

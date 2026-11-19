@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router/js-tabs';
-import { View, type ColorValue } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, View, type ColorValue } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { Icon, type IconName } from '@/components/icons';
 import { TopRow } from '@/components/top-row';
+import { useSession } from '@/lib/session';
 import { fonts } from '@/lib/theme';
 
 /**
@@ -11,6 +13,17 @@ import { fonts } from '@/lib/theme';
  * centre button with the phone's Round entry.
  */
 export default function TabsLayout() {
+  const { refresh } = useSession();
+
+  // Coming back to the app re-checks the token, so a disabled or idle login
+  // returns to sign-in, whichever tab is open.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => subscription.remove();
+  }, [refresh]);
+
   const [surface, separator, foreground, muted] = useCSSVariable([
     '--color-surface',
     '--color-separator',

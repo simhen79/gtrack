@@ -17,7 +17,8 @@ function apply() {
 
 /** Applies the choice saved on this device. Run it before the first screen shows. */
 export async function loadThemeChoice() {
-  const stored = await SecureStore.getItemAsync(STORAGE_KEY);
+  // An unreadable keychain falls back to System rather than holding the splash screen.
+  const stored = await SecureStore.getItemAsync(STORAGE_KEY).catch(() => null);
   choice = stored === 'dark' || stored === 'light' ? stored : 'system';
   apply();
   listeners.forEach((listener) => listener());
@@ -28,7 +29,8 @@ export async function setThemeChoice(next: ThemeChoice) {
   choice = next;
   apply();
   listeners.forEach((listener) => listener());
-  await SecureStore.setItemAsync(STORAGE_KEY, next);
+  // If the keychain refuses, the choice still holds until the app restarts.
+  await SecureStore.setItemAsync(STORAGE_KEY, next).catch(() => undefined);
 }
 
 /** The live Practice Session switches Range on and off, whatever the golfer chose. */

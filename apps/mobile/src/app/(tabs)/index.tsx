@@ -1,20 +1,10 @@
 import { Card, Chip } from 'heroui-native';
-import { useEffect } from 'react';
-import { AppState, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { useSession } from '@/lib/session';
 import { fonts } from '@/lib/theme';
 
 export default function Home() {
-  const { me, refresh } = useSession();
-
-  // Coming back to the app re-checks the token, so a disabled or idle login
-  // returns to sign-in.
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') refresh();
-    });
-    return () => subscription.remove();
-  }, [refresh]);
+  const { me } = useSession();
 
   if (!me) return null;
 

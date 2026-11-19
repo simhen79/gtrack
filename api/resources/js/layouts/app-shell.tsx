@@ -150,23 +150,26 @@ function RailTooltip({ label, collapsed, children }: { label: string; collapsed:
 /** Phone width: the pages that are tabs, with Enter a Round as the raised centre button. */
 function TabBar({ url }: { url: string }) {
     const tabs = golferNav.filter((item) => item.tab);
+    // Half the tabs either side of the centre button, so it stays centred however many there are.
+    const left = Math.ceil(tabs.length / 2);
 
     return (
         <nav
             aria-label="Pages"
-            className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 items-end border-t border-separator bg-surface px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] md:hidden"
+            style={{ gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))` }}
+            className="fixed inset-x-0 bottom-0 z-30 grid items-end border-t border-separator bg-surface px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)] md:hidden"
         >
-            {tabs.slice(0, 2).map((item) => (
+            {tabs.slice(0, left).map((item) => (
                 <Tab key={item.href} item={item} current={isCurrent(item, url)} />
             ))}
             <Link
                 href={ENTER_A_ROUND}
                 aria-label="Enter a Round"
-                className="col-start-3 -mt-6 flex size-14 items-center justify-center justify-self-center rounded-full bg-accent text-accent-foreground no-underline [box-shadow:var(--overlay-shadow)] hover:no-underline"
+                className="-mt-6 flex size-14 items-center justify-center justify-self-center rounded-full bg-accent text-accent-foreground no-underline [box-shadow:var(--overlay-shadow)] hover:no-underline"
             >
                 <Plus className="size-6" />
             </Link>
-            {tabs.slice(2).map((item) => (
+            {tabs.slice(left).map((item) => (
                 <Tab key={item.href} item={item} current={isCurrent(item, url)} />
             ))}
         </nav>
@@ -196,7 +199,7 @@ function Tab({ item, current }: { item: NavItem; current: boolean }) {
 
 const COLLAPSED_KEY = 'gtrack.sidebar-collapsed';
 
-/** The sidebar's icon-rail state, remembered in this browser. `[` toggles it outside text fields. */
+/** The sidebar's icon-rail state, remembered in this browser. `[` toggles it outside text fields, while the sidebar shows. */
 function useCollapsed(): [boolean, () => void] {
     const [collapsed, setCollapsed] = useState(() => {
         try {
@@ -218,7 +221,10 @@ function useCollapsed(): [boolean, () => void] {
         const onKeyDown = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement | null;
             const typing = target?.closest('input, textarea, select, [contenteditable="true"]');
-            if (event.key === '[' && !typing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+            const modified = event.metaKey || event.ctrlKey || event.altKey;
+            // Below md the sidebar is hidden, so `[` would change it unseen.
+            const sidebarShows = window.matchMedia('(min-width: 48rem)').matches;
+            if (event.key === '[' && !typing && !modified && !event.repeat && !event.defaultPrevented && sidebarShows) {
                 setCollapsed((was) => !was);
             }
         };
