@@ -1,6 +1,7 @@
 import { Alert, Button, Card, Checkbox, Chip, FieldError, Form, Input, Label, TextField } from '@heroui/react';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import type { AdminUserData, Role } from '@gtrack/types';
+import type { ShellProps } from '../../layouts/app-shell';
 import type { SharedProps } from '../../types';
 
 const ROLES: Role[] = ['admin', 'golfer'];
@@ -16,9 +17,8 @@ export default function Users({ users }: { users: AdminUserData[] }) {
     };
 
     return (
-        <main className="mx-auto flex max-w-3xl flex-col gap-6 p-4">
+        <div className="flex max-w-3xl flex-col gap-6">
             <Head title="Users" />
-            <h1 className="text-2xl font-semibold">Users</h1>
 
             <Card>
                 <Card.Header>
@@ -128,9 +128,11 @@ export default function Users({ users }: { users: AdminUserData[] }) {
                     </li>
                 ))}
             </ul>
-        </main>
+        </div>
     );
 }
+
+Users.layout = { title: 'Users' } satisfies ShellProps;
 
 function Status({ user }: { user: AdminUserData }) {
     if (user.disabled_at) {

@@ -14,8 +14,10 @@ npm i @gravity-ui/icons
 ```css
 @import "tailwindcss";
 @import "@heroui/styles";
-@import "./gtrack-theme.css" layer(theme);
+@import "./gtrack-theme.css";
 ```
+
+Import it without `layer(theme)`: inside that layer its `@layer components` shape overrides become `theme.components`, which loses to HeroUI's own `components` layer, so buttons stay pills. Load Manrope and Instrument Serif with a `<link>` in the page head; Tailwind drops the `@import url(...)` at the top of the file.
 
 ## 3. Pick the theme on `<html>`
 

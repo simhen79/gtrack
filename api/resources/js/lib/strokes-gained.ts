@@ -1,3 +1,5 @@
+import { formatSG, parseSG } from '@gtrack/design';
+
 /** A key on the Strokes Gained keypad. */
 export type SgKey = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '.' | '±' | '⌫';
 
@@ -30,16 +32,10 @@ export function applySgKey(value: string, key: SgKey): string {
     return whole.length >= 2 ? value : value + key;
 }
 
-/** Signed, two decimals, an em dash when empty: "+1.05", "-0.40", "—". */
-export function formatSg(value: string | null | undefined): string {
-    if (value === null || value === undefined || value === '' || value === '-') {
-        return '—';
-    }
-    const number = Number(value);
-    if (Number.isNaN(number)) {
-        return '—';
-    }
-    return `${number > 0 ? '+' : ''}${number.toFixed(2)}`;
+/** A typed or stored value through the shared formatSG ("+1.05", "−0.40"), or an em dash when empty. */
+export function displaySg(value: string | null | undefined): string {
+    const number = value ? parseSG(value) : null;
+    return number === null ? '—' : formatSG(number);
 }
 
 /** Adds values in hundredths, so float rounding never shows. */

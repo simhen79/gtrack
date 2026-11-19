@@ -1,11 +1,12 @@
 import { Button, Card, FieldError, Form, Input, Label, TextField } from '@heroui/react';
 import { Head, useForm } from '@inertiajs/react';
+import type { ShellProps } from '../../layouts/app-shell';
 
 export default function Handicap({ fallback_handicap_index }: { fallback_handicap_index: string | null }) {
     const form = useForm({ fallback_handicap_index: fallback_handicap_index ?? '' });
 
     return (
-        <main className="flex min-h-screen items-center justify-center p-4">
+        <div>
             <Head title="Your Handicap Index" />
             <Card className="w-full max-w-sm">
                 <Card.Header>
@@ -40,6 +41,8 @@ export default function Handicap({ fallback_handicap_index }: { fallback_handica
                     </Form>
                 </Card.Content>
             </Card>
-        </main>
+        </div>
     );
 }
+
+Handicap.layout = { title: 'Handicap Index' } satisfies ShellProps;

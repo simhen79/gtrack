@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import '@heroui/styles';
+/* Copied from docs/design-system/code, which generates it from tokens.json: change both together.
+   Not in layer(theme): there its shape overrides nest under theme.components and lose to HeroUI's components layer. */
+@import './gtrack-theme.css';
 
 @source '../**/*.blade.php';
 @source '../**/*.tsx';

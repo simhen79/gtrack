@@ -14,8 +14,11 @@ export default defineConfig({
         tailwindcss(),
     ],
     resolve: {
-        // The generated types package lives in the pnpm workspace, which this app sits outside.
-        alias: { '@gtrack/types': fileURLToPath(new URL('../packages/types/src/index.ts', import.meta.url)) },
+        // The shared packages live in the pnpm workspace, which this app sits outside.
+        alias: {
+            '@gtrack/types': fileURLToPath(new URL('../packages/types/src/index.ts', import.meta.url)),
+            '@gtrack/design': fileURLToPath(new URL('../packages/design/src/index.ts', import.meta.url)),
+        },
     },
     server: {
         watch: {

@@ -7,7 +7,7 @@ use App\Http\Controllers\RoundsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'golfer.settings'])->group(function () {
-    Route::inertia('/', 'welcome');
+    Route::inertia('/', 'home');
     Route::resource('rounds', RoundsController::class)->except('show');
 });
 
