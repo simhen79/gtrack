@@ -78,7 +78,7 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
         form.setData(field, on ? [...form.data[field], id] : form.data[field].filter((other) => other !== id));
 
     return (
-        <div className="flex max-w-3xl flex-col gap-4">
+        <div className="flex flex-col gap-4">
             <Head title={drill ? `Edit ${drill.name}` : 'Add a Drill'} />
             <AdminTabs />
 
@@ -90,135 +90,141 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                 </Alert>
             )}
 
+            {/* aria: the browser doesn't block the save, so the server's messages show under each field. */}
             <Form
-                className="flex flex-col gap-4"
+                validationBehavior="aria"
+                className="flex flex-col gap-4 xl:flex-row xl:items-start"
                 onSubmit={(event) => {
                     event.preventDefault();
                     save();
                 }}
             >
-                <Card>
-                    <Card.Content className="flex flex-col gap-5">
-                        <TextField isRequired isInvalid={'name' in form.errors} value={form.data.name} onChange={(value) => form.setData('name', value)}>
-                            <Label>Name</Label>
-                            <Input />
-                            <FieldError>{form.errors.name}</FieldError>
-                        </TextField>
+                <div className="flex w-full max-w-3xl flex-col gap-4">
+                    <Card>
+                        <Card.Content className="flex flex-col gap-5">
+                            <TextField isRequired isInvalid={'name' in form.errors} value={form.data.name} onChange={(value) => form.setData('name', value)}>
+                                <Label>Name</Label>
+                                <Input />
+                                <FieldError>{form.errors.name}</FieldError>
+                            </TextField>
 
-                        <Section label="SG Category" error={form.errors.sg_category}>
-                            <ToggleButtonGroup
-                                aria-label="SG Category"
-                                selectionMode="single"
-                                disallowEmptySelection
-                                isDetached
-                                className="flex-wrap justify-start"
-                                selectedKeys={[form.data.sg_category]}
-                                onSelectionChange={(keys) => pickCategory([...keys][0] as SgCategory)}
-                            >
-                                {SG_CATEGORIES.map(({ category, label }) => (
-                                    <ToggleButton key={category} id={category} className={`gap-2 ${SELECTED_SEGMENT}`}>
-                                        <SgCategoryBadge category={sgCategoryKey(category)} />
-                                        {label}
-                                    </ToggleButton>
-                                ))}
-                            </ToggleButtonGroup>
-                        </Section>
-
-                        <TextField isRequired isInvalid={'setup' in form.errors} value={form.data.setup} onChange={(value) => form.setData('setup', value)}>
-                            <Label>Setup</Label>
-                            <TextArea rows={5} />
-                            <FieldError>{form.errors.setup}</FieldError>
-                        </TextField>
-                    </Card.Content>
-                </Card>
-
-                <Card>
-                    <Card.Header>
-                        <Card.Title>Facilities and features</Card.Title>
-                    </Card.Header>
-                    <Card.Content className="flex flex-col gap-4">
-                        {form.errors.facility_ids && <p className="text-sm text-danger">{form.errors.facility_ids}</p>}
-                        {facilities.map((facility) => {
-                            const needed = form.data.facility_ids.includes(facility.id);
-
-                            return (
-                                <div key={facility.id} className="flex flex-col gap-2">
-                                    <Tick label={facility.name} isSelected={needed} onChange={(on) => toggleFacility(facility, on)} />
-                                    {needed && facility.features.length > 0 && (
-                                        <div className="ms-7 flex flex-wrap gap-x-5 gap-y-2">
-                                            {facility.features.map((feature) => (
-                                                <Tick
-                                                    key={feature.id}
-                                                    label={feature.name}
-                                                    isSelected={form.data.feature_ids.includes(feature.id)}
-                                                    onChange={(on) => toggle('feature_ids', feature.id, on)}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                        {form.errors.feature_ids && <p className="text-sm text-danger">{form.errors.feature_ids}</p>}
-
-                        {groups.length > 0 && (
-                            <Section label="Distance groups" error={form.errors.distance_group_ids}>
-                                <div className="flex flex-wrap gap-x-5 gap-y-2">
-                                    {groups.map((group) => (
-                                        <Tick
-                                            key={group.id}
-                                            label={group.label}
-                                            isSelected={form.data.distance_group_ids.includes(group.id)}
-                                            onChange={(on) => toggle('distance_group_ids', group.id, on)}
-                                        />
+                            <Section label="SG Category" error={form.errors.sg_category}>
+                                <ToggleButtonGroup
+                                    aria-label="SG Category"
+                                    selectionMode="single"
+                                    disallowEmptySelection
+                                    isDetached
+                                    className="flex-wrap justify-start"
+                                    selectedKeys={[form.data.sg_category]}
+                                    onSelectionChange={(keys) => pickCategory([...keys][0] as SgCategory)}
+                                >
+                                    {SG_CATEGORIES.map(({ category, label }) => (
+                                        <ToggleButton key={category} id={category} className={`gap-2 ${SELECTED_SEGMENT}`}>
+                                            <SgCategoryBadge category={sgCategoryKey(category)} />
+                                            {label}
+                                        </ToggleButton>
                                     ))}
-                                </div>
+                                </ToggleButtonGroup>
                             </Section>
-                        )}
-                    </Card.Content>
-                </Card>
 
-                <Card>
-                    <Card.Header>
-                        <Card.Title>Time</Card.Title>
-                        <Card.Description>Give the balls, or the estimated minutes when it isn’t counted in balls.</Card.Description>
-                    </Card.Header>
-                    <Card.Content className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <Whole form={form} name="balls" label="Balls" />
-                        <Whole form={form} name="estimated_minutes" label="Estimated minutes" />
-                        <Whole form={form} name="seconds_per_ball" label="Seconds per ball" description="Blank uses the Facility’s pace." />
-                    </Card.Content>
-                </Card>
+                            <TextField isRequired isInvalid={'setup' in form.errors} value={form.data.setup} onChange={(value) => form.setData('setup', value)}>
+                                <Label>Setup</Label>
+                                <TextArea rows={5} />
+                                <FieldError>{form.errors.setup}</FieldError>
+                            </TextField>
+                        </Card.Content>
+                    </Card>
 
-                <Card>
-                    <Card.Header>
-                        <Card.Title>Source</Card.Title>
-                    </Card.Header>
-                    <Card.Content className="flex flex-col gap-4">
-                        <TextField isInvalid={'source_concept' in form.errors} value={form.data.source_concept} onChange={(value) => form.setData('source_concept', value)}>
-                            <Label>Concept</Label>
-                            <TextArea rows={2} />
-                            <FieldError>{form.errors.source_concept}</FieldError>
-                        </TextField>
-                        <TextField type="url" isInvalid={'source_url' in form.errors} value={form.data.source_url} onChange={(value) => form.setData('source_url', value)}>
-                            <Label>Link</Label>
-                            <Input />
-                            <FieldError>{form.errors.source_url}</FieldError>
-                        </TextField>
-                    </Card.Content>
-                </Card>
+                    <Card>
+                        <Card.Header>
+                            <Card.Title>Facilities and features</Card.Title>
+                        </Card.Header>
+                        <Card.Content className="flex flex-col gap-4">
+                            {form.errors.facility_ids && <p className="text-sm text-danger">{form.errors.facility_ids}</p>}
+                            {facilities.map((facility) => {
+                                const needed = form.data.facility_ids.includes(facility.id);
 
-                <div className="flex gap-2">
-                    <Button type="submit" isPending={form.processing}>
+                                return (
+                                    <div key={facility.id} className="flex flex-col gap-2">
+                                        <Tick label={facility.name} isSelected={needed} onChange={(on) => toggleFacility(facility, on)} />
+                                        {needed && facility.features.length > 0 && (
+                                            <div className="ms-7 flex flex-wrap gap-x-5 gap-y-2">
+                                                {facility.features.map((feature) => (
+                                                    <Tick
+                                                        key={feature.id}
+                                                        label={feature.name}
+                                                        isSelected={form.data.feature_ids.includes(feature.id)}
+                                                        onChange={(on) => toggle('feature_ids', feature.id, on)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                            {form.errors.feature_ids && <p className="text-sm text-danger">{form.errors.feature_ids}</p>}
+
+                            {groups.length > 0 && (
+                                <Section label="Distance groups" error={form.errors.distance_group_ids}>
+                                    <div className="flex flex-wrap gap-x-5 gap-y-2">
+                                        {groups.map((group) => (
+                                            <Tick
+                                                key={group.id}
+                                                label={group.label}
+                                                isSelected={form.data.distance_group_ids.includes(group.id)}
+                                                onChange={(on) => toggle('distance_group_ids', group.id, on)}
+                                            />
+                                        ))}
+                                    </div>
+                                </Section>
+                            )}
+                        </Card.Content>
+                    </Card>
+
+                    <Card>
+                        <Card.Header>
+                            <Card.Title>Time</Card.Title>
+                            <Card.Description>Give the balls, or the estimated minutes when it isn’t counted in balls.</Card.Description>
+                        </Card.Header>
+                        <Card.Content className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <Whole form={form} name="balls" label="Balls" />
+                            <Whole form={form} name="estimated_minutes" label="Estimated minutes" />
+                            <Whole form={form} name="seconds_per_ball" label="Seconds per ball" description="Blank uses the Facility’s pace." />
+                        </Card.Content>
+                    </Card>
+
+                    <Card>
+                        <Card.Header>
+                            <Card.Title>Source</Card.Title>
+                        </Card.Header>
+                        <Card.Content className="flex flex-col gap-4">
+                            <TextField isInvalid={'source_concept' in form.errors} value={form.data.source_concept} onChange={(value) => form.setData('source_concept', value)}>
+                                <Label>Concept</Label>
+                                <TextArea rows={2} />
+                                <FieldError>{form.errors.source_concept}</FieldError>
+                            </TextField>
+                            <TextField type="url" isInvalid={'source_url' in form.errors} value={form.data.source_url} onChange={(value) => form.setData('source_url', value)}>
+                                <Label>Link</Label>
+                                <Input />
+                                <FieldError>{form.errors.source_url}</FieldError>
+                            </TextField>
+                        </Card.Content>
+                    </Card>
+
+                </div>
+
+                {/* The save action stays in view: a sticky rail at desktop width, a bar above the tab bar narrower. */}
+                <aside className="sticky bottom-24 z-20 flex gap-2 rounded-[24px] bg-surface p-3 [box-shadow:var(--overlay-shadow)] md:bottom-4 xl:top-8 xl:bottom-auto xl:w-72 xl:flex-col xl:p-5 xl:[box-shadow:none]">
+                    <Button type="submit" size="lg" className="flex-1 xl:w-full xl:flex-none" isPending={form.processing}>
                         Save Drill
                     </Button>
                     <Link
                         href={drill ? `/admin/catalogue?item=${drill.id}` : '/admin/catalogue'}
-                        className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}
+                        className={buttonVariants({ variant: 'tertiary', size: 'lg', className: 'no-underline hover:no-underline xl:w-full' })}
                     >
                         Cancel
                     </Link>
-                </div>
+                </aside>
             </Form>
         </div>
     );

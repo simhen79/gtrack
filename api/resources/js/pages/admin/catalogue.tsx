@@ -1,8 +1,9 @@
-import { Alert, AlertDialog, Button, buttonVariants, Chip, Link, SearchField, Tabs } from '@heroui/react';
+import { Alert, Button, buttonVariants, Chip, Link, SearchField, Tabs } from '@heroui/react';
 import type { DistanceGroupData, DrillData, FacilityData, GameOrigin, GameStatus, GameVersionData, ScoreEntry } from '@gtrack/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
 import { AdminTabs } from '../../components/admin-tabs';
+import { ConfirmDialog, ConfirmName } from '../../components/confirm-dialog';
 import { SgCategoryBadge, sgCategoryKey } from '../../components/sg-category';
 import type { ShellProps } from '../../layouts/app-shell';
 import { useMediaQuery } from '../../lib/media';
@@ -138,12 +139,6 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                             <p className="text-[20px] font-extrabold tabular-nums">{count('retired')}</p>
                         </div>
                     </div>
-                    <Link
-                        href="/admin/drills/create"
-                        className={buttonVariants({ variant: 'secondary', className: 'mt-auto no-underline hover:no-underline' })}
-                    >
-                        Add a Drill
-                    </Link>
                 </section>
 
                 <section className="rounded-[24px] bg-surface p-6 lg:col-span-9">
@@ -177,7 +172,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
     );
 }
 
-Catalogue.layout = { title: 'Catalogue' } satisfies ShellProps;
+Catalogue.layout = { title: 'Catalogue', action: { label: 'Add a Drill', href: '/admin/drills/create' } } satisfies ShellProps;
 
 const itemIn = (url: string) => new URLSearchParams(url.split('?')[1] ?? '').get('item');
 
@@ -283,13 +278,14 @@ function Actions({ item }: { item: Item }) {
     if (item.status === 'draft') {
         return (
             <div className="flex gap-2">
-                <Confirm
+                <ConfirmDialog
                     trigger="Delete Draft"
-                    heading={`Delete the Draft “${name(item)}”?`}
-                    body="It’s removed for good. This can’t be undone."
-                    confirm="Delete Draft"
-                    onConfirm={(options) => router.delete(`/admin/drafts/${item.id}`, { ...done, ...options })}
-                />
+                    heading="Delete this Draft?"
+                    keep="Keep Draft"
+                    onConfirm={(visit) => router.delete(`/admin/drafts/${item.id}`, { ...done, ...visit })}
+                >
+                    <ConfirmName>{name(item)}</ConfirmName> is removed for good. It can’t be undone.
+                </ConfirmDialog>
                 <Button
                     isPending={approving}
                     onPress={() =>
@@ -312,66 +308,17 @@ function Actions({ item }: { item: Item }) {
                 </Link>
             )}
             {item.status === 'published' && (
-                <Confirm
+                <ConfirmDialog
                     trigger={`Retire ${item.kind}`}
-                    heading={`Retire “${name(item)}”?`}
-                    body={
-                        item.kind === 'Game'
-                            ? 'It leaves the Catalogue, so no new Practice Session includes it. Its scores and record are kept.'
-                            : 'It leaves the Catalogue, so no new Practice Session includes it. Its record is kept.'
-                    }
-                    confirm={`Retire ${item.kind}`}
-                    onConfirm={(options) => router.post(retireUrl, {}, { ...done, ...options })}
-                />
+                    heading={`Retire this ${item.kind}?`}
+                    keep={`Keep ${item.kind}`}
+                    onConfirm={(visit) => router.post(retireUrl, {}, { ...done, ...visit })}
+                >
+                    <ConfirmName>{name(item)}</ConfirmName> leaves the Catalogue, so no new Practice Session includes it.{' '}
+                    {item.kind === 'Game' ? 'Its scores and record are kept.' : 'Its record is kept.'}
+                </ConfirmDialog>
             )}
         </div>
-    );
-}
-
-type VisitOptions = { onStart: () => void; onFinish: () => void };
-
-/** A danger button that asks first, in an AlertDialog whose confirm repeats the verb. */
-function Confirm(props: { trigger: string; heading: string; body: string; confirm: string; onConfirm: (options: VisitOptions) => void }) {
-    const [open, setOpen] = useState(false);
-    const [pending, setPending] = useState(false);
-
-    return (
-        <AlertDialog isOpen={open} onOpenChange={setOpen}>
-            <Button variant="danger-soft">{props.trigger}</Button>
-            <AlertDialog.Backdrop>
-                <AlertDialog.Container>
-                    <AlertDialog.Dialog className="sm:max-w-[420px]">
-                        <AlertDialog.Header>
-                            <AlertDialog.Icon status="danger" />
-                            <AlertDialog.Heading>{props.heading}</AlertDialog.Heading>
-                        </AlertDialog.Header>
-                        <AlertDialog.Body>
-                            <p className="text-muted">{props.body}</p>
-                        </AlertDialog.Body>
-                        <AlertDialog.Footer>
-                            <Button slot="close" variant="tertiary">
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="danger"
-                                isPending={pending}
-                                onPress={() =>
-                                    props.onConfirm({
-                                        onStart: () => setPending(true),
-                                        onFinish: () => {
-                                            setPending(false);
-                                            setOpen(false);
-                                        },
-                                    })
-                                }
-                            >
-                                {props.confirm}
-                            </Button>
-                        </AlertDialog.Footer>
-                    </AlertDialog.Dialog>
-                </AlertDialog.Container>
-            </AlertDialog.Backdrop>
-        </AlertDialog>
     );
 }
 
