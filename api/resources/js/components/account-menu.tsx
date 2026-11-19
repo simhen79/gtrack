@@ -1,4 +1,4 @@
-import { ArrowRightFromSquare } from '@gravity-ui/icons';
+import { ArrowRightFromSquare, Gear } from '@gravity-ui/icons';
 import { Avatar, Dropdown, Header, Separator, ToggleButton, ToggleButtonGroup } from '@heroui/react';
 import { router } from '@inertiajs/react';
 import type { NavItem } from '../layouts/nav';
@@ -21,7 +21,7 @@ type Props = {
     placement?: 'top start' | 'bottom end';
 };
 
-/** The avatar and its menu: the email, the theme choice, any extra pages, and Sign out. */
+/** The avatar and its menu: the email, the theme choice, any extra pages, Settings and Sign out. */
 export function AccountMenu({ email, showEmail = false, admin = [], placement = 'bottom end' }: Props) {
     return (
         <Dropdown>
@@ -79,6 +79,10 @@ export function AccountMenu({ email, showEmail = false, admin = [], placement = 
                         </Dropdown.Section>
                     )}
                     {admin.length > 0 && <Separator />}
+                    <Dropdown.Item id="/settings" href="/settings" textValue="Settings">
+                        <Gear className="size-4" />
+                        Settings
+                    </Dropdown.Item>
                     <Dropdown.Item id={SIGN_OUT} textValue="Sign out" variant="danger" className="text-danger">
                         <ArrowRightFromSquare className="size-4" />
                         Sign out

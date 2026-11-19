@@ -55,7 +55,7 @@ class UsersController extends Controller
         ])['roles'];
 
         DB::transaction(function () use ($user, $roles) {
-            if (! in_array('admin', $roles) && $this->isLastAdmin($user)) {
+            if (! in_array('admin', $roles) && $user->isLastAdmin()) {
                 throw ValidationException::withMessages(['roles' => 'This is the last admin, so the admin role stays.']);
             }
 
@@ -71,7 +71,7 @@ class UsersController extends Controller
     public function disable(User $user): RedirectResponse
     {
         DB::transaction(function () use ($user) {
-            if ($this->isLastAdmin($user)) {
+            if ($user->isLastAdmin()) {
                 throw ValidationException::withMessages(['disable' => 'This is the last admin, so their login can\'t be disabled.']);
             }
 
@@ -88,16 +88,5 @@ class UsersController extends Controller
         $user->forceFill(['disabled_at' => null])->save();
 
         return to_route('admin.users.index');
-    }
-
-    /**
-     * Call inside a transaction: locking the enabled admins makes two admins
-     * removing each other at once wait in turn instead of both succeeding.
-     */
-    private function isLastAdmin(User $user): bool
-    {
-        $enabledAdminIds = User::role('admin')->whereNull('disabled_at')->lockForUpdate()->pluck('id');
-
-        return $enabledAdminIds->count() === 1 && $enabledAdminIds->first() === $user->id;
     }
 }

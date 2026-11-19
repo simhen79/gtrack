@@ -50,4 +50,15 @@ class User extends Authenticatable
             'disabled_at' => 'datetime',
         ];
     }
+
+    /**
+     * Call inside a transaction: locking the enabled admins makes two admins
+     * removing each other at once wait in turn instead of both succeeding.
+     */
+    public function isLastAdmin(): bool
+    {
+        $enabledAdminIds = self::role('admin')->whereNull('disabled_at')->lockForUpdate()->pluck('id');
+
+        return $enabledAdminIds->count() === 1 && $enabledAdminIds->first() === $this->id;
+    }
 }

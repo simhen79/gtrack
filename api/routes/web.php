@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\EmailCodeController;
 use App\Http\Controllers\FallbackHandicapController;
@@ -8,12 +9,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'golfer.settings'])->group(function () {
     Route::inertia('/', 'home');
+    Route::inertia('/settings', 'settings/index');
     Route::resource('rounds', RoundsController::class)->except('show');
 });
 
 Route::middleware('auth')->group(function () {
     Route::get('/settings/handicap', [FallbackHandicapController::class, 'edit']);
     Route::post('/settings/handicap', [FallbackHandicapController::class, 'store']);
+    Route::delete('/settings/account', [AccountController::class, 'destroy']);
 });
 
 Route::middleware('guest')->group(function () {
