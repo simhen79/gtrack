@@ -6,3 +6,5 @@
 
 @source '../**/*.blade.php';
 @source '../**/*.tsx';
+/* sgTone's classes live in the shared design helpers. */
+@source '../../../packages/design/src';

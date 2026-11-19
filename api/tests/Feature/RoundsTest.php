@@ -2,31 +2,6 @@
 
 use App\Models\Round;
 
-/**
- * A complete Round as the entry form posts it.
- *
- * @param  array<string, mixed>  $overrides
- * @return array<string, mixed>
- */
-function roundFields(array $overrides = []): array
-{
-    return [
-        'played_on' => '2026-11-15',
-        'course_name' => 'Royal Johannesburg East',
-        'tees' => 'White',
-        'holes' => 18,
-        'par' => 72,
-        'score' => 84,
-        'handicap_index' => '12.4',
-        'course_handicap' => 14,
-        'sg_off_the_tee' => '-1.25',
-        'sg_approach' => '-2.10',
-        'sg_short_game' => '0.40',
-        'sg_putting' => '1.05',
-        ...$overrides,
-    ];
-}
-
 it('lets a golfer with no Baselines add one inline at their first Round, and makes it their default', function () {
     $this->actingAs(golfer())
         ->post('/rounds', roundFields(['new_baseline' => 'Scratch']))
@@ -122,14 +97,6 @@ it('refuses a Baseline that belongs to another golfer', function () {
         ->post('/rounds', roundFields(['baseline_id' => $theirs]))
         ->assertSessionHasErrors('baseline_id');
 });
-
-/** Saves a Round through the form and returns its id, as the list shows it. */
-function enterRound(array $overrides = []): string
-{
-    test()->post('/rounds', roundFields(['new_baseline' => 'Scratch', ...$overrides]))->assertSessionHasNoErrors();
-
-    return test()->get('/rounds')->inertiaProps('rounds.0.id');
-}
 
 it('opens a saved Round for editing and saves the change', function () {
     $this->actingAs(golfer());

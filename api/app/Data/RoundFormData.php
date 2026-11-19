@@ -28,6 +28,9 @@ class RoundFormData extends Data
         public ?string $sg_approach,
         public ?string $sg_short_game,
         public ?string $sg_putting,
+        public RoundStatsData $stats,
+        /** @var array<string, string> Strokes Gained by SG band id, only the bands entered */
+        public array $bands,
     ) {}
 
     public static function fromRound(Round $round): self
@@ -47,6 +50,8 @@ class RoundFormData extends Data
             $round->sg_approach,
             $round->sg_short_game,
             $round->sg_putting,
+            RoundStatsData::fromStats($round->stats),
+            $round->sgBands->pluck('value', 'sg_band_id')->all(),
         );
     }
 
@@ -65,6 +70,8 @@ class RoundFormData extends Data
             $last?->course_handicap,
             $last->baseline_id ?? $defaultBaselineId,
             null, null, null, null,
+            new RoundStatsData,
+            [],
         );
     }
 }

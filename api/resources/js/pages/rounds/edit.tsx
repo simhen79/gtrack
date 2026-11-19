@@ -6,23 +6,30 @@ import {
     Input,
     Label,
     Link,
+    NumberField,
     TextField,
     ToggleButton,
     ToggleButtonGroup,
 } from '@heroui/react';
-import type { BaselineData, RoundFormData } from '@gtrack/types';
+import { parseSG } from '@gtrack/design';
+import type { BaselineData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { AdvancedStats } from '../../components/advanced-stats';
+import { SgCategoryBadge, type SgCategoryKey } from '../../components/sg-category';
+import { SgInput } from '../../components/sg-input';
 import { SgKeypad } from '../../components/sg-keypad';
+import { SgValue } from '../../components/sg-value';
 import type { ShellProps } from '../../layouts/app-shell';
-import { displaySg, sumSg } from '../../lib/strokes-gained';
+import { useMediaQuery } from '../../lib/media';
+import { sumSg } from '../../lib/strokes-gained';
 
 const SG_CATEGORIES = [
-    { field: 'sg_off_the_tee', label: 'Off the Tee' },
-    { field: 'sg_approach', label: 'Approach' },
-    { field: 'sg_short_game', label: 'Short Game' },
-    { field: 'sg_putting', label: 'Putting' },
-] as const;
+    { field: 'sg_off_the_tee', key: 'ott', category: 'off_the_tee', label: 'Off the Tee' },
+    { field: 'sg_approach', key: 'app', category: 'approach', label: 'Approach' },
+    { field: 'sg_short_game', key: 'shg', category: 'short_game', label: 'Short Game' },
+    { field: 'sg_putting', key: 'put', category: 'putting', label: 'Putting' },
+] as const satisfies readonly { field: string; key: SgCategoryKey; category: SgCategory; label: string }[];
 
 type SgField = (typeof SG_CATEGORIES)[number]['field'];
 
@@ -31,13 +38,39 @@ const DETAIL_FIELDS = ['played_on', 'course_name', 'tees', 'holes', 'par', 'hand
 /** Picks the new-Baseline text field instead of an existing Baseline. */
 const NEW_BASELINE = 'new';
 
-type Props = { round: RoundFormData; baselines: BaselineData[] };
+/** From here the page has room for the focused column and the side rail, typed on a keyboard. */
+const WIDE = '(min-width: 80rem)';
+
+type Props = { round: RoundFormData; baselines: BaselineData[]; sg_bands: SgBandData[] };
+
+type RoundForm = ReturnType<typeof useRoundForm>;
 
 /**
- * Layout C: Strokes Gained leads, and the course and handicap details carried
- * over from the last Round sit folded away under one line.
+ * Round entry. At desktop width, a focused column of Strokes Gained, Score and
+ * Details beside a rail with the live total and Save Round. Narrower, layout C:
+ * Strokes Gained on the keypad, with the carried-over details folded under one line.
+ * Advanced stats are folded away below either.
  */
-export default function EditRound({ round, baselines }: Props) {
+export default function EditRound({ round, baselines, sg_bands }: Props) {
+    const wide = useMediaQuery(WIDE);
+    const form = useRoundForm(round, baselines, sg_bands);
+
+    return (
+        <>
+            <Head title={form.editing ? 'Edit Round' : 'Enter a Round'} />
+            {wide ? <WideEntry form={form} baselines={baselines} /> : <NarrowEntry form={form} baselines={baselines} />}
+        </>
+    );
+}
+
+EditRound.layout = ({ round }: Props) => ({ title: round.id === null ? 'Enter a Round' : 'Edit Round' }) satisfies ShellProps;
+
+/**
+ * The form, plus what follows from the distance bands: once any band of Approach or
+ * Putting is entered, that SG Category's value is the sum of its bands, as the server
+ * will save it.
+ */
+function useRoundForm(round: RoundFormData, baselines: BaselineData[], sgBands: SgBandData[]) {
     const editing = round.id !== null;
     const form = useForm({
         played_on: round.played_on,
@@ -54,21 +87,33 @@ export default function EditRound({ round, baselines }: Props) {
         sg_approach: round.sg_approach ?? '',
         sg_short_game: round.sg_short_game ?? '',
         sg_putting: round.sg_putting ?? '',
+        stats: round.stats,
+        bands: { ...round.bands } as Record<string, string>,
     });
-    const [activeSg, setActiveSg] = useState<number | null>(editing ? null : 0);
-    const [showDetails, setShowDetails] = useState(round.course_name === '');
-    const detailsHaveErrors = DETAIL_FIELDS.some((field) => field in form.errors);
-    const errorList = Object.values(form.errors);
+    const hasAdvanced = Object.values(round.stats).some((value) => value !== null) || Object.keys(round.bands).length > 0;
+    const [advancedOpen, setAdvancedOpen] = useState(hasAdvanced);
+
+    const enteredBands = Object.entries(form.data.bands).filter(([, value]) => parseSG(value) !== null);
+    const bandTotal = (category: SgCategory): string | null => {
+        const ids = new Set(sgBands.filter((band) => band.sg_category === category).map((band) => band.id));
+        const values = enteredBands.filter(([id]) => ids.has(id)).map(([, value]) => value);
+        return values.length > 0 ? sumSg(values) : null;
+    };
+    const locked = Object.fromEntries(SG_CATEGORIES.map(({ field, category }) => [field, bandTotal(category)])) as Record<SgField, string | null>;
+    const sg = (field: SgField) => locked[field] ?? form.data[field];
+    const errors = form.errors as Partial<Record<string, string>>;
+    const advancedHasErrors = Object.keys(errors).some((key) => key.startsWith('stats') || key.startsWith('bands'));
 
     const submit = (event?: FormEvent) => {
         event?.preventDefault();
-        setActiveSg(null);
         form.transform(({ baseline_id, new_baseline, ...data }) => ({
             ...data,
+            ...Object.fromEntries(SG_CATEGORIES.map(({ field }) => [field, sg(field)])),
             baseline_id: baseline_id === NEW_BASELINE ? null : baseline_id,
             new_baseline: baseline_id === NEW_BASELINE ? new_baseline : null,
             tees: data.tees || null,
             par: data.par || null,
+            bands: Object.fromEntries(enteredBands),
         }));
         if (editing) {
             form.put(`/rounds/${round.id}`, { preserveScroll: true });
@@ -83,15 +128,133 @@ export default function EditRound({ round, baselines }: Props) {
         }
     };
 
+    return {
+        ...form,
+        errors,
+        editing,
+        sgBands,
+        locked,
+        sg,
+        total: sumSg(SG_CATEGORIES.map(({ field }) => sg(field))),
+        submit,
+        destroy,
+        advanced: (
+            <AdvancedStats
+                stats={form.data.stats}
+                onStatChange={(field: keyof RoundStatsData, value) => form.setData('stats', { ...form.data.stats, [field]: value })}
+                sgBands={sgBands}
+                bands={form.data.bands}
+                onBandChange={(id, value) => form.setData('bands', { ...form.data.bands, [id]: value })}
+                errors={errors}
+                isExpanded={advancedOpen || advancedHasErrors}
+                onExpandedChange={setAdvancedOpen}
+            />
+        ),
+    };
+}
+
+function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineData[] }) {
+    const inputs = useRef<(HTMLInputElement | null)[]>([]);
+    const focusAfter = (index: number) => {
+        const next = SG_CATEGORIES.findIndex(({ field }, i) => i > index && form.locked[field] === null);
+        inputs.current[next]?.focus();
+    };
+
+    return (
+        <form className="flex flex-col gap-8 xl:flex-row xl:items-start" onSubmit={form.submit} noValidate>
+            <div className="flex w-full max-w-[760px] flex-col gap-8">
+                <Errors errors={form.errors} />
+
+                <Section n={1} title="Strokes Gained">
+                    <div className="flex flex-col gap-2">
+                        {SG_CATEGORIES.map(({ field, key }, index) => (
+                            <SgInput
+                                key={field}
+                                category={key}
+                                value={form.sg(field)}
+                                locked={form.locked[field] !== null}
+                                onChange={(value) => form.setData(field, value)}
+                                onEnter={() => focusAfter(index)}
+                                invalid={field in form.errors}
+                                inputRef={(input) => {
+                                    inputs.current[index] = input;
+                                }}
+                            />
+                        ))}
+                    </div>
+                </Section>
+
+                <Section n={2} title="Score">
+                    <div className="grid grid-cols-3 items-start gap-4">
+                        <NumberInput form={form} name="score" label="Score" isRequired />
+                        <HolesPicker form={form} />
+                        <NumberInput form={form} name="course_handicap" label="Course Handicap" isRequired />
+                    </div>
+                </Section>
+
+                <Section n={3} title="Details">
+                    <div className="grid grid-cols-3 items-start gap-4">
+                        <Field form={form} name="played_on" label="Date" type="date" isRequired />
+                        <div className="col-span-2">
+                            <Field form={form} name="course_name" label="Course" isRequired />
+                        </div>
+                        <NumberInput form={form} name="handicap_index" label="Handicap Index" decimals={1} isRequired />
+                        <Field form={form} name="tees" label="Tees (optional)" />
+                        <NumberInput form={form} name="par" label="Par (optional)" />
+                        <div className="col-span-3">
+                            <BaselinePicker form={form} baselines={baselines} />
+                        </div>
+                    </div>
+                </Section>
+
+                {form.advanced}
+            </div>
+
+            <aside className="flex w-full flex-col gap-4 rounded-[24px] bg-surface p-5 xl:sticky xl:top-8 xl:w-80">
+                <div>
+                    <p className="text-[13px] font-bold text-muted">Total Strokes Gained</p>
+                    <SgValue value={form.total} className="text-[48px] leading-none" />
+                </div>
+                <div className="flex flex-col gap-2">
+                    {SG_CATEGORIES.map(({ field, key }) => (
+                        <div key={field} className="flex items-center justify-between">
+                            <SgCategoryBadge category={key} long />
+                            <SgValue value={form.sg(field)} className="text-[15px]" />
+                        </div>
+                    ))}
+                </div>
+                <p className="text-[13px] text-muted">
+                    {[form.data.course_name, `${form.data.holes} holes`, form.data.score].filter(Boolean).join(' · ')}
+                </p>
+                <Button type="submit" size="lg" fullWidth isPending={form.processing}>
+                    Save Round
+                </Button>
+                {form.editing && (
+                    <Button variant="danger-soft" fullWidth onPress={form.destroy}>
+                        Delete Round
+                    </Button>
+                )}
+            </aside>
+        </form>
+    );
+}
+
+function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: BaselineData[] }) {
+    const firstOpen = SG_CATEGORIES.findIndex(({ field }) => form.locked[field] === null);
+    const [activeSg, setActiveSg] = useState<number | null>(form.editing || firstOpen < 0 ? null : firstOpen);
+    const [showDetails, setShowDetails] = useState(form.data.course_name === '');
+    const detailsHaveErrors = DETAIL_FIELDS.some((field) => field in form.errors);
     const sgField = activeSg === null ? null : SG_CATEGORIES[activeSg].field;
+    const nextAfter = (index: number) => {
+        const next = SG_CATEGORIES.findIndex(({ field }, i) => i > index && form.locked[field] === null);
+        return next < 0 ? null : next;
+    };
 
     return (
         <div className="flex max-w-md flex-col gap-4">
-            <Head title={editing ? 'Edit Round' : 'Enter a Round'} />
-
             <div className="flex items-center justify-between">
                 <Link href="/rounds">Rounds</Link>
-                <span className="text-muted text-sm">
+                <span className="text-sm text-muted">
                     {new Date(`${form.data.played_on}T00:00`).toLocaleDateString(undefined, {
                         weekday: 'short',
                         day: 'numeric',
@@ -102,36 +265,32 @@ export default function EditRound({ round, baselines }: Props) {
             </div>
 
             <div className="flex items-end justify-between">
-                <h2 className="text-2xl font-semibold">Strokes Gained</h2>
-                <span className="text-3xl font-semibold tabular-nums" aria-label="Total Strokes Gained">
-                    {displaySg(sumSg(SG_CATEGORIES.map(({ field }) => form.data[field])))}
+                <h2 className="text-[20px] font-extrabold">Strokes Gained</h2>
+                <span aria-label="Total Strokes Gained">
+                    <SgValue value={form.total} className="text-[32px]" />
                 </span>
             </div>
 
-            {errorList.length > 0 && (
-                <Alert status="danger">
-                    <Alert.Content>
-                        <Alert.Title>This Round can’t be saved yet</Alert.Title>
-                        <Alert.Description>
-                            <ul className="list-disc pl-4">
-                                {errorList.map((error) => (
-                                    <li key={error}>{error}</li>
-                                ))}
-                            </ul>
-                        </Alert.Description>
-                    </Alert.Content>
-                </Alert>
-            )}
+            <Errors errors={form.errors} />
 
-            <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+            <form
+                className="flex flex-col gap-4"
+                onSubmit={(event) => {
+                    setActiveSg(null);
+                    form.submit(event);
+                }}
+                noValidate
+            >
                 <Card>
                     <Card.Content className="flex flex-col gap-2">
-                        {SG_CATEGORIES.map(({ field, label }, index) => (
+                        {SG_CATEGORIES.map(({ field, key, label }, index) => (
                             <SgRow
                                 key={field}
+                                category={key}
                                 label={label}
-                                value={form.data[field]}
+                                value={form.sg(field)}
                                 active={activeSg === index}
+                                locked={form.locked[field] !== null}
                                 invalid={field in form.errors}
                                 onPress={() => setActiveSg(index)}
                             />
@@ -143,9 +302,9 @@ export default function EditRound({ round, baselines }: Props) {
                     <SgKeypad
                         key={sgField}
                         value={form.data[sgField]}
-                        onChange={(value) => form.setData(sgField as SgField, value)}
-                        onNext={() => setActiveSg(activeSg < SG_CATEGORIES.length - 1 ? activeSg + 1 : null)}
-                        isLast={activeSg === SG_CATEGORIES.length - 1}
+                        onChange={(value) => form.setData(sgField, value)}
+                        onNext={() => setActiveSg(nextAfter(activeSg))}
+                        isLast={nextAfter(activeSg) === null}
                     />
                 ) : (
                     <>
@@ -161,14 +320,7 @@ export default function EditRound({ round, baselines }: Props) {
                                 <Label>Score</Label>
                                 <Input />
                             </TextField>
-                            <BaselinePicker
-                                baselines={baselines}
-                                value={form.data.baseline_id}
-                                newName={form.data.new_baseline}
-                                errors={form.errors}
-                                onChange={(value) => form.setData('baseline_id', value)}
-                                onNewNameChange={(value) => form.setData('new_baseline', value)}
-                            />
+                            <BaselinePicker form={form} baselines={baselines} />
                         </div>
 
                         {showDetails || detailsHaveErrors ? (
@@ -176,22 +328,7 @@ export default function EditRound({ round, baselines }: Props) {
                                 <Card.Content className="flex flex-col gap-3">
                                     <Field form={form} name="played_on" label="Date" type="date" isRequired />
                                     <Field form={form} name="course_name" label="Course" isRequired />
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-sm font-medium">Holes</span>
-                                        <ToggleButtonGroup
-                                            aria-label="Holes"
-                                            selectionMode="single"
-                                            disallowEmptySelection
-                                            selectedKeys={[String(form.data.holes)]}
-                                            onSelectionChange={(keys) => form.setData('holes', Number([...keys][0]))}
-                                        >
-                                            <ToggleButton id="9">9</ToggleButton>
-                                            <ToggleButton id="18">
-                                                <ToggleButtonGroup.Separator />
-                                                18
-                                            </ToggleButton>
-                                        </ToggleButtonGroup>
-                                    </div>
+                                    <HolesPicker form={form} />
                                     <div className="grid grid-cols-2 gap-3">
                                         <Field form={form} name="handicap_index" label="Handicap Index" inputMode="decimal" isRequired />
                                         <Field form={form} name="course_handicap" label="Course Handicap" inputMode="numeric" isRequired />
@@ -220,11 +357,13 @@ export default function EditRound({ round, baselines }: Props) {
                             </Card>
                         )}
 
+                        {form.advanced}
+
                         <Button type="submit" size="lg" isPending={form.processing}>
                             Save Round
                         </Button>
-                        {editing && (
-                            <Button variant="danger-soft" onPress={destroy}>
+                        {form.editing && (
+                            <Button variant="danger-soft" onPress={form.destroy}>
                                 Delete Round
                             </Button>
                         )}
@@ -235,35 +374,103 @@ export default function EditRound({ round, baselines }: Props) {
     );
 }
 
-EditRound.layout = ({ round }: Props) => ({ title: round.id === null ? 'Enter a Round' : 'Edit Round' }) satisfies ShellProps;
+function Section({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+    return (
+        <section className="flex flex-col gap-4">
+            <h2 className="flex items-center gap-3 text-[20px] font-extrabold">
+                <span className="flex size-7 items-center justify-center rounded-full bg-surface-secondary text-[13px]">{n}</span>
+                {title}
+            </h2>
+            {children}
+        </section>
+    );
+}
 
-function SgRow(props: { label: string; value: string; active: boolean; invalid: boolean; onPress: () => void }) {
-    const border = props.active ? 'border-accent border-2 bg-accent-soft' : props.invalid ? 'border-danger' : 'border-border';
+function Errors({ errors }: { errors: Partial<Record<string, string>> }) {
+    const list = [...new Set(Object.values(errors))];
+
+    return (
+        list.length > 0 && (
+            <Alert status="danger">
+                <Alert.Content>
+                    <Alert.Title>This Round can’t be saved yet</Alert.Title>
+                    <Alert.Description>
+                        <ul className="list-disc pl-4">
+                            {list.map((error) => (
+                                <li key={error}>{error}</li>
+                            ))}
+                        </ul>
+                    </Alert.Description>
+                </Alert.Content>
+            </Alert>
+        )
+    );
+}
+
+/** A Strokes Gained value at phone width, opening the keypad; read-only once its bands make it up. */
+function SgRow(props: {
+    category: SgCategoryKey;
+    label: string;
+    value: string;
+    active: boolean;
+    locked: boolean;
+    invalid: boolean;
+    onPress: () => void;
+}) {
+    const border = props.active ? 'border-highlight border-2' : props.invalid ? 'border-danger' : 'border-field-border';
 
     return (
         <div className="flex items-center justify-between gap-3">
-            <span>{props.label}</span>
-            <button
-                type="button"
-                aria-label={`${props.label} Strokes Gained`}
-                aria-pressed={props.active}
-                onClick={props.onPress}
-                className={`h-12 min-w-24 rounded-xl border px-3 text-right text-xl font-semibold tabular-nums ${border}`}
-            >
-                {props.active ? props.value || '0' : displaySg(props.value)}
-            </button>
+            <SgCategoryBadge category={props.category} long />
+            {props.locked ? (
+                <span
+                    aria-label={`${props.label} Strokes Gained, the sum of its distance bands`}
+                    className="flex h-12 min-w-24 flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
+                >
+                    <SgValue value={props.value} className="text-xl leading-none" />
+                    <span className="text-[11px] font-bold text-muted">Sum of bands</span>
+                </span>
+            ) : (
+                <button
+                    type="button"
+                    aria-label={`${props.label} Strokes Gained`}
+                    aria-pressed={props.active}
+                    onClick={props.onPress}
+                    className={`h-12 min-w-24 rounded-[12px] border bg-field-background px-3 text-right ${border}`}
+                >
+                    {props.active ? (
+                        <span className="text-xl font-extrabold tabular-nums">{(props.value || '0').replace('-', '−')}</span>
+                    ) : (
+                        <SgValue value={props.value} className="text-xl" />
+                    )}
+                </button>
+            )}
         </div>
     );
 }
 
-function BaselinePicker(props: {
-    baselines: BaselineData[];
-    value: string;
-    newName: string;
-    errors: Record<string, string>;
-    onChange: (value: string) => void;
-    onNewNameChange: (value: string) => void;
-}) {
+function HolesPicker({ form }: { form: RoundForm }) {
+    return (
+        <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium">Holes</span>
+            <ToggleButtonGroup
+                aria-label="Holes"
+                selectionMode="single"
+                disallowEmptySelection
+                selectedKeys={[String(form.data.holes)]}
+                onSelectionChange={(keys) => form.setData('holes', Number([...keys][0]))}
+            >
+                <ToggleButton id="9">9</ToggleButton>
+                <ToggleButton id="18">
+                    <ToggleButtonGroup.Separator />
+                    18
+                </ToggleButton>
+            </ToggleButtonGroup>
+        </div>
+    );
+}
+
+function BaselinePicker({ form, baselines }: { form: RoundForm; baselines: BaselineData[] }) {
     return (
         <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">Baseline</span>
@@ -273,38 +480,38 @@ function BaselinePicker(props: {
                 disallowEmptySelection
                 className="flex-wrap"
                 isDetached
-                selectedKeys={props.value ? [props.value] : []}
-                onSelectionChange={(keys) => props.onChange(String([...keys][0]))}
+                selectedKeys={form.data.baseline_id ? [form.data.baseline_id] : []}
+                onSelectionChange={(keys) => form.setData('baseline_id', String([...keys][0]))}
             >
-                {props.baselines.map((baseline) => (
+                {baselines.map((baseline) => (
                     <ToggleButton key={baseline.id} id={baseline.id}>
                         {baseline.name}
                     </ToggleButton>
                 ))}
                 <ToggleButton id={NEW_BASELINE}>+ New</ToggleButton>
             </ToggleButtonGroup>
-            {props.value === NEW_BASELINE && (
+            {form.data.baseline_id === NEW_BASELINE && (
                 <TextField
                     name="new_baseline"
                     aria-label="New Baseline name"
-                    isInvalid={'new_baseline' in props.errors}
-                    value={props.newName}
-                    onChange={props.onNewNameChange}
+                    isInvalid={'new_baseline' in form.errors}
+                    value={form.data.new_baseline}
+                    onChange={(value) => form.setData('new_baseline', value)}
                 >
                     <Input placeholder="e.g. Scratch" />
-                    <FieldError>{props.errors.new_baseline}</FieldError>
+                    <FieldError>{form.errors.new_baseline}</FieldError>
                 </TextField>
             )}
-            {props.errors.baseline_id && <p className="text-danger text-sm">{props.errors.baseline_id}</p>}
+            {form.errors.baseline_id && <p className="text-sm text-danger">{form.errors.baseline_id}</p>}
         </div>
     );
 }
 
-type FormFields = { [key: string]: string | number };
+type TextFieldName = 'played_on' | 'course_name' | 'tees' | 'handicap_index' | 'course_handicap' | 'par';
 
 function Field(props: {
-    form: { data: FormFields; errors: Partial<Record<string, string>>; setData: (key: never, value: string) => void };
-    name: string;
+    form: RoundForm;
+    name: TextFieldName;
     label: string;
     type?: string;
     inputMode?: 'decimal' | 'numeric';
@@ -319,12 +526,41 @@ function Field(props: {
             inputMode={props.inputMode}
             isRequired={props.isRequired}
             isInvalid={name in form.errors}
-            value={String(form.data[name] ?? '')}
-            onChange={(value) => form.setData(name as never, value)}
+            value={form.data[name]}
+            onChange={(value) => form.setData(name, value)}
         >
             <Label>{props.label}</Label>
             <Input />
             <FieldError>{form.errors[name]}</FieldError>
         </TextField>
+    );
+}
+
+/** A whole number (or one decimal) held as text in the form, typed with a keyboard. */
+function NumberInput(props: {
+    form: RoundForm;
+    name: 'score' | 'course_handicap' | 'handicap_index' | 'par';
+    label: string;
+    decimals?: number;
+    isRequired?: boolean;
+}) {
+    const { form, name } = props;
+    const value = form.data[name];
+
+    return (
+        <NumberField
+            name={name}
+            isRequired={props.isRequired}
+            isInvalid={name in form.errors}
+            formatOptions={{ maximumFractionDigits: props.decimals ?? 0, useGrouping: false }}
+            value={value === '' ? Number.NaN : Number(value)}
+            onChange={(number) => form.setData(name, Number.isNaN(number) ? '' : number.toFixed(props.decimals ?? 0))}
+        >
+            <Label>{props.label}</Label>
+            <NumberField.Group>
+                <NumberField.Input className="tabular-nums" />
+            </NumberField.Group>
+            <FieldError>{form.errors[name]}</FieldError>
+        </NumberField>
     );
 }

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Round extends Model
 {
@@ -44,6 +46,43 @@ class Round extends Model
     public function baseline(): BelongsTo
     {
         return $this->belongsTo(Baseline::class);
+    }
+
+    /**
+     * @return HasOne<RoundStats, $this>
+     */
+    public function stats(): HasOne
+    {
+        return $this->hasOne(RoundStats::class);
+    }
+
+    /**
+     * @return HasMany<RoundSgBand, $this>
+     */
+    public function sgBands(): HasMany
+    {
+        return $this->hasMany(RoundSgBand::class);
+    }
+
+    /**
+     * Replaces the Round's advanced stats and band values. A stat or band left
+     * empty isn't stored, and a Round with no stats keeps no stats row.
+     *
+     * @param  array<string, int|null>  $stats
+     * @param  array<string, string|null>  $bands  values by SG band id
+     */
+    public function saveAdvancedStats(array $stats, array $bands): void
+    {
+        if (array_filter($stats, fn ($value) => $value !== null) === []) {
+            $this->stats()->delete();
+        } else {
+            $this->stats()->updateOrCreate([], array_replace(array_fill_keys(RoundStats::FIELDS, null), $stats));
+        }
+
+        $this->sgBands()->delete();
+        foreach (array_filter($bands, fn ($value) => $value !== null) as $bandId => $value) {
+            $this->sgBands()->create(['sg_band_id' => $bandId, 'value' => $value]);
+        }
     }
 
     /** Summed in hundredths so float rounding never shows. */

@@ -77,6 +77,20 @@ sg_off_the_tee: string | null,
 sg_approach: string | null,
 sg_short_game: string | null,
 sg_putting: string | null,
+stats: RoundStatsData,
+bands: Record<string, string>,
+};
+export type RoundStatsData = {
+fairways_hit: number | null,
+fairways_missed_left: number | null,
+fairways_missed_right: number | null,
+penalties: number | null,
+approach_miss_long_percent: number | null,
+approach_miss_short_percent: number | null,
+approach_miss_left_percent: number | null,
+approach_miss_right_percent: number | null,
+up_and_downs_made: number | null,
+up_and_downs_attempted: number | null,
 };
 export type RoundSummaryData = {
 id: string,
@@ -86,7 +100,19 @@ holes: number,
 score: number,
 baseline: string,
 sg_total: string,
+sg_off_the_tee: string,
+sg_approach: string,
+sg_short_game: string,
+sg_putting: string,
+stats: RoundStatsData,
 };
+export type SgBandData = {
+id: string,
+sg_category: SgCategory,
+label: string,
+distance_group: string | null,
+};
+export type SgCategory = 'off_the_tee' | 'approach' | 'short_game' | 'putting';
 export type SignedInUserData = {
 id: string,
 email: string,
