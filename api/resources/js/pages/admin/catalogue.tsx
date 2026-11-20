@@ -64,13 +64,14 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
         }
     }
 
-    const listed = items.filter((item) => item.status === filter && name(item).toLowerCase().includes(search.trim().toLowerCase()));
+    const query = search.trim();
+    const listed = items.filter((item) => item.status === filter && name(item).toLowerCase().includes(query.toLowerCase()));
     const shown = selected ?? listed[0];
     const count = (status: GameStatus) => items.filter((item) => item.status === status).length;
 
     // Below WIDE the detail stacks under the list, so opening an item scrolls down to it.
     const detailRef = useRef<HTMLDivElement>(null);
-    const open = (id: string) => {
+    const openItem = (id: string) => {
         setSelectedId(id);
         if (!wide) {
             detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -98,9 +99,9 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                     <SearchField.ClearButton />
                 </SearchField.Group>
             </SearchField>
-            {listed.length === 0 && search.trim() ? (
+            {listed.length === 0 && query ? (
                 <div className="flex flex-col items-start gap-2 px-4 py-3">
-                    <p className="text-[13px] text-muted">No Games or Drills match “{search.trim()}”.</p>
+                    <p className="text-[13px] text-muted">No {filter} Games or Drills match “{query}”.</p>
                     <Button size="sm" variant="tertiary" onPress={() => setSearch('')}>
                         Clear search
                     </Button>
@@ -114,7 +115,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                             <button
                                 type="button"
                                 aria-current={item.id === shown?.id}
-                                onClick={() => open(item.id)}
+                                onClick={() => openItem(item.id)}
                                 className={`flex w-full items-center justify-between gap-3 rounded-[16px] px-4 py-3 text-left ${
                                     item.id === shown?.id ? 'bg-segment text-segment-foreground' : 'hover:bg-surface-secondary'
                                 }`}
@@ -167,7 +168,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                         <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2">
                             {draftItems.map((item) => (
                                 <li key={item.id}>
-                                    <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => open(item.id)} />
+                                    <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => openItem(item.id)} />
                                 </li>
                             ))}
                         </ul>
