@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SgCategory;
 use App\Models\Concerns\BelongsToGolfer;
 use Database\Factories\RoundFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -83,6 +84,18 @@ class Round extends Model
         foreach (array_filter($bands, fn ($value) => $value !== null) as $bandId => $value) {
             $this->sgBands()->create(['sg_band_id' => $bandId, 'value' => $value]);
         }
+    }
+
+    /** An SG Category's value in hundredths per 18 holes. */
+    public function sgPer18(SgCategory $category): int
+    {
+        return $this->per18($this->{"sg_{$category->value}"});
+    }
+
+    /** A Strokes Gained value from this Round in hundredths, doubled for a 9-hole Round so every Round counts per 18. */
+    public function per18(string $value): int
+    {
+        return (int) round($value * 100) * intdiv(18, $this->holes);
     }
 
     /** Summed in hundredths so float rounding never shows. */

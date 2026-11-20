@@ -1,4 +1,4 @@
-import { BookOpen, House, ListUl, Persons } from '@gravity-ui/icons';
+import { BookOpen, ChartLine, House, ListUl, Persons } from '@gravity-ui/icons';
 import type { ComponentType, SVGProps } from 'react';
 
 export type NavItem = {
@@ -16,6 +16,7 @@ export type NavItem = {
 export const golferNav: (NavItem & { tab: boolean })[] = [
     { label: 'Home', href: '/', icon: House, tab: true },
     { label: 'Rounds', href: '/rounds', icon: ListUl, tab: true },
+    { label: 'Trends', href: '/trends', icon: ChartLine, tab: true },
 ];
 
 /** Pages under Admin, each shown to whoever has its permission. */
