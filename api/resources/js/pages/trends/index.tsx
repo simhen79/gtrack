@@ -1,4 +1,4 @@
-import { Button, Card, Skeleton, ToggleButton, ToggleButtonGroup } from '@heroui/react';
+import { Button, Card, ListBox, Select, Skeleton, ToggleButton, ToggleButtonGroup } from '@heroui/react';
 import { formatSG, parseSG, SG_CATEGORIES } from '@gtrack/design';
 import type { BaselineData, SgBandTrendData, SgTrendData, TrendRoundData } from '@gtrack/types';
 import { Head, router } from '@inertiajs/react';
@@ -59,7 +59,7 @@ export default function Trends({ baselines, baseline_id, rounds, categories }: P
         key: sgCategoryKey(trend.category),
         trend,
     }));
-    const card = ({ key, trend }: (typeof trends)[number], size: 'grid' | 'big' | 'small') => (
+    const card = ({ key, trend }: (typeof trends)[number], size: CardSize) => (
         <TrendCard
             key={key}
             category={key}
@@ -79,20 +79,7 @@ export default function Trends({ baselines, baseline_id, rounds, categories }: P
             <Head title="Trends" />
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                 <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-12">
-                    <ToggleButtonGroup
-                        aria-label="Baseline"
-                        selectionMode="single"
-                        disallowEmptySelection
-                        className="w-max flex-wrap rounded-full bg-surface-secondary p-1"
-                        selectedKeys={baseline_id ? [baseline_id] : []}
-                        onSelectionChange={(keys) => pickBaseline(String([...keys][0]))}
-                    >
-                        {baselines.map((baseline) => (
-                            <ToggleButton key={baseline.id} id={baseline.id} className={SELECTED_SEGMENT}>
-                                {baseline.name}
-                            </ToggleButton>
-                        ))}
-                    </ToggleButtonGroup>
+                    <BaselinePicker baselines={baselines} value={baseline_id} onPick={pickBaseline} />
                     <div className="flex flex-wrap items-center gap-4">
                         <span className="text-[13px] text-muted">Per 18 holes, 9-hole Rounds count double</span>
                         <TrendLegend />
@@ -121,14 +108,63 @@ export default function Trends({ baselines, baseline_id, rounds, categories }: P
 
 Trends.layout = { title: 'Trends' } satisfies ShellProps;
 
+/** A segmented toggle for up to four Baselines, a Select beyond that. */
+function BaselinePicker({ baselines, value, onPick }: { baselines: BaselineData[]; value: string | null; onPick: (id: string) => void }) {
+    if (baselines.length > 4) {
+        return (
+            <Select aria-label="Baseline" className="w-64" value={value} onChange={(key) => key !== null && onPick(String(key))}>
+                <Select.Trigger>
+                    <Select.Value />
+                    <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover>
+                    <ListBox>
+                        {baselines.map((baseline) => (
+                            <ListBox.Item key={baseline.id} id={baseline.id} textValue={baseline.name}>
+                                {baseline.name}
+                            </ListBox.Item>
+                        ))}
+                    </ListBox>
+                </Select.Popover>
+            </Select>
+        );
+    }
+
+    return (
+        <ToggleButtonGroup
+            aria-label="Baseline"
+            selectionMode="single"
+            disallowEmptySelection
+            className="w-max flex-wrap rounded-full bg-surface-secondary p-1"
+            selectedKeys={value ? [value] : []}
+            onSelectionChange={(keys) => onPick(String([...keys][0]))}
+        >
+            {baselines.map((baseline) => (
+                <ToggleButton key={baseline.id} id={baseline.id} className={SELECTED_SEGMENT}>
+                    {baseline.name}
+                </ToggleButton>
+            ))}
+        </ToggleButtonGroup>
+    );
+}
+
+type CardSize = 'grid' | 'big' | 'small';
+
 const CHART_HEIGHT = { grid: 180, big: 300, small: 70 };
+
+/** Last 5 in `stat` and Last 20 smaller; the small cards under an expanded chart drop to `stat-sm`. */
+const LAST_VALUE_SIZE = {
+    grid: { last_5: 'text-[32px]', last_20: 'text-[16px]' },
+    big: { last_5: 'text-[32px]', last_20: 'text-[16px]' },
+    small: { last_5: 'text-[16px]', last_20: 'text-[13px]' },
+};
 
 type CardProps = {
     category: SgCategoryKey;
     trend: SgTrendData;
     rounds: TrendRoundData[];
     domain: [number, number];
-    size: 'grid' | 'big' | 'small';
+    size: CardSize;
     hovered: number | null;
     onHover: (index: number | null) => void;
     onExpand?: () => void;
@@ -145,7 +181,7 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
             <Card.Header className="flex flex-row flex-wrap items-center justify-between gap-3">
                 {size === 'big' ? <SgCategoryBadge category={category} /> : <SgCategoryBadge category={category} long />}
                 <span className="flex items-center gap-4">
-                    {size !== 'big' && <LastValues trend={trend} at={at} />}
+                    {size !== 'big' && <LastValues trend={trend} at={at} size={size} />}
                     {onExpand && (
                         <Button size="sm" variant="tertiary" onPress={onExpand}>
                             {size === 'big' ? 'Collapse' : 'Expand'}
@@ -160,7 +196,7 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
                             <h2 className="text-[28px] font-extrabold">{name}</h2>
                             <p className="text-[13px] text-muted">{roundLabel(rounds[at])}</p>
                         </div>
-                        <LastValues trend={trend} at={at} big />
+                        <LastValues trend={trend} at={at} size={size} />
                     </div>
                 )}
                 {size === 'grid' && <p className="mb-2 text-[13px] text-muted">{roundLabel(rounds[at])}</p>}
@@ -179,13 +215,13 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
     );
 }
 
-function LastValues({ trend, at, big = false }: { trend: SgTrendData; at: number; big?: boolean }) {
+function LastValues({ trend, at, size }: { trend: SgTrendData; at: number; size: CardSize }) {
     return (
-        <span className={big ? 'flex gap-8 text-right' : 'flex gap-4 text-[13px]'}>
+        <span className="flex items-start gap-4 text-right text-[13px]">
             {(['last_5', 'last_20'] as const).map((series) => (
-                <span key={series} className={big ? 'flex flex-col' : ''}>
-                    <span className="text-muted">{series === 'last_5' ? 'Last 5' : 'Last 20'} </span>
-                    <SgValue value={trend[series][at]} className={big ? 'text-[32px]' : ''} />
+                <span key={series} className="flex flex-col">
+                    <span className="text-muted">{series === 'last_5' ? 'Last 5' : 'Last 20'}</span>
+                    <SgValue value={trend[series][at]} className={LAST_VALUE_SIZE[size][series]} />
                 </span>
             ))}
         </span>
