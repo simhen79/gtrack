@@ -9,12 +9,14 @@ use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\EmailCodeController;
 use App\Http\Controllers\FallbackHandicapController;
 use App\Http\Controllers\RoundsController;
+use App\Http\Controllers\TrendsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'golfer.settings'])->group(function () {
     Route::inertia('/', 'home');
     Route::inertia('/settings', 'settings/index');
     Route::resource('rounds', RoundsController::class)->except('show');
+    Route::get('/trends', [TrendsController::class, 'index']);
 });
 
 Route::middleware('auth')->group(function () {

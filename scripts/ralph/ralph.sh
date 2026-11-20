@@ -4,7 +4,7 @@
 #
 #   ralph.sh queue  1           read the map's tickets from GitHub and show what build would do
 #   ralph.sh build  1 [max]     build the approved tickets down the chain, then run the retro
-#   ralph.sh ticket 22          build one ticket on its own, then run the retro
+#   ralph.sh ticket 66 67 60    build these tickets in order, each on its own, then run the retro
 #   ralph.sh retry  1 22        let build try a failed ticket again
 #   ralph.sh retro  1           re-run the retro over every session so far
 #   ralph.sh status 1           show the queue as last read
@@ -64,6 +64,57 @@ use_state() {
 
 log() { printf '[ralph %s] %s\n' "$(date +%H:%M:%S)" "$*" >&2; }
 TAB="$(printf '\t')"
+
+# What a build or ticket run leaves waiting on you. It ends with a "Waiting on you" summary and
+# a macOS notification, whatever stopped it, so a stop never hides in the middle of the log.
+WAITING=""   # one line per ticket: a draft PR to review, or why the chain stopped there
+STOPPED=""   # the first thing a run stopped at, when it did
+STOPS=0      # how many it stopped at: a ticket list can stop at several
+PROTO_LABEL="${RALPH_PROTO_LABEL:-needs-prototype}"
+
+# waiting_on_you NUM WHAT: logs WHAT and keeps it for the summary.
+waiting_on_you() {
+  log "#$1 $2"
+  WAITING="$WAITING  #$1 $(field "$1" 6): $2
+"
+}
+
+# stopped_at NUM WHY: the chain stops at NUM until you do WHY.
+stopped_at() {
+  waiting_on_you "$1" "$2"
+  note_stop "Stopped at #$1: $2"
+}
+
+note_stop() {
+  [ -n "$STOPPED" ] || STOPPED="$1"
+  STOPS=$((STOPS + 1))
+}
+
+# notify TITLE MESSAGE: a macOS notification. Both go in as arguments, never as AppleScript.
+notify() {
+  command -v osascript >/dev/null 2>&1 || return 0
+  osascript -e 'on run argv' \
+    -e 'display notification (item 2 of argv) with title "Ralph" subtitle (item 1 of argv) sound name "Glass"' \
+    -e 'end run' "$1" "$2" >/dev/null 2>&1 || true
+}
+
+# finish: the EXIT trap of build and ticket.
+finish() {
+  local status=$?
+  if [ -n "$WAITING" ]; then
+    printf '\n=== Waiting on you ===\n%s\n' "$WAITING" >&2
+  fi
+  if [ -n "$STOPPED" ]; then
+    if [ "$STOPS" -gt 1 ]; then notify "Waiting on you: $STOPS stops" "$STOPPED"; else notify "Waiting on you" "$STOPPED"; fi
+  elif [ "$status" -ne 0 ]; then
+    notify "Stopped with an error" "ralph.sh $MODE $MAP exited with $status; see the terminal"
+  elif [ -n "$WAITING" ]; then
+    notify "Finished" "Draft PRs to review: $(printf '%s' "$WAITING" | grep -c '^')"
+  else
+    notify "Finished" "ralph.sh $MODE $MAP: nothing new to build"
+  fi
+}
+case "$MODE" in build | ticket) trap finish EXIT ;; esac
 
 render() {   # render <prompt-file> NAME value ...: fills each {{NAME}}
   local text
@@ -325,12 +376,19 @@ refresh_queue() {
 # needs_prototype NUM: true (and says why) when NUM's Design section asks for a prototype
 # first but the ticket names no prototype/ branch that exists on origin. Such a screen is built
 # from a prototype a person has driven (/mattpocock-skills:prototype), not from a guess.
+# The ticket carries the PROTO_LABEL label while it waits, so the board shows it too.
 needs_prototype() {
   local proto
   [ "$(field "$1" 8)" = yes ] || return 1
   proto="$(field "$1" 10)"
-  if [ -n "$proto" ] && git ls-remote --exit-code -q --heads origin "$proto" >/dev/null 2>&1; then return 1; fi
-  log "#$1 asks for a prototype first, but ${proto:+its branch $proto is not on origin}${proto:-it names no prototype/ branch}: run /mattpocock-skills:prototype, push its prototype/ branch, and name the branch and the verdict on the ticket"
+  if [ -n "$proto" ] && git ls-remote --exit-code -q --heads origin "$proto" >/dev/null 2>&1; then
+    gh issue edit "$1" --remove-label "$PROTO_LABEL" >/dev/null 2>&1 || true
+    return 1
+  fi
+  gh label create "$PROTO_LABEL" --color FBCA04 \
+    --description "Ralph is waiting for a prototype/ branch and its verdict on this ticket" >/dev/null 2>&1 || true
+  gh issue edit "$1" --add-label "$PROTO_LABEL" >/dev/null || log "#$1: could not add the $PROTO_LABEL label"
+  stopped_at "$1" "needs a prototype: ${proto:+its branch $proto is not on origin}${proto:-it names no prototype/ branch}. Run /mattpocock-skills:prototype, push its prototype/ branch, and name the branch and the verdict in a comment on the ticket"
 }
 
 # read_recently FILE: true when FILE is non-empty and was written under 10 minutes ago.
@@ -434,7 +492,7 @@ build_ticket() {
   url="$(gh pr create --draft --base "$base_branch" --head "$branch" \
     --title "$title" --body "$body")" || return 1
   set_field "$num" 2 pr-open
-  log "#$num: draft PR $url"
+  waiting_on_you "$num" "draft PR $url to review and merge"
   move_on_board "$num" "In Review" || log "#$num: could not move it to In Review on project $PROJECT"
   { printf 'The Ralph loop built this ticket: draft PR %s, on branch `%s`.\n\nThe loop'"'"'s own gates:\n\n' "$url" "$branch"
     gate_summary "$num"
@@ -443,16 +501,41 @@ build_ticket() {
   sbx stop "$sandbox" </dev/null >/dev/null 2>&1 || true
 }
 
-# cmd_ticket NUM: builds one ticket on its own, whether or not it belongs to a map. Running the
+# cmd_ticket NUM...: builds each ticket in the order given, then runs the retro once per map.
+# A ticket that stops or fails doesn't stop the others; one that a stopped ticket blocks stops
+# at its blocker check. Exits 1 when any ticket stopped or failed. ticket_one is called bare,
+# never in an `||`, so that errexit still ends the run on an unexpected error.
+cmd_ticket() {
+  local num maps=" "
+  for num in "$@"; do
+    printf '%s' "$num" | grep -Eq '^[0-9]+$' || { log "'$num' is not an issue number; skipped"; note_stop "'$num' is not an issue number"; continue; }
+    ticket_one "$num"
+    # ticket_one sets MAP and STATE to the ticket's map; remember it for the retro.
+    if [ -n "$ATTEMPTED" ]; then
+      case "$maps" in *" $MAP "*) ;; *) maps="$maps$MAP " ;; esac
+    fi
+    ATTEMPTED=""
+  done
+  for MAP in $maps; do
+    use_state "$MAP"
+    cmd_status
+    cmd_retro
+  done
+  [ -z "$STOPPED" ]
+}
+
+# ticket_one NUM: builds one ticket on its own, whether or not it belongs to a map. Running the
 # command is the approval, so it only has to be open. Its progress is kept with its map's, so a
 # map build later sees it. It stacks on a blocker's open loop branch when it has one, and
-# refuses while any other blocker is open.
-cmd_ticket() {
+# refuses while any other blocker is open. Sets ATTEMPTED when it started a build. A stop is
+# recorded by stopped_at and returns 0, so the caller carries on with the next ticket.
+ATTEMPTED=""
+ticket_one() {
   local num="$1" json row map local_state bnum bstate stacked="" base base_branch
   json="$(gh api graphql -F owner="$OWNER" -F name="$NAME" -F num="$num" -f query="
     query(\$owner: String!, \$name: String!, \$num: Int!) { repository(owner: \$owner, name: \$name) {
       issue(number: \$num) { $ISSUE_FIELDS parent { number body } } } }")"
-  [ "$(printf '%s' "$json" | jq -r '.data.repository.issue != null')" = true ] || { log "issue #$num not found"; exit 1; }
+  [ "$(printf '%s' "$json" | jq -r '.data.repository.issue != null')" = true ] || { log "issue #$num not found"; note_stop "#$num not found"; return 0; }
   map="$(printf '%s' "$json" | jq -r '.data.repository.issue.parent.number // empty')"
   MAP="${map:-$num}"
   use_state "$MAP"
@@ -478,11 +561,11 @@ cmd_ticket() {
     set_field "$num" 10 "$(printf '%s' "$row" | cut -f8)"
   fi
   case "$local_state" in
-    pr-open) log "#$num already has a draft PR from the loop"; exit 0 ;;
-    built | failed) log "#$num is $local_state; once the cause is fixed: ralph.sh retry $MAP $num"; exit 1 ;;
+    pr-open) log "#$num already has a draft PR from the loop"; return 0 ;;
+    built | failed) stopped_at "$num" "is $local_state; once the cause is fixed: ralph.sh retry $MAP $num"; return 0 ;;
   esac
-  if [ "$(field "$num" 3)" = CLOSED ] && [ "$local_state" = new ]; then log "#$num is closed; nothing to build"; exit 0; fi
-  if [ "$local_state" = new ] && needs_prototype "$num"; then exit 1; fi
+  if [ "$(field "$num" 3)" = CLOSED ] && [ "$local_state" = new ]; then log "#$num is closed; nothing to build"; return 0; fi
+  if [ "$local_state" = new ] && needs_prototype "$num"; then return 0; fi
 
   git fetch -q origin --prune
   while read -r bnum; do
@@ -491,9 +574,9 @@ cmd_ticket() {
     case "$bstate" in
       built | pr-open)
         [ "$(pr_state "$(field "$bnum" 9)")" != MERGED ] || continue
-        [ -z "$stacked" ] || { log "#$num is blocked by two unmerged loop branches; merge one first"; exit 1; }
+        [ -z "$stacked" ] || { stopped_at "$num" "is blocked by two unmerged loop branches; merge one first"; return 0; }
         stacked="$(field "$bnum" 9)" ;;
-      *) log "#$num is blocked by #$bnum, which is open (and was not built by this loop for map #$MAP)"; exit 1 ;;
+      *) stopped_at "$num" "is blocked by #$bnum, which is open (and was not built by this loop for map #$MAP)"; return 0 ;;
     esac
   done < <(printf '%s' "$json" | jq -r '.data.repository.issue.blockedBy.nodes[] | select(.state == "OPEN") | .number')
   if [ -n "$stacked" ]; then
@@ -505,15 +588,11 @@ cmd_ticket() {
   fi
 
   log "=== #$num on $base_branch ==="
-  if build_ticket "$num" "$base" "$base_branch" </dev/null; then
-    cmd_status
-    cmd_retro
-  else
+  ATTEMPTED=yes
+  if ! build_ticket "$num" "$base" "$base_branch" </dev/null; then
     set_field "$num" 2 failed
-    log "#$num failed"
-    cmd_status
-    cmd_retro
-    exit 1
+    stopped_at "$num" "failed; its logs are in $STATE/logs/. Fix the cause, then: ralph.sh retry $MAP $num"
+    return 0
   fi
 }
 
@@ -542,16 +621,18 @@ cmd_build() {
           base_branch="$branch"
         fi
         continue ;;
-      failed) log "#$num failed last time; fix the cause, then: ralph.sh retry $MAP $num"; break ;;
+      failed) stopped_at "$num" "failed last time; fix the cause, then: ralph.sh retry $MAP $num"; break ;;
       retry) ;;
       new)
         if [ "$state" = CLOSED ]; then continue; fi
         if [ "$approved" != yes ]; then
-          log "#$num has no '$READY' label; add it to approve the ticket. Stopping here, because the tickets after it build on it"
+          stopped_at "$num" "has no '$READY' label; add it to approve the ticket"
+          log "Stopping here, because the tickets after it build on it"
           break
         fi
         if [ "$assigned" = yes ]; then
-          log "#$num is assigned, so another session has claimed it; unassign it to let the loop build it. Stopping here"
+          stopped_at "$num" "is assigned, so another session has claimed it; unassign it to let the loop build it"
+          log "Stopping here"
           break
         fi
         if needs_prototype "$num"; then log "Stopping here, because the tickets after it build on it"; break; fi ;;
@@ -564,7 +645,8 @@ cmd_build() {
       base_branch="$branch"
     else
       set_field "$num" 2 failed
-      log "#$num failed; stopping the chain"
+      stopped_at "$num" "failed; its logs are in $STATE/logs/. Fix the cause, then: ralph.sh retry $MAP $num"
+      log "Stopping the chain"
       break
     fi
   done < <(cat "$QUEUE")
@@ -601,7 +683,7 @@ cmd_clean() {
 case "$MODE" in
   queue) cmd_queue ;;
   build) cmd_build "${3:-999}" ;;
-  ticket) cmd_ticket "$MAP" ;;
+  ticket) shift; cmd_ticket "$@" ;;
   retry) shift 2; cmd_retry "$@" ;;
   retro) cmd_retro ;;
   status) cmd_status ;;

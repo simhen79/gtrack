@@ -182,10 +182,27 @@ sg_category: SgCategory,
 label: string,
 distance_group: string | null,
 };
+export type SgBandTrendData = {
+id: string,
+label: string,
+value: string | null,
+};
 export type SgCategory = 'off_the_tee' | 'approach' | 'short_game' | 'putting';
+export type SgTrendData = {
+category: SgCategory,
+last_5: string[],
+last_20: string[],
+bands: SgBandTrendData[],
+};
 export type SignedInUserData = {
 id: string,
 email: string,
+};
+export type TrendRoundData = {
+id: string,
+played_on: string,
+course_name: string,
+holes: number,
 };
 export type VariationData = {
 id: string,

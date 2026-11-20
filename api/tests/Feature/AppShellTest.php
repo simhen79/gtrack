@@ -21,7 +21,7 @@ it('gives every page in the shell the account it shows, without the Admin sectio
     $round = Round::factory()->create();
     app(CurrentGolfer::class)->clear();
 
-    foreach (['/', '/rounds', '/rounds/create', "/rounds/{$round->id}/edit"] as $url) {
+    foreach (['/', '/rounds', '/rounds/create', "/rounds/{$round->id}/edit", '/trends'] as $url) {
         $this->actingAs($golfer)->get($url)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
