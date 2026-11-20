@@ -91,17 +91,20 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                     save();
                 }}
             >
-                {/* The save action stays in view: a bar above the form that sticks to the top as the admin scrolls. */}
-                <div className="sticky top-2 z-20 flex gap-2 rounded-[24px] bg-surface p-3 [box-shadow:var(--overlay-shadow)] md:top-4">
-                    <Button type="submit" size="lg" className="flex-1 sm:flex-none" isPending={form.processing}>
-                        Save Drill
-                    </Button>
-                    <Link
-                        href={drill ? `/admin/catalogue?item=${drill.id}` : '/admin/catalogue'}
-                        className={buttonVariants({ variant: 'tertiary', size: 'lg', className: 'no-underline hover:no-underline' })}
-                    >
-                        Cancel
-                    </Link>
+                {/* The save action stays in view: a bar above the form that sticks to the top as the admin scrolls.
+                    It sticks at 0 inside a strip of page background, so the form never shows through above it. */}
+                <div className="sticky top-0 z-20 -mt-2 bg-(--background) pt-2 md:-mt-4 md:pt-4">
+                    <div className="flex gap-2 rounded-[24px] bg-surface p-3 [box-shadow:var(--overlay-shadow)]">
+                        <Button type="submit" size="lg" className="flex-1 sm:flex-none" isPending={form.processing}>
+                            Save Drill
+                        </Button>
+                        <Link
+                            href={drill ? `/admin/catalogue?item=${drill.id}` : '/admin/catalogue'}
+                            className={buttonVariants({ variant: 'tertiary', size: 'lg', className: 'no-underline hover:no-underline' })}
+                        >
+                            Cancel
+                        </Link>
+                    </div>
                 </div>
 
                 {form.hasErrors && (
