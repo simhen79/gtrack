@@ -99,3 +99,17 @@ it('needs a Drill to have balls or estimated minutes', function () {
     $this->actingAs(admin())->post('/admin/drills', drillFields(['balls' => null]))
         ->assertSessionHasErrors('balls');
 });
+
+it('returns a Drill that wasn’t saved to its form, with each field’s own error', function () {
+    $this->actingAs(admin())->post('/admin/drills', drillFields());
+    $id = $this->get('/admin/catalogue')->inertiaProps('drills.0.id');
+
+    $this->from("/admin/drills/{$id}/edit")->followingRedirects()
+        ->put("/admin/drills/{$id}", drillFields(['name' => '', 'balls' => null]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/drill')
+            ->where('drill.id', $id)
+            ->has('errors.name')
+            ->has('errors.balls')
+            ->missing('errors.setup'));
+});
