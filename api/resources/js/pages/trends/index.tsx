@@ -10,9 +10,12 @@ import { TrendChart, TrendLegend } from '../../components/trend-chart';
 import type { ShellProps } from '../../layouts/app-shell';
 import { useMediaQuery } from '../../lib/media';
 
+type TrendWindow = '5' | '10';
+
 type Props = {
     baselines: BaselineData[];
     baseline_id: string | null;
+    window: TrendWindow;
     rounds: TrendRoundData[];
     categories: SgTrendData[];
 };
@@ -22,14 +25,20 @@ const WIDE = '(min-width: 64rem)';
 
 const SELECTED_SEGMENT = 'data-[selected=true]:bg-segment data-[selected=true]:text-segment-foreground';
 
+/** How many of the most recent Rounds to show, as the server takes it in `?window=`. */
+const WINDOWS: { id: TrendWindow; label: string }[] = [
+    { id: '5', label: 'Last 5' },
+    { id: '10', label: 'Last 10' },
+];
+
 /**
- * Strokes Gained trends on one Baseline: a chart per SG Category with its rolling Last 5 and
- * Last 20, per 18 holes. At desktop width one chart can be expanded, with its distance bands.
+ * Strokes Gained trends on one Baseline: a chart per SG Category showing the last 5 or 10 Rounds,
+ * against the last 20 Rounds' average, per 18 holes. At desktop width one chart can be expanded,
+ * with its distance bands.
  */
-export default function Trends({ baselines, baseline_id, rounds, categories }: Props) {
+export default function Trends({ baselines, baseline_id, window, rounds, categories }: Props) {
     const wide = useMediaQuery(WIDE);
     const [expanded, setExpanded] = useState<SgCategoryKey | null>(null);
-    const [hovered, setHovered] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
 
     if (rounds.length === 0 && baselines.length === 0) {
@@ -41,10 +50,11 @@ export default function Trends({ baselines, baseline_id, rounds, categories }: P
         );
     }
 
-    const pickBaseline = (id: string) =>
+    const recentLabel = WINDOWS.find(({ id }) => id === window)!.label;
+    const visit = (query: { baseline?: string; window?: TrendWindow }) =>
         router.get(
             '/trends',
-            { baseline: id },
+            { ...(baseline_id && { baseline: baseline_id }), window, ...query },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -65,10 +75,9 @@ export default function Trends({ baselines, baseline_id, rounds, categories }: P
             category={key}
             trend={trend}
             rounds={rounds}
+            recentLabel={recentLabel}
             domain={domain}
             size={size}
-            hovered={hovered}
-            onHover={setHovered}
             onExpand={wide ? () => setExpanded(shown === key ? null : key) : undefined}
             className={size === 'big' ? 'lg:col-span-12' : size === 'small' ? 'lg:col-span-4' : 'lg:col-span-6'}
         />
@@ -79,7 +88,10 @@ export default function Trends({ baselines, baseline_id, rounds, categories }: P
             <Head title="Trends" />
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
                 <div className="flex flex-wrap items-center justify-between gap-3 lg:col-span-12">
-                    <BaselinePicker baselines={baselines} value={baseline_id} onPick={pickBaseline} />
+                    <div className="flex flex-wrap items-center gap-3">
+                        <BaselinePicker baselines={baselines} value={baseline_id} onPick={(baseline) => visit({ baseline })} />
+                        <WindowPicker value={window} onPick={(window) => visit({ window })} />
+                    </div>
                     <div className="flex flex-wrap items-center gap-4">
                         <span className="text-[13px] text-muted">Per 18 holes, 9-hole Rounds count double</span>
                         <TrendLegend />
@@ -148,32 +160,50 @@ function BaselinePicker({ baselines, value, onPick }: { baselines: BaselineData[
     );
 }
 
+/** How many of the most recent Rounds the charts show; the Last 20 average stays as the dashed line to compare. */
+function WindowPicker({ value, onPick }: { value: TrendWindow; onPick: (window: TrendWindow) => void }) {
+    return (
+        <ToggleButtonGroup
+            aria-label="Average over"
+            selectionMode="single"
+            disallowEmptySelection
+            className="w-max flex-wrap rounded-full bg-surface-secondary p-1"
+            selectedKeys={[value]}
+            onSelectionChange={(keys) => onPick([...keys][0] as TrendWindow)}
+        >
+            {WINDOWS.map(({ id, label }) => (
+                <ToggleButton key={id} id={id} className={SELECTED_SEGMENT}>
+                    {label}
+                </ToggleButton>
+            ))}
+        </ToggleButtonGroup>
+    );
+}
+
 type CardSize = 'grid' | 'big' | 'small';
 
 const CHART_HEIGHT = { grid: 180, big: 300, small: 70 };
 
-/** Last 5 in `stat` and Last 20 smaller; the small cards under an expanded chart drop to `stat-sm`. */
+/** The shown Rounds' average in `stat` and Last 20 smaller; the small cards under an expanded chart drop to `stat-sm`. */
 const LAST_VALUE_SIZE = {
-    grid: { last_5: 'text-[32px]', last_20: 'text-[16px]' },
-    big: { last_5: 'text-[32px]', last_20: 'text-[16px]' },
-    small: { last_5: 'text-[16px]', last_20: 'text-[13px]' },
+    grid: { recent: 'text-[32px]', last_20: 'text-[16px]' },
+    big: { recent: 'text-[32px]', last_20: 'text-[16px]' },
+    small: { recent: 'text-[16px]', last_20: 'text-[13px]' },
 };
 
 type CardProps = {
     category: SgCategoryKey;
     trend: SgTrendData;
     rounds: TrendRoundData[];
+    recentLabel: string;
     domain: [number, number];
     size: CardSize;
-    hovered: number | null;
-    onHover: (index: number | null) => void;
     onExpand?: () => void;
     className: string;
 };
 
-/** One SG Category: its Last 5 and Last 20 at the hovered Round, or the latest, over its chart. */
-function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, onExpand, className }: CardProps) {
-    const at = hovered ?? rounds.length - 1;
+/** One SG Category: the shown Rounds' and Last 20 averages over its chart. */
+function TrendCard({ category, trend, rounds, recentLabel, domain, size, onExpand, className }: CardProps) {
     const name = SG_CATEGORIES.find(({ key }) => key === category)!.name;
 
     return (
@@ -181,7 +211,7 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
             <Card.Header className="flex flex-row flex-wrap items-center justify-between gap-3">
                 {size === 'big' ? <SgCategoryBadge category={category} /> : <SgCategoryBadge category={category} long />}
                 <span className="flex items-center gap-4">
-                    {size !== 'big' && <LastValues trend={trend} at={at} size={size} />}
+                    {size !== 'big' && <LastValues trend={trend} size={size} recentLabel={recentLabel} />}
                     {onExpand && (
                         <Button size="sm" variant="tertiary" onPress={onExpand}>
                             {size === 'big' ? 'Collapse' : 'Expand'}
@@ -192,14 +222,10 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
             <Card.Content>
                 {size === 'big' && (
                     <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-                        <div>
-                            <h2 className="text-[28px] font-extrabold">{name}</h2>
-                            <p className="text-[13px] text-muted">{roundLabel(rounds[at])}</p>
-                        </div>
-                        <LastValues trend={trend} at={at} size={size} />
+                        <h2 className="text-[28px] font-extrabold">{name}</h2>
+                        <LastValues trend={trend} size={size} recentLabel={recentLabel} />
                     </div>
                 )}
-                {size === 'grid' && <p className="mb-2 text-[13px] text-muted">{roundLabel(rounds[at])}</p>}
                 <TrendChart
                     category={category}
                     trend={trend}
@@ -207,7 +233,6 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
                     domain={domain}
                     height={CHART_HEIGHT[size]}
                     axis={size !== 'small'}
-                    onHover={onHover}
                 />
                 {size === 'big' && trend.bands.some(({ value }) => value !== null) && <BandChart bands={trend.bands} />}
             </Card.Content>
@@ -215,13 +240,13 @@ function TrendCard({ category, trend, rounds, domain, size, hovered, onHover, on
     );
 }
 
-function LastValues({ trend, at, size }: { trend: SgTrendData; at: number; size: CardSize }) {
+function LastValues({ trend, size, recentLabel }: { trend: SgTrendData; size: CardSize; recentLabel: string }) {
     return (
         <span className="flex items-start gap-4 text-right text-[13px]">
-            {(['last_5', 'last_20'] as const).map((series) => (
+            {(['recent', 'last_20'] as const).map((series) => (
                 <span key={series} className="flex flex-col">
-                    <span className="text-muted">{series === 'last_5' ? 'Last 5' : 'Last 20'}</span>
-                    <SgValue value={trend[series][at]} className={LAST_VALUE_SIZE[size][series]} />
+                    <span className="text-muted">{series === 'recent' ? recentLabel : 'Last 20'}</span>
+                    <SgValue value={trend[series]} className={LAST_VALUE_SIZE[size][series]} />
                 </span>
             ))}
         </span>
@@ -281,13 +306,8 @@ function BandTick({ x, y, label, value }: { x: number; y: number; label: string;
     );
 }
 
-function roundLabel(round: TrendRoundData): string {
-    const played = new Date(`${round.played_on}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-    return `${played} · ${round.course_name} · ${round.holes} holes`;
-}
-
 /** One y-scale for all four charts, at least +2 to −4, widened to fit every value. */
 function sharedDomain(categories: SgTrendData[]): [number, number] {
-    const values = categories.flatMap((trend) => [...trend.last_5, ...trend.last_20]).map((value) => parseSG(value) ?? 0);
+    const values = categories.flatMap((trend) => [...trend.values, trend.last_20 ?? '0']).map((value) => parseSG(value) ?? 0);
     return [Math.min(-4, Math.floor(Math.min(...values))), Math.max(2, Math.ceil(Math.max(...values)))];
 }

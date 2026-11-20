@@ -54,27 +54,30 @@ it('counts a 9-hole Round per 18', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('trends/index')
             ->where('categories.3.category', 'putting')
-            ->where('categories.3.last_5', ['-1.60'])
-            ->where('categories.3.last_20', ['-1.60']));
+            ->where('categories.3.values', ['-1.60'])
+            ->where('categories.3.recent', '-1.60')
+            ->where('categories.3.last_20', '-1.60'));
 });
 
-it('sends each SG Category a 5-Round and a 20-Round rolling series, a point per Round', function () {
+it('sends the last 5 Rounds by default, each SG Category with their values, their average and the last 20 Rounds\' average', function () {
     $golfer = golfer();
     $scratch = baselineOf($golfer, 'Scratch', default: true);
     // Putting −0.01 in the first Round, −0.02 in the second … −0.25 in the 25th.
-    roundsOn($golfer, $scratch, array_map(fn (int $i) => sprintf('-0.%02d', $i), range(1, 25)));
+    $rounds = roundsOn($golfer, $scratch, array_map(fn (int $i) => sprintf('-0.%02d', $i), range(1, 25)));
 
     $this->actingAs($golfer)->get('/trends')->assertInertia(fn (Assert $page) => $page
-        ->has('rounds', 25)
-        ->where('rounds.0.played_on', '2026-10-01')
-        ->where('rounds.24.played_on', '2026-10-25')
+        ->where('window', '5')
+        ->has('rounds', 5)
+        ->where('rounds.0.played_on', '2026-10-21')
+        ->where('rounds.4.played_on', '2026-10-25')
+        ->where('rounds.4.course_name', $rounds[24]->course_name)
+        ->where('rounds.4.score', $rounds[24]->score)
         ->where('categories', fn ($categories) => collect($categories)->pluck('category')->all() === ['off_the_tee', 'approach', 'short_game', 'putting']
-            && collect($categories)->every(fn ($trend) => count($trend['last_5']) === 25 && count($trend['last_20']) === 25))
-        ->where('categories.0.last_5.24', '0.00')
-        ->where('categories.3.last_5.5', '-0.04')
-        ->where('categories.3.last_5.24', '-0.23')
-        ->where('categories.3.last_20.19', '-0.11')
-        ->where('categories.3.last_20.24', '-0.16'));
+            && collect($categories)->every(fn ($trend) => count($trend['values']) === 5))
+        ->where('categories.0.recent', '0.00')
+        ->where('categories.3.values', ['-0.21', '-0.22', '-0.23', '-0.24', '-0.25'])
+        ->where('categories.3.recent', '-0.23')
+        ->where('categories.3.last_20', '-0.16'));
 });
 
 it('combines only the picked Baseline\'s Rounds, starting with the default Baseline', function () {
@@ -91,12 +94,13 @@ it('combines only the picked Baseline\'s Rounds, starting with the default Basel
         ])
         ->where('baseline_id', $scratch->id)
         ->has('rounds', 2)
-        ->where('categories.3.last_5', ['-1.00', '-1.50']));
+        ->where('categories.3.values', ['-1.00', '-2.00'])
+        ->where('categories.3.recent', '-1.50'));
 
     $this->get("/trends?baseline={$tour->id}")->assertInertia(fn (Assert $page) => $page
         ->where('baseline_id', $tour->id)
         ->has('rounds', 1)
-        ->where('categories.3.last_5', ['-3.00']));
+        ->where('categories.3.values', ['-3.00']));
 });
 
 it('averages the Rounds available when there are fewer than a window', function () {
@@ -105,8 +109,9 @@ it('averages the Rounds available when there are fewer than a window', function 
     roundsOn($golfer, $scratch, ['-1.00', '0.50', '-2.00']);
 
     $this->actingAs($golfer)->get('/trends')->assertInertia(fn (Assert $page) => $page
-        ->where('categories.3.last_5', ['-1.00', '-0.25', '-0.83'])
-        ->where('categories.3.last_20', ['-1.00', '-0.25', '-0.83']));
+        ->where('categories.3.values', ['-1.00', '0.50', '-2.00'])
+        ->where('categories.3.recent', '-0.83')
+        ->where('categories.3.last_20', '-0.83'));
 });
 
 it('sends empty trends to a golfer with no Rounds', function () {
@@ -115,8 +120,9 @@ it('sends empty trends to a golfer with no Rounds', function () {
         ->where('baselines', [])
         ->where('baseline_id', null)
         ->where('rounds', [])
-        ->where('categories.0.last_5', [])
-        ->where('categories.3.last_20', []));
+        ->where('categories.0.values', [])
+        ->where('categories.0.recent', null)
+        ->where('categories.3.last_20', null));
 });
 
 it('keeps a golfer\'s Baseline out of another golfer\'s trends', function () {
@@ -151,4 +157,24 @@ it('averages each Approach and Putting distance band per 18 over the last 20 Rou
         ->has('categories.2.bands', 0)
         ->has('categories.3.bands', 11)
         ->where('categories.3.bands.10.label', '10+ m'));
+});
+
+it('sends the last 10 Rounds when the golfer picks 10', function () {
+    $golfer = golfer();
+    $scratch = baselineOf($golfer, 'Scratch', default: true);
+    roundsOn($golfer, $scratch, array_map(fn (int $i) => sprintf('-0.%02d', $i), range(1, 25)));
+
+    $this->actingAs($golfer)->get('/trends?window=10')->assertInertia(fn (Assert $page) => $page
+        ->where('window', '10')
+        ->has('rounds', 10)
+        ->where('rounds.0.played_on', '2026-10-16')
+        ->has('categories.3.values', 10)
+        ->where('categories.3.values.0', '-0.16')
+        ->where('categories.3.recent', '-0.21')
+        ->where('categories.3.last_20', '-0.16'));
+});
+
+it('refuses a window that isn\'t one', function () {
+    $this->actingAs(golfer())->get('/trends?window=7')->assertNotFound();
+    $this->get('/trends?window=all')->assertNotFound();
 });

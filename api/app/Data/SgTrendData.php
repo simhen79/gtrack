@@ -10,18 +10,20 @@ use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 /**
- * One SG Category's trend over a Baseline's Rounds: rolling per-18 averages,
- * one point per Round, oldest first.
+ * One SG Category over the golfer's most recent Rounds on a Baseline: each shown Round's
+ * per-18 value, oldest first, their average, and the last 20 Rounds' average to compare with.
  */
 #[TypeScript]
 class SgTrendData extends Data
 {
     public function __construct(
         public SgCategory $category,
-        /** @var array<int, string> */
-        public array $last_5,
-        /** @var array<int, string> */
-        public array $last_20,
+        /** @var array<int, string> one per shown Round, oldest first */
+        public array $values,
+        /** The shown Rounds' average; null with no Rounds. */
+        public ?string $recent,
+        /** The last 20 Rounds' average; null with no Rounds. */
+        public ?string $last_20,
         /** @var array<int, SgBandTrendData> Approach and Putting only, over the last 20 Rounds */
         public array $bands,
     ) {}
@@ -29,35 +31,33 @@ class SgTrendData extends Data
     /**
      * @param  Collection<int, Round>  $rounds  oldest first, with their band values loaded
      * @param  Collection<int, SgBand>  $bands  every SG band, in order
+     * @param  int  $window  how many of the most recent Rounds to show
      */
-    public static function fromRounds(SgCategory $category, Collection $rounds, Collection $bands): self
+    public static function fromRounds(SgCategory $category, Collection $rounds, Collection $bands, int $window): self
     {
         $per18 = $rounds->map(fn (Round $round) => $round->sgPer18($category))->values()->all();
+        $shown = array_slice($per18, -$window);
         $last20 = $rounds->slice(-20);
 
         return new self(
             $category,
-            self::rolling($per18, 5),
-            self::rolling($per18, 20),
+            array_map(self::format(...), $shown),
+            self::mean($shown),
+            self::mean(array_slice($per18, -20)),
             $bands->where('sg_category', $category)
                 ->map(fn (SgBand $band) => SgBandTrendData::fromRounds($band, $last20))
                 ->values()->all(),
         );
     }
 
-    /**
-     * Each point averages the Round and those before it, up to `$window` Rounds,
-     * so the first points average the Rounds available.
-     *
-     * @param  array<int, int>  $hundredths
-     * @return array<int, string>
-     */
-    private static function rolling(array $hundredths, int $window): array
+    /** @param  array<int, int>  $hundredths */
+    private static function mean(array $hundredths): ?string
     {
-        return array_map(function (int $i) use ($hundredths, $window) {
-            $slice = array_slice($hundredths, max(0, $i - $window + 1), min($i + 1, $window));
+        return $hundredths === [] ? null : self::format(array_sum($hundredths) / count($hundredths));
+    }
 
-            return number_format(round(array_sum($slice) / count($slice)) / 100, 2, '.', '');
-        }, array_keys($hundredths));
+    private static function format(int|float $hundredths): string
+    {
+        return number_format(round($hundredths) / 100, 2, '.', '');
     }
 }

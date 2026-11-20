@@ -7,30 +7,29 @@ import type { SgCategoryKey } from './sg-category';
 /** Hovering one chart moves the marker on all four. */
 const SYNC_ID = 'sg-trends';
 
-type Point = { round: TrendRoundData; last_5: number; last_20: number };
+type Point = { round: TrendRoundData; value: number };
 
 type Props = {
     category: SgCategoryKey;
     trend: SgTrendData;
+    /** The Rounds shown, oldest first, one per value in `trend.values`. */
     rounds: TrendRoundData[];
     /** Shared by the four charts, so heights compare across SG Categories. */
     domain: [number, number];
     height: number;
     /** Grid and y-axis labels, for charts with room for them. */
     axis?: boolean;
-    /** The hovered Round's index, shared by the four charts; null when the pointer leaves. */
-    onHover: (index: number | null) => void;
 };
 
 /**
- * One SG Category's rolling Last 5 and Last 20 lines, a point per Round, with a zero line.
- * Colours are CSS variables, so the chart follows the theme.
+ * One SG Category's value in each shown Round, a dot per Round joined by a line, against a dashed
+ * Last 20 average and a zero line. Colours are CSS variables, so the chart follows the theme.
  */
-export function TrendChart({ category, trend, rounds, domain, height, axis = false, onHover }: Props) {
+export function TrendChart({ category, trend, rounds, domain, height, axis = false }: Props) {
+    const last20 = trend.last_20 === null ? null : parseSG(trend.last_20);
     const points: Point[] = rounds.map((round, i) => ({
         round,
-        last_5: parseSG(trend.last_5[i]) ?? 0,
-        last_20: parseSG(trend.last_20[i]) ?? 0,
+        value: parseSG(trend.values[i]) ?? 0,
     }));
 
     return (
@@ -39,10 +38,6 @@ export function TrendChart({ category, trend, rounds, domain, height, axis = fal
                 data={points}
                 syncId={SYNC_ID}
                 margin={{ top: 8, right: 8, bottom: 8, left: axis ? 0 : 8 }}
-                onMouseMove={(state) =>
-                    onHover(state.activeTooltipIndex === undefined || state.activeTooltipIndex === null ? null : Number(state.activeTooltipIndex))
-                }
-                onMouseLeave={() => onHover(null)}
             >
                 {axis && <CartesianGrid vertical={false} stroke="var(--separator)" strokeDasharray="4 4" />}
                 <XAxis dataKey={(point: Point) => point.round.id} hide />
@@ -58,23 +53,14 @@ export function TrendChart({ category, trend, rounds, domain, height, axis = fal
                     tickFormatter={(value: number) => formatSG(value)}
                 />
                 <ReferenceLine y={0} stroke="var(--muted)" strokeWidth={1.5} />
-                <Tooltip content={TrendTooltip} position={{ y: 0 }} cursor={{ stroke: 'var(--muted)', strokeDasharray: '4 4' }} isAnimationActive={false} />
+                <Tooltip content={TrendTooltip} offset={16} cursor={{ stroke: 'var(--muted)', strokeDasharray: '4 4' }} isAnimationActive={false} />
+                {last20 !== null && <ReferenceLine y={last20} stroke="var(--chart-bar)" strokeWidth={2} strokeDasharray="5 4" />}
                 <Line
-                    dataKey="last_20"
-                    name="Last 20"
-                    stroke="var(--chart-bar)"
-                    strokeWidth={2}
-                    strokeDasharray="5 4"
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                />
-                <Line
-                    dataKey="last_5"
-                    name="Last 5"
+                    dataKey="value"
+                    name="Round"
                     stroke={`var(--cat-${category})`}
                     strokeWidth={3}
-                    dot={false}
+                    dot={{ r: axis ? 3 : 1.5, fill: `var(--cat-${category})`, stroke: 'none' }}
                     activeDot={{
                         r: 5,
                         fill: `var(--cat-${category})`,
@@ -94,35 +80,43 @@ function ticks([min, max]: [number, number]): number[] {
     return Array.from({ length: Math.floor((max - from) / 2) + 1 }, (_, i) => from + i * 2);
 }
 
-/** The hovered Round's Last 5, signed; its date and Last 20 show in the card header. */
+/** The hovered Round: its value signed, then its date, course and score. */
 function TrendTooltip({ active, payload }: TooltipContentProps<ValueType, NameType>) {
     const point = payload?.[0]?.payload as Point | undefined;
     if (!active || !point) {
         return null;
     }
 
+    const played = new Date(`${point.round.played_on}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
     return (
-        <div className="rounded-[8px] bg-segment px-2 py-1 text-[13px] font-extrabold text-segment-foreground tabular-nums shadow-lg">
-            {formatSG(point.last_5)}
+        <div className="rounded-[8px] bg-segment px-2 py-1 text-[13px] text-segment-foreground shadow-lg">
+            <div className="font-extrabold tabular-nums">{formatSG(point.value)}</div>
+            <div>{played}</div>
+            <div>{point.round.course_name}</div>
+            <div className="tabular-nums">
+                Score {point.round.score} · {point.round.holes} holes
+            </div>
         </div>
     );
 }
 
-/** The key under the Baseline picker: Last 5 solid in the SG Category's colour, Last 20 dashed. */
+/** The key beside the pickers: each Round solid in the SG Category's colour, the Last 20 average dashed. */
 export function TrendLegend() {
     return (
         <div className="flex gap-4 text-[13px] text-muted">
             <span className="flex items-center gap-1.5">
                 <svg width="16" height="4" aria-hidden>
                     <line x1="0" x2="16" y1="2" y2="2" stroke="currentColor" strokeWidth="3" />
+                    <circle cx="8" cy="2" r="2" fill="currentColor" />
                 </svg>
-                Last 5
+                Round
             </span>
             <span className="flex items-center gap-1.5">
                 <svg width="16" height="4" aria-hidden>
                     <line x1="0" x2="16" y1="2" y2="2" stroke="var(--chart-bar)" strokeWidth="2" strokeDasharray="4 2" />
                 </svg>
-                Last 20
+                Last 20 average
             </span>
         </div>
     );
