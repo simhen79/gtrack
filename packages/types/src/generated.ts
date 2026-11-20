@@ -190,8 +190,9 @@ value: string | null,
 export type SgCategory = 'off_the_tee' | 'approach' | 'short_game' | 'putting';
 export type SgTrendData = {
 category: SgCategory,
-last_5: string[],
-last_20: string[],
+values: string[],
+recent: string | null,
+last_20: string | null,
 bands: SgBandTrendData[],
 };
 export type SignedInUserData = {
@@ -203,6 +204,7 @@ id: string,
 played_on: string,
 course_name: string,
 holes: number,
+score: number,
 };
 export type VariationData = {
 id: string,

@@ -15,10 +15,11 @@ class TrendRoundData extends Data
         public string $played_on,
         public string $course_name,
         public int $holes,
+        public int $score,
     ) {}
 
     public static function fromRound(Round $round): self
     {
-        return new self($round->id, $round->played_on->toDateString(), $round->course_name, $round->holes);
+        return new self($round->id, $round->played_on->toDateString(), $round->course_name, $round->holes, $round->score);
     }
 }

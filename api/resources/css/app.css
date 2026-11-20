@@ -8,3 +8,8 @@
 @source '../**/*.tsx';
 /* sgTone's classes live in the shared design helpers. */
 @source '../../../packages/design/src';
+
+/* Recharts makes each chart focusable for its arrow-key tooltip; show the ring for the keyboard, not a click. */
+.recharts-surface:focus:not(:focus-visible) {
+    outline: none;
+}
