@@ -21,6 +21,7 @@ A golf practice app: golfers log Rounds with Strokes Gained and get Practice Ses
 
 - Models holding a golfer's data use `BelongsToGolfer`. Its scope reads `CurrentGolfer` and throws when none is set (fail closed). Requests set it in middleware; jobs, tinker and test setup set it themselves.
 - An arch test treats every model as golfer-owned unless `api/tests/Arch/GolferOwnedTest.php` lists it as shared.
+- Golfer-owned tables cascade from `users`, and detail tables cascade from their parent; `api/tests/Arch/GolferDeletionTest.php` checks the schema and lists the exceptions.
 - Every golfer-data endpoint gets an `assertGolferIsolation` test. A second golfer sees a 404, never a 403.
 
 ## Tests
