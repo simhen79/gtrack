@@ -66,11 +66,7 @@ it('deletes every row the golfer owns and leaves shared rows and other golfers a
     $session = signInWithCode($golfer);
     phoneToken($golfer);
     $this->postJson('/api/login/code', ['email' => $golfer->email]); // a code they never used
-    $tablesWithUserId = DB::table('information_schema.columns')
-        ->where('table_schema', DB::getDatabaseName())
-        ->where('column_name', 'user_id')
-        ->pluck('table_name');
-    expect($tablesWithUserId->diff(array_keys(rowsOwnedBy($golfer)))->values()->all())
+    expect(tablesWithUserId()->diff(array_keys(rowsOwnedBy($golfer)))->values()->all())
         ->toBe([], 'Give the golfer a row in each of these tables in withGolferData().')
         ->and(rowsOwnedBy($golfer))->toHaveKeys(['personal_access_tokens', 'one_time_passwords', 'model_has_roles']);
     $otherRows = rowsOwnedBy($other);
