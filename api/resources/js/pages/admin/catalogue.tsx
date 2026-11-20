@@ -1,7 +1,7 @@
 import { Alert, Button, buttonVariants, Chip, Link, SearchField, Tabs } from '@heroui/react';
 import type { DistanceGroupData, DrillData, FacilityData, GameOrigin, GameStatus, GameVersionData, ScoreEntry } from '@gtrack/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { AdminTabs } from '../../components/admin-tabs';
 import { ConfirmDialog, ConfirmName } from '../../components/confirm-dialog';
 import { SgCategoryBadge, sgCategoryKey } from '../../components/sg-category';
@@ -68,6 +68,15 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
     const shown = selected ?? listed[0];
     const count = (status: GameStatus) => items.filter((item) => item.status === status).length;
 
+    // Below WIDE the detail stacks under the list, so opening an item scrolls down to it.
+    const detailRef = useRef<HTMLDivElement>(null);
+    const open = (id: string) => {
+        setSelectedId(id);
+        if (!wide) {
+            detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
     const list = (
         <div className="flex flex-col gap-2">
             <Tabs selectedKey={filter} onSelectionChange={(key) => setFilter(key as Filter)}>
@@ -89,8 +98,15 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                     <SearchField.ClearButton />
                 </SearchField.Group>
             </SearchField>
-            {listed.length === 0 ? (
-                <p className="px-4 py-3 text-[13px] text-muted">{search ? 'Nothing matches.' : `Nothing ${filter} yet.`}</p>
+            {listed.length === 0 && search.trim() ? (
+                <div className="flex flex-col items-start gap-2 px-4 py-3">
+                    <p className="text-[13px] text-muted">No Games or Drills match “{search.trim()}”.</p>
+                    <Button size="sm" variant="tertiary" onPress={() => setSearch('')}>
+                        Clear search
+                    </Button>
+                </div>
+            ) : listed.length === 0 ? (
+                <p className="px-4 py-3 text-[13px] text-muted">Nothing {filter} yet.</p>
             ) : (
                 <ul className="flex flex-col gap-1">
                     {listed.map((item) => (
@@ -98,7 +114,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                             <button
                                 type="button"
                                 aria-current={item.id === shown?.id}
-                                onClick={() => setSelectedId(item.id)}
+                                onClick={() => open(item.id)}
                                 className={`flex w-full items-center justify-between gap-3 rounded-[16px] px-4 py-3 text-left ${
                                     item.id === shown?.id ? 'bg-segment text-segment-foreground' : 'hover:bg-surface-secondary'
                                 }`}
@@ -118,6 +134,8 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
 
     const detail = shown ? (
         <Detail key={shown.id} item={shown} facilities={facilities} distanceGroups={distance_groups} />
+    ) : items.length > 0 ? (
+        <p className="text-muted">Choose a Game or Drill from the list.</p>
     ) : (
         <p className="text-muted">Nothing in the Catalogue yet. Approve a Draft or add a Drill.</p>
     );
@@ -149,7 +167,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                         <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2">
                             {draftItems.map((item) => (
                                 <li key={item.id}>
-                                    <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => setSelectedId(item.id)} />
+                                    <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => open(item.id)} />
                                 </li>
                             ))}
                         </ul>
@@ -165,7 +183,9 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
             ) : (
                 <>
                     <div className="rounded-[24px] bg-surface p-3">{list}</div>
-                    <div className="rounded-[24px] bg-surface p-5">{detail}</div>
+                    <div ref={detailRef} className="scroll-mt-4 rounded-[24px] bg-surface p-5">
+                        {detail}
+                    </div>
                 </>
             )}
         </div>
@@ -187,10 +207,10 @@ function DraftCard({ draft, selected, onSelect }: { draft: GameVersionData; sele
             onClick={onSelect}
             className={`flex w-full flex-col gap-2 rounded-[18px] bg-surface-secondary p-4 text-left ${selected ? 'outline-2 outline-highlight' : ''}`}
         >
-            <span className="flex items-center gap-2">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <SgCategoryBadge category={sgCategoryKey(draft.sg_category)} />
                 <b>{draft.name}</b>
-                <span className="text-[12px] text-muted">
+                <span className="text-[12px] whitespace-nowrap text-muted">
                     v{draft.version} · {ORIGINS[draft.origin]}
                 </span>
             </span>
