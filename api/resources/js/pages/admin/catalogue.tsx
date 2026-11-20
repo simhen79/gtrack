@@ -102,8 +102,9 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
             {listed.length === 0 && query ? (
                 <div className="flex flex-col items-start gap-2 px-4 py-3">
                     <p className="text-[13px] text-muted">No {filter} Games or Drills match “{query}”.</p>
+                    {/* Not "Clear search": the SearchField's × already has that name. */}
                     <Button size="sm" variant="tertiary" onPress={() => setSearch('')}>
-                        Clear search
+                        Clear “{query}”
                     </Button>
                 </div>
             ) : listed.length === 0 ? (
