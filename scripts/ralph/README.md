@@ -43,7 +43,16 @@ State lives outside the repo, in `~/.ralph/gtrack/map-<N>/` (change it with `RAL
 building" is built from a prototype a person has driven, not from the loop's guess at the
 design. Run `/mattpocock-skills:prototype`, push its `prototype/` branch to origin, and name that
 branch, with the verdict, in a comment on the ticket. `build` and `ticket` stop at such a ticket
-until that branch exists on origin.
+until that branch exists on origin, and label it `needs-prototype` (change it with
+`RALPH_PROTO_LABEL`) so the board shows it. The label comes off once the branch is there.
+
+**A run tells you what it's waiting on.** `build` and `ticket` end with a "Waiting on you" block
+listing each draft PR to review and the ticket the chain stopped at, with the step to take: a
+missing prototype, a missing `ready-for-agent` label, a ticket assigned elsewhere, an open
+blocker, or a failed build. They also post a macOS notification: "Waiting on you" when the chain
+stopped early, "Stopped with an error" when the script itself failed, "Finished" otherwise. The
+first time, macOS may ask you to allow notifications from Script Editor, which `osascript` posts
+them as.
 
 **The phone app is checked by a person.** The sandbox can't run iOS or Android, so the verify
 step lists the phone checks still owed, and the PR body carries them.
