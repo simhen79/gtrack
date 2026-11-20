@@ -109,14 +109,21 @@ Run every command from the main checkout, on an up-to-date `main`.
 
 Check where things stand at any point with `scripts/ralph/ralph.sh status 1`.
 
-## Building one ticket
+## Building chosen tickets
 
 ```bash
 scripts/ralph/ralph.sh ticket 22
+scripts/ralph/ralph.sh ticket 66 67 60 47
 ```
 
-Builds exactly that ticket, through the same pipeline, then runs the retro. It works for a
-ticket on a map and for one with no map, such as a bug.
+Builds exactly those tickets, in the order given, through the same pipeline, then runs the
+retro once. It works for tickets on a map and for ones with no map, such as a bug.
+
+- **A list doesn't stop at the first problem.** A ticket that needs a prototype, is blocked or
+  fails is listed under "Waiting on you", and the next ticket is built. Put a blocker before the
+  tickets it blocks: a ticket stacks on a blocker's branch only once that branch is built.
+- **Each ticket starts from `main`,** unless it stacks on a blocker, so unrelated tickets give
+  separate draft PRs that merge in any order.
 
 - **Running the command approves it.** The label does not matter, as long as the issue is open.
 - **Spec:** the map's "Spec:" issue, as for a map build. With no map, the ticket itself is the
@@ -137,7 +144,7 @@ apart in `~/.ralph/gtrack/map-<N>/`.
 |---|---|
 | `queue <MAP>` | Reads the map's child issues from GitHub, with their state, labels, assignees and blocking links, finds the spec issue, and writes `queue.tsv` in blocking order. Shows the spec and what `build` would do. Stops when no spec is found. Changes no code; on GitHub it only moves the tickets the loop could start now to Selected For Development on the board. |
 | `build <MAP> [max]` | Refreshes the queue (or reuses one read under 10 minutes ago, unless `RALPH_REFRESH=1`), then works down it. A closed ticket is skipped. An open ticket with the `ready-for-agent` label, unassigned, and with its prototype when its Design section asks for one, is built: claimed (assigned), set up, implemented, browser-checked when it has a web page, reviewed, gated by the loop, opened as a draft PR, and commented on. The chain stops at the first ticket that isn't ready, or that fails. `max` caps how many tickets this run builds. Tickets the loop already finished are skipped, so a second run carries on. Ends with the retro whenever it attempted a ticket. |
-| `ticket <NUM>` | Builds one ticket on its own, map or not, then runs the retro. See *Building one ticket*. |
+| `ticket <NUM>...` | Builds the tickets given, in order, each on its own, map or not, then runs the retro. See *Building chosen tickets*. |
 | `retry <MAP> <NUM>...` | Lets `build` try a `failed` ticket again, or one stuck at `built`. Its assignment no longer matters, since the build itself claimed it. |
 | `retro <MAP>` | Runs the retro over every transcript, gate log and report so far, and writes `reports/retro.md`. `build` already runs it; use this to run it again. |
 | `status <MAP>` | Prints `queue.tsv` as last read. Changes nothing and does not call GitHub. |
