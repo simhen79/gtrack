@@ -75,6 +75,7 @@ export function AdvancedButton(props: { category: SgCategory; summary: string; e
             onPress={props.onPress}
             className="h-auto w-full justify-between gap-3 rounded-[12px] px-3 py-2 text-left"
             aria-label={`Advanced ${NAMES[category]}: ${errorCount > 0 ? `${errorCount} to fix` : props.summary}`}
+            data-has-error={errorCount > 0 || undefined}
         >
             <span className="flex min-w-0 items-center gap-3">
                 {standalone && <SgCategoryBadge category={sgCategoryKey(category)} />}

@@ -1,5 +1,4 @@
 import {
-    Alert,
     Button,
     Card,
     ComboBox,
@@ -16,7 +15,7 @@ import {
 import { parseSG } from '@gtrack/design';
 import type { BaselineData, CourseData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
-import { useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { AdvancedButton, AdvancedSheet, advancedErrorCount, advancedSummary } from '../../components/advanced-stats';
 import { DeleteRound } from '../../components/delete-round';
 import { RoundDate } from '../../components/round-date';
@@ -25,6 +24,7 @@ import { SgInput } from '../../components/sg-input';
 import { SgKeypad } from '../../components/sg-keypad';
 import { SgValue } from '../../components/sg-value';
 import type { ShellProps } from '../../layouts/app-shell';
+import { useFocusFirstError } from '../../lib/forms';
 import { useMediaQuery } from '../../lib/media';
 import { sgForServer, sumSg } from '../../lib/strokes-gained';
 
@@ -133,6 +133,8 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
     };
     const fieldOf = (category: SgCategory) => SG_CATEGORIES.find((entry) => entry.category === category)!.field;
 
+    const onError = useFocusFirstError();
+
     const submit = (event?: FormEvent) => {
         event?.preventDefault();
         form.transform(({ baseline_id, new_baseline, ...data }) => ({
@@ -144,11 +146,11 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
             par: data.par || null,
             bands: Object.fromEntries(enteredBands.map(([id, value]) => [id, sgForServer(value)])),
         }));
-        // A save that fails returns to the top, so the banner and the fields show below the save bar, not behind it.
+        // A refused save has no summary: it moves to the first field that needs fixing, whose message is under it.
         if (editing) {
-            form.put(`/rounds/${round.id}`);
+            form.put(`/rounds/${round.id}`, { onError });
         } else {
-            form.post('/rounds');
+            form.post('/rounds', { onError });
         }
     };
 
@@ -204,8 +206,6 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                 </div>
             </SaveBar>
 
-            <Errors errors={form.errors} />
-
             <Section n={1} title="Score">
                 <div className="grid grid-cols-3 items-start gap-4">
                     <NumberInput form={form} name="score" label="Score" isRequired />
@@ -241,7 +241,7 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                                 locked={form.locked[field] !== null}
                                 onChange={(value) => form.setData(field, value)}
                                 onEnter={() => focusAfter(index)}
-                                invalid={field in form.errors}
+                                error={form.errors[field]}
                                 inputRef={(input) => {
                                     inputs.current[index] = input;
                                 }}
@@ -294,8 +294,6 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
             >
                 <SaveBar form={form} />
 
-                <Errors errors={form.errors} />
-
                 <div className="flex items-end justify-between">
                     <h2 className="text-[20px] font-extrabold">Strokes Gained</h2>
                     <span aria-label="Total Strokes Gained">
@@ -313,7 +311,7 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                                 value={form.sg(field)}
                                 active={activeSg === index}
                                 locked={form.locked[field] !== null}
-                                invalid={field in form.errors}
+                                error={form.errors[field]}
                                 onPress={() => setActiveSg(index)}
                             />
                         ))}
@@ -341,6 +339,7 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                             >
                                 <Label>Score</Label>
                                 <Input />
+                                <FieldError>{form.errors.score}</FieldError>
                             </TextField>
                             <BaselinePicker form={form} baselines={baselines} compact />
                         </div>
@@ -422,27 +421,6 @@ function Section({ n, title, children }: { n: number; title: string; children: R
     );
 }
 
-function Errors({ errors }: { errors: Partial<Record<string, string>> }) {
-    const list = [...new Set(Object.values(errors))];
-
-    return (
-        list.length > 0 && (
-            <Alert status="danger">
-                <Alert.Content>
-                    <Alert.Title>This Round can’t be saved yet</Alert.Title>
-                    <Alert.Description>
-                        <ul className="list-disc pl-4">
-                            {list.map((error) => (
-                                <li key={error}>{error}</li>
-                            ))}
-                        </ul>
-                    </Alert.Description>
-                </Alert.Content>
-            </Alert>
-        )
-    );
-}
-
 /** A Strokes Gained value at phone width, opening the keypad; read-only once its bands make it up. */
 function SgRow(props: {
     category: SgCategoryKey;
@@ -450,36 +428,47 @@ function SgRow(props: {
     value: string;
     active: boolean;
     locked: boolean;
-    invalid: boolean;
+    /** Why the value can't be saved, shown under the row. */
+    error?: string;
     onPress: () => void;
 }) {
-    const border = props.active ? 'border-highlight border-2' : props.invalid ? 'border-danger' : 'border-(--field-border)';
+    const errorId = useId();
+    const border = props.active ? 'border-highlight border-2' : props.error !== undefined ? 'border-danger' : 'border-(--field-border)';
 
     return (
-        <div className="flex items-center justify-between gap-3">
-            <SgCategoryBadge category={props.category} long />
-            {props.locked ? (
-                <span
-                    aria-label={`${props.label} Strokes Gained, the sum of its distance bands`}
-                    className="flex h-12 min-w-24 flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
-                >
-                    <SgValue value={props.value} className="text-xl leading-none" />
-                    <span className="text-[11px] font-bold text-muted">Sum of bands</span>
-                </span>
-            ) : (
-                <button
-                    type="button"
-                    aria-label={`${props.label} Strokes Gained`}
-                    aria-pressed={props.active}
-                    onClick={props.onPress}
-                    className={`h-12 min-w-24 rounded-[12px] border bg-(--field-background) px-3 text-right ${border}`}
-                >
-                    {props.active ? (
-                        <span className="text-xl font-extrabold tabular-nums">{(props.value || '0').replace('-', '−')}</span>
-                    ) : (
-                        <SgValue value={props.value} className="text-xl" />
-                    )}
-                </button>
+        <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-3">
+                <SgCategoryBadge category={props.category} long />
+                {props.locked ? (
+                    <span
+                        aria-label={`${props.label} Strokes Gained, the sum of its distance bands`}
+                        className="flex h-12 min-w-24 flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
+                    >
+                        <SgValue value={props.value} className="text-xl leading-none" />
+                        <span className="text-[11px] font-bold text-muted">Sum of bands</span>
+                    </span>
+                ) : (
+                    <button
+                        type="button"
+                        aria-label={`${props.label} Strokes Gained`}
+                        aria-pressed={props.active}
+                        aria-describedby={props.error === undefined ? undefined : errorId}
+                        data-has-error={props.error === undefined ? undefined : true}
+                        onClick={props.onPress}
+                        className={`h-12 min-w-24 rounded-[12px] border bg-(--field-background) px-3 text-right ${border}`}
+                    >
+                        {props.active ? (
+                            <span className="text-xl font-extrabold tabular-nums">{(props.value || '0').replace('-', '−')}</span>
+                        ) : (
+                            <SgValue value={props.value} className="text-xl" />
+                        )}
+                    </button>
+                )}
+            </div>
+            {props.error !== undefined && (
+                <p id={errorId} className="text-right text-sm text-danger">
+                    {props.error}
+                </p>
             )}
         </div>
     );
@@ -522,6 +511,7 @@ function BaselinePicker({ form, baselines, compact = false }: { form: RoundForm;
             </div>
             <ToggleButtonGroup
                 aria-label="Baseline"
+                data-has-error={form.errors.baseline_id ? true : undefined}
                 selectionMode="single"
                 disallowEmptySelection
                 className={`flex-wrap ${TRACK}`}

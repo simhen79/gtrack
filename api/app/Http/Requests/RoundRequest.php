@@ -102,6 +102,7 @@ class RoundRequest extends FormRequest
         return [
             'played_on' => 'date',
             'course_name' => 'course',
+            'score' => 'Score',
             'handicap_index' => 'Handicap Index',
             'course_handicap' => 'Course Handicap',
             'baseline_id' => 'Baseline',

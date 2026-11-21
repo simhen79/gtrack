@@ -1,6 +1,6 @@
 import { SG_CATEGORIES, parseSG, sgTone } from '@gtrack/design';
 import { Button, InputGroup } from '@heroui/react';
-import type { KeyboardEvent, Ref } from 'react';
+import { useId, type KeyboardEvent, type Ref } from 'react';
 import { flipSg, signSg, typeSg } from '../lib/strokes-gained';
 import { SgCategoryBadge, type SgCategoryKey } from './sg-category';
 import { SgValue } from './sg-value';
@@ -11,7 +11,8 @@ type Props = {
     onChange: (value: string) => void;
     /** Enter moves on to the next SG Category. */
     onEnter?: () => void;
-    invalid?: boolean;
+    /** Why the value can't be saved, shown under it. */
+    error?: string;
     /** Calculated from distance bands, so shown but not typed. */
     locked?: boolean;
     inputRef?: Ref<HTMLInputElement>;
@@ -21,36 +22,45 @@ type Props = {
  * One SG Category's Strokes Gained, typed with a keyboard. It's negative unless
  * + or the ± button makes it positive; − sets it back.
  */
-export function SgInput({ category, value, onChange, onEnter, invalid = false, locked = false, inputRef }: Props) {
+export function SgInput({ category, value, onChange, onEnter, error, locked = false, inputRef }: Props) {
     const { name } = SG_CATEGORIES.find(({ key }) => key === category)!;
+    const errorId = useId();
 
     return (
-        <div className="flex items-center gap-3 rounded-[16px] bg-surface-secondary p-3 focus-within:ring-2 focus-within:ring-highlight focus-within:ring-inset">
-            <SgCategoryBadge category={category} long />
-            {/* 228px holds the 48px ± button and the 180px value field. */}
-            <div className="ml-auto">
-                {locked ? (
-                    <div
-                        className="flex h-14 w-[228px] flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
-                        aria-label={`${name} Strokes Gained, the sum of its distance bands`}
-                    >
-                        <SgValue value={value} className="text-[24px] leading-none" />
-                        <span className="text-[11px] font-bold text-muted">Sum of bands</span>
-                    </div>
-                ) : (
-                    <SignedInput
-                        label={`${name} Strokes Gained`}
-                        value={value}
-                        onChange={onChange}
-                        onEnter={onEnter}
-                        invalid={invalid}
-                        inputRef={inputRef}
-                        className="h-14 w-[228px] rounded-[12px] bg-background"
-                        inputClassName="text-[24px]"
-                        buttonClassName="size-12"
-                    />
-                )}
+        <div className="flex flex-col gap-1 rounded-[16px] bg-surface-secondary p-3 focus-within:ring-2 focus-within:ring-highlight focus-within:ring-inset">
+            <div className="flex items-center gap-3">
+                <SgCategoryBadge category={category} long />
+                {/* 228px holds the 48px ± button and the 180px value field. */}
+                <div className="ml-auto">
+                    {locked ? (
+                        <div
+                            className="flex h-14 w-[228px] flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
+                            aria-label={`${name} Strokes Gained, the sum of its distance bands`}
+                        >
+                            <SgValue value={value} className="text-[24px] leading-none" />
+                            <span className="text-[11px] font-bold text-muted">Sum of bands</span>
+                        </div>
+                    ) : (
+                        <SignedInput
+                            label={`${name} Strokes Gained`}
+                            value={value}
+                            onChange={onChange}
+                            onEnter={onEnter}
+                            invalid={error !== undefined}
+                            describedBy={error === undefined ? undefined : errorId}
+                            inputRef={inputRef}
+                            className="h-14 w-[228px] rounded-[12px] bg-background"
+                            inputClassName="text-[24px]"
+                            buttonClassName="size-12"
+                        />
+                    )}
+                </div>
             </div>
+            {error !== undefined && (
+                <p id={errorId} className="text-right text-sm text-danger">
+                    {error}
+                </p>
+            )}
         </div>
     );
 }
@@ -62,6 +72,8 @@ export function SignedInput(props: {
     onChange: (value: string) => void;
     onEnter?: () => void;
     invalid?: boolean;
+    /** The id of the message saying why the value can't be saved. */
+    describedBy?: string;
     inputRef?: Ref<HTMLInputElement>;
     placeholder?: string;
     className?: string;
@@ -85,6 +97,8 @@ export function SignedInput(props: {
             <InputGroup.Input
                 ref={props.inputRef}
                 aria-label={props.label}
+                aria-describedby={props.describedBy}
+                aria-invalid={props.invalid || undefined}
                 inputMode="decimal"
                 autoComplete="off"
                 placeholder={props.placeholder}
