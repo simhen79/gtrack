@@ -30,7 +30,7 @@ A golf practice app: golfers log Rounds with Strokes Gained and get Practice Ses
 
 ## Local development
 
-- Mail goes to Mailpit (`docker compose up -d` in `api/`), so sign-in codes appear in the inbox at http://localhost:8025.
+- Mail goes to Mailpit (`docker compose up -d` in `api/`), so sign-in codes appear in the inbox at http://localhost:8025 (or `MAILPIT_UI_PORT` in `api/.env`). Ralph's sandboxes run no Mailpit and keep mail in `api/storage/logs/laravel.log`.
 - The CSS files in `docs/design-system/code/` are generated from `tokens.json`, but the generator isn't in the repo yet: change `tokens.json` and the CSS together.
 
 ## GitHub

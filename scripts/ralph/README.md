@@ -210,4 +210,4 @@ that no other ticket or chat can touch:
   `ralph-admin@example.test`. `php artisan serve` and the browser check use it.
 - `gtrack_test` is for Pest, which refreshes it on every run.
 
-Mail goes to the log, so sign-in codes appear in `api/storage/logs/laravel.log`.
+Mail goes to the log, so sign-in codes appear in `api/storage/logs/laravel.log`. The sandbox runs no Mailpit, so `sandbox-setup.sh` sets `MAIL_MAILER=log` over the Mailpit setting `.env.example` carries.
