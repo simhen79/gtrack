@@ -328,4 +328,4 @@ function Editor({ ground, facilities }: { ground: PracticeGroundData | null; fac
     );
 }
 
-PracticeGrounds.layout = { title: 'Practice Grounds', action: { label: 'Add a Practice Ground', href: '/practice-grounds/create' } } satisfies ShellProps;
+PracticeGrounds.layout = { title: 'Practice Grounds', action: { label: 'Add a Practice Ground', short: 'Add', href: '/practice-grounds/create' } } satisfies ShellProps;
