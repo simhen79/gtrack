@@ -43,6 +43,7 @@ class RoundsController extends Controller
     {
         DB::transaction(fn () => Round::create($this->roundAttributes($request))
             ->saveAdvancedStats($request->validated('stats') ?? [], $request->validated('bands') ?? []));
+        $this->toast('Round saved', $request->validated('course_name'));
 
         return to_route('rounds.index');
     }
@@ -58,6 +59,7 @@ class RoundsController extends Controller
             $round->update($this->roundAttributes($request));
             $round->saveAdvancedStats($request->validated('stats') ?? [], $request->validated('bands') ?? []);
         });
+        $this->toast('Round saved', $round->course_name);
 
         return to_route('rounds.index');
     }
@@ -65,6 +67,7 @@ class RoundsController extends Controller
     public function destroy(Round $round): RedirectResponse
     {
         $round->delete();
+        $this->toast('Round deleted', $round->course_name);
 
         return to_route('rounds.index');
     }

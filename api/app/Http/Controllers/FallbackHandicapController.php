@@ -27,6 +27,7 @@ class FallbackHandicapController extends Controller
         ]);
 
         Setting::firstOrNew()->fill($validated)->save();
+        $this->toast('Handicap Index saved', $validated['fallback_handicap_index']);
 
         return redirect('/');
     }

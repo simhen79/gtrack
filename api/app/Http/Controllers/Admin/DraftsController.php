@@ -15,6 +15,7 @@ class DraftsController extends Controller
     {
         $version = $this->draft($draft);
         $publisher->approve($version);
+        $this->toast('Draft approved', $version->name);
 
         return to_route('admin.catalogue', ['item' => $version->id]);
     }
@@ -34,6 +35,7 @@ class DraftsController extends Controller
                 $version->game->delete();
             }
         });
+        $this->toast('Draft deleted', $version->name);
 
         return to_route('admin.catalogue');
     }

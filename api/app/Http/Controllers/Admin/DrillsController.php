@@ -24,6 +24,7 @@ class DrillsController extends Controller
     public function store(DrillRequest $request): RedirectResponse
     {
         $drill = $this->save(new Drill, $request);
+        $this->toast('Drill saved', $drill->name);
 
         return to_route('admin.catalogue', ['item' => $drill->id]);
     }
@@ -36,6 +37,7 @@ class DrillsController extends Controller
     public function update(DrillRequest $request, Drill $drill): RedirectResponse
     {
         $this->save($drill, $request);
+        $this->toast('Drill saved', $drill->name);
 
         return to_route('admin.catalogue', ['item' => $drill->id]);
     }
@@ -46,6 +48,7 @@ class DrillsController extends Controller
     public function retire(Drill $drill): RedirectResponse
     {
         $drill->forceFill(['retired_at' => $drill->retired_at ?? now()])->save();
+        $this->toast('Drill retired', $drill->name);
 
         return to_route('admin.catalogue', ['item' => $drill->id]);
     }
