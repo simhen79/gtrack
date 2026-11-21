@@ -75,6 +75,14 @@ it('links the invitation to the app\'s sign-in page', function () {
         ->and(inbox()[0]->getTextBody())->toContain('https://gtrack.test/login');
 });
 
+it('gives the sign-in link once in the invitation\'s plain text', function () {
+    inviteAndRequestCode('new.golfer@example.com');
+
+    // The text button already prints its link, so the "Or go to" line is for the HTML part only.
+    expect(substr_count(inbox()[0]->getTextBody(), 'https://gtrack.test/login'))->toBe(1)
+        ->and(inbox()[0]->getHtmlBody())->toContain('Or go to https://gtrack.test/login');
+});
+
 it('sends from MAIL_FROM_ADDRESS as gtrack', function () {
     inviteAndRequestCode('new.golfer@example.com');
 

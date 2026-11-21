@@ -9,5 +9,8 @@ There's no password. Sign in with this email address and we'll email you a 6-dig
 Sign in to {{ config('app.name') }}
 </x-mail::button>
 
+{{-- For clients that hide the button's address. The text button already prints it. --}}
+<x-mail::html-only>
 <p class="muted">Or go to {{ $signInUrl }}</p>
+</x-mail::html-only>
 </x-mail::message>
