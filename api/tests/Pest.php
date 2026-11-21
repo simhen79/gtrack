@@ -4,6 +4,7 @@ use App\Auth\CurrentGolfer;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -159,6 +160,20 @@ function forgetBrowserState(): void
     app()->forgetInstance('auth.driver');
     app('session')->forgetDrivers();
     app()->forgetInstance('session.store');
+}
+
+/**
+ * The tables with a user_id column, read from the test database: golfer-owned.
+ *
+ * @return Collection<int, string>
+ */
+function tablesWithUserId(): Collection
+{
+    return DB::table('information_schema.columns')
+        ->where('table_schema', DB::getDatabaseName())
+        ->where('column_name', 'user_id')
+        ->orderBy('table_name')
+        ->pluck('table_name');
 }
 
 /**
