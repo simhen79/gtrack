@@ -1,7 +1,8 @@
 import type { FacilityData, PracticeGroundData, PracticeGroundsData } from '@gtrack/types';
-import { BottomSheet, Button, Card, Dialog, FieldError, Input, Label, TextArea, TextField } from 'heroui-native';
+import { BottomSheet, Button, Card, Dialog, FieldError, Input, Label, Spinner, TextArea, TextField } from 'heroui-native';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useCSSVariable } from 'uniwind';
 import { Icon } from '@/components/icons';
 import { Invalid } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -28,10 +29,20 @@ export default function PracticeGrounds() {
     load();
   }, [load]);
 
+  const archive = (ground: PracticeGroundData) => call(`/practice-grounds/${ground.id}/archive`, { method: 'POST' });
+  const restore = (ground: PracticeGroundData) => call(`/practice-grounds/${ground.id}/restore`, { method: 'POST' });
+
   if (!data) return null;
 
   const card = (ground: PracticeGroundData) => (
-    <GroundCard key={ground.id} ground={ground} facilities={data.facilities} onOpen={() => setEditing({ ground })} />
+    <GroundCard
+      key={ground.id}
+      ground={ground}
+      facilities={data.facilities}
+      onOpen={() => setEditing({ ground })}
+      onArchive={() => archive(ground).then(load)}
+      onRestore={() => restore(ground).then(load)}
+    />
   );
 
   return (
@@ -69,6 +80,8 @@ export default function PracticeGrounds() {
       <Editor
         editing={editing}
         facilities={data.facilities}
+        onArchive={archive}
+        onRestore={restore}
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null);
@@ -79,82 +92,116 @@ export default function PracticeGrounds() {
   );
 }
 
-function GroundCard({ ground, facilities, onOpen }: { ground: PracticeGroundData; facilities: FacilityData[]; onOpen: () => void }) {
+/**
+ * A View, not a Pressable: Edit and Archive are buttons of their own in its header. The rest of
+ * the card is a separate Pressable that also opens the editor.
+ */
+function GroundCard({
+  ground,
+  facilities,
+  onOpen,
+  onArchive,
+  onRestore,
+}: {
+  ground: PracticeGroundData;
+  facilities: FacilityData[];
+  onOpen: () => void;
+  onArchive: () => Promise<unknown>;
+  onRestore: () => Promise<unknown>;
+}) {
+  const [muted] = useCSSVariable(['--color-muted']) as string[];
   const rows = facilities
     .map((facility) => ({ facility, features: facility.features.filter((feature) => ground.feature_ids.includes(feature.id)) }))
     .filter(({ features }) => features.length > 0);
 
   return (
-    <Pressable
-      onPress={onOpen}
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${ground.name}`}
-      className={`gap-3 rounded-[24px] bg-surface p-5 ${ground.archived_at ? 'opacity-60' : ''}`}
-    >
-      <View>
-        <Text className="text-[18px] text-foreground" style={{ fontFamily: fonts.extraBold }} numberOfLines={1}>
-          {ground.name}
-        </Text>
-        {ground.archived_at && (
-          <Text className="text-[12px] text-muted" style={{ fontFamily: fonts.bold }}>
-            Archived {new Date(ground.archived_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+    <View className={`gap-3 rounded-[24px] bg-surface p-5 ${ground.archived_at ? 'opacity-60' : ''}`}>
+      <View className="flex-row items-center justify-between gap-2">
+        <View className="flex-1">
+          <Text className="text-[18px] text-foreground" style={{ fontFamily: fonts.bold }} numberOfLines={1}>
+            {ground.name}
+          </Text>
+          {ground.archived_at && (
+            <Text className="text-[12px] text-muted" style={{ fontFamily: fonts.bold }}>
+              Archived {new Date(ground.archived_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+            </Text>
+          )}
+        </View>
+        <View className="flex-row items-center gap-1">
+          <Button isIconOnly size="sm" variant="ghost" accessibilityLabel={`Edit ${ground.name}`} onPress={onOpen}>
+            <Icon name="Pencil" color={muted} size={16} />
+          </Button>
+          {ground.archived_at ? (
+            <Button isIconOnly size="sm" variant="ghost" accessibilityLabel={`Restore ${ground.name}`} onPress={onRestore}>
+              <Icon name="ArrowRotateLeft" color={muted} size={16} />
+            </Button>
+          ) : (
+            <ArchiveGround ground={ground} icon onArchive={onArchive} />
+          )}
+        </View>
+      </View>
+      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`Open ${ground.name}`} className="gap-3">
+        {/* All four Facilities: lit when the ground has one, struck through and dimmed when it doesn't. */}
+        <View className="flex-row gap-1.5">
+          {facilities.map((facility) => {
+            const has = ground.facility_ids.includes(facility.id);
+            return (
+              <View key={facility.id} className={`flex-1 rounded-[12px] py-2 ${has ? 'bg-highlight' : 'bg-surface-secondary opacity-60'}`}>
+                <Text
+                  className={`text-center text-[12px] ${has ? 'text-highlight-foreground' : 'text-muted line-through'}`}
+                  style={{ fontFamily: fonts.bold }}
+                  accessibilityLabel={`${facility.name}: ${has ? 'has it' : 'not here'}`}
+                >
+                  {SHORT[facility.key] ?? facility.name}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+        {rows.length > 0 && (
+          <View className="rounded-[18px] bg-surface-secondary">
+            {rows.map(({ facility, features }, index) => (
+              <View key={facility.id} className={`flex-row gap-3 px-3 py-2 ${index > 0 ? 'border-t border-separator' : ''}`}>
+                <Text className="w-16 text-[12px] text-muted" style={{ fontFamily: fonts.bold }}>
+                  {SHORT[facility.key] ?? facility.name}
+                </Text>
+                <Text className="flex-1 text-[13px] text-foreground" style={{ fontFamily: fonts.body }}>
+                  {features.map((feature) => feature.name).join('   ')}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {ground.note && (
+          <Text className="text-[13px] text-muted" style={{ fontFamily: fonts.body }} numberOfLines={2}>
+            {ground.note}
           </Text>
         )}
-      </View>
-      {/* All four Facilities: lit when the ground has one, struck through and dimmed when it doesn't. */}
-      <View className="flex-row gap-1.5">
-        {facilities.map((facility) => {
-          const has = ground.facility_ids.includes(facility.id);
-          return (
-            <View key={facility.id} className={`flex-1 rounded-[12px] py-2 ${has ? 'bg-highlight' : 'bg-surface-secondary opacity-60'}`}>
-              <Text
-                className={`text-center text-[12px] ${has ? 'text-highlight-foreground' : 'text-muted line-through'}`}
-                style={{ fontFamily: fonts.bold }}
-                accessibilityLabel={`${facility.name}: ${has ? 'has it' : 'not here'}`}
-              >
-                {SHORT[facility.key] ?? facility.name}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-      {rows.length > 0 && (
-        <View className="rounded-[14px] bg-surface-secondary">
-          {rows.map(({ facility, features }, index) => (
-            <View key={facility.id} className={`flex-row gap-3 px-3 py-2 ${index > 0 ? 'border-t border-separator' : ''}`}>
-              <Text className="w-16 text-[12px] text-muted" style={{ fontFamily: fonts.bold }}>
-                {SHORT[facility.key] ?? facility.name}
-              </Text>
-              <Text className="flex-1 text-[13px] text-foreground" style={{ fontFamily: fonts.body }}>
-                {features.map((feature) => feature.name).join('   ')}
-              </Text>
-            </View>
-          ))}
-        </View>
-      )}
-      {ground.note && (
-        <Text className="text-[13px] text-muted" style={{ fontFamily: fonts.body }} numberOfLines={2}>
-          {ground.note}
-        </Text>
-      )}
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
-function Editor({ editing, facilities, onClose, onSaved }: { editing: Editing; facilities: FacilityData[]; onClose: () => void; onSaved: () => void }) {
+type GroundActions = {
+  onArchive: (ground: PracticeGroundData) => Promise<unknown>;
+  onRestore: (ground: PracticeGroundData) => Promise<unknown>;
+  onSaved: () => void;
+};
+
+function Editor({ editing, facilities, onClose, ...actions }: { editing: Editing; facilities: FacilityData[]; onClose: () => void } & GroundActions) {
   return (
     <BottomSheet isOpen={editing !== null} onOpenChange={(open) => !open && onClose()}>
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content snapPoints={['90%']} backgroundClassName="rounded-t-[24px] bg-overlay">
-          {editing && <EditorBody key={editing.ground?.id ?? 'new'} ground={editing.ground} facilities={facilities} onSaved={onSaved} />}
+          {editing && <EditorBody key={editing.ground?.id ?? 'new'} ground={editing.ground} facilities={facilities} {...actions} />}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>
   );
 }
 
-function EditorBody({ ground, facilities, onSaved }: { ground: PracticeGroundData | null; facilities: FacilityData[]; onSaved: () => void }) {
+function EditorBody({ ground, facilities, onArchive, onRestore, onSaved }: { ground: PracticeGroundData | null; facilities: FacilityData[] } & GroundActions) {
   const { call } = useSession();
   const [form, setForm] = useState<GroundForm>({
     name: ground?.name ?? '',
@@ -269,40 +316,64 @@ function EditorBody({ ground, facilities, onSaved }: { ground: PracticeGroundDat
 
       <TextField isInvalid={!!errors.note}>
         <Label>Note (optional)</Label>
-        <TextArea value={form.note} onChangeText={(note) => setForm((data) => ({ ...data, note }))} numberOfLines={3} />
+        <TextArea value={form.note} onChangeText={(note) => setForm((data) => ({ ...data, note }))} numberOfLines={5} />
         <FieldError>{errors.note?.[0]}</FieldError>
       </TextField>
 
       <Button size="lg" isDisabled={busy} onPress={save}>
-        <Button.Label>Save Practice Ground</Button.Label>
+        <Button.Label>Done</Button.Label>
       </Button>
       {ground &&
         (ground.archived_at ? (
-          <Button variant="secondary" isDisabled={busy} onPress={() => run(() => call(`/practice-grounds/${ground.id}/restore`, { method: 'POST' }))}>
+          <Button variant="secondary" isDisabled={busy} onPress={() => run(() => onRestore(ground))}>
             <Button.Label>Restore Practice Ground</Button.Label>
           </Button>
         ) : (
-          <ArchiveGround ground={ground} busy={busy} onArchive={() => run(() => call(`/practice-grounds/${ground.id}/archive`, { method: 'POST' }))} />
+          <ArchiveGround ground={ground} onArchive={() => run(() => onArchive(ground))} />
         ))}
     </ScrollView>
   );
 }
 
-/** Asks first, in the same layout and words as the web's confirm dialog. */
-function ArchiveGround({ ground, busy, onArchive }: { ground: PracticeGroundData; busy: boolean; onArchive: () => void }) {
+/**
+ * Asks first, in the same layout and words as the web's confirm dialog: from a card's header as
+ * an icon, or full width in the editor. The confirm shows progress until the request is done.
+ */
+function ArchiveGround({ ground, icon = false, onArchive }: { ground: PracticeGroundData; icon?: boolean; onArchive: () => Promise<unknown> }) {
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [muted, danger] = useCSSVariable(['--color-muted', '--color-danger']) as string[];
+
+  const confirm = async () => {
+    setPending(true);
+    try {
+      await onArchive();
+    } finally {
+      setPending(false);
+      setOpen(false);
+    }
+  };
 
   return (
     <Dialog isOpen={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button variant="danger-soft">
-          <Button.Label>Archive Practice Ground</Button.Label>
-        </Button>
+        {icon ? (
+          <Button isIconOnly size="sm" variant="ghost" accessibilityLabel={`Archive ${ground.name}`}>
+            <Icon name="Archive" color={muted} size={16} />
+          </Button>
+        ) : (
+          <Button variant="danger-soft">
+            <Button.Label>Archive Practice Ground</Button.Label>
+          </Button>
+        )}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay />
         <Dialog.Content className="gap-4">
-          <Dialog.Title>Archive this Practice Ground?</Dialog.Title>
+          <View className="flex-row items-center justify-between gap-3">
+            <Dialog.Title>Archive this Practice Ground?</Dialog.Title>
+            <Icon name="TriangleExclamation" color={danger} />
+          </View>
           <Dialog.Description>
             <Text className="text-foreground" style={{ fontFamily: fonts.bold }}>
               {ground.name}
@@ -314,14 +385,8 @@ function ArchiveGround({ ground, busy, onArchive }: { ground: PracticeGroundData
             <Button variant="tertiary" onPress={() => setOpen(false)}>
               <Button.Label>Keep Practice Ground</Button.Label>
             </Button>
-            <Button
-              variant="danger"
-              isDisabled={busy}
-              onPress={() => {
-                setOpen(false);
-                onArchive();
-              }}
-            >
+            <Button variant="danger" isDisabled={pending} onPress={confirm}>
+              {pending && <Spinner size="sm" color="white" />}
               <Button.Label>Archive Practice Ground</Button.Label>
             </Button>
           </View>
