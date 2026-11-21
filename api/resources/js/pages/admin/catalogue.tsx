@@ -233,7 +233,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
     const groupLabels = distanceGroups.filter((group) => shape.distance_group_ids.includes(group.id)).map((group) => group.label);
 
     return (
-        <div className="flex max-w-3xl flex-col gap-5">
+        <div className="flex flex-col gap-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <span className="flex items-center gap-2">
@@ -355,11 +355,12 @@ function Tile({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
+/** Rules, scoring and setup keep a reading width, while the tiles above use the whole pane. */
 function Text({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div>
             <p className="text-[13px] font-bold text-muted">{label}</p>
-            <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line">{children}</p>
+            <p className="mt-1 max-w-prose text-[15px] leading-relaxed whitespace-pre-line">{children}</p>
         </div>
     );
 }
