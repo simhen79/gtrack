@@ -1,8 +1,9 @@
-import { Alert, Button, buttonVariants, Card, Checkbox, FieldError, Form, Input, Label, Link, NumberField, TextArea, TextField, ToggleButton, ToggleButtonGroup } from '@heroui/react';
+import { Button, buttonVariants, Card, Checkbox, FieldError, Form, Input, Label, Link, NumberField, TextArea, TextField, ToggleButton, ToggleButtonGroup } from '@heroui/react';
 import type { DistanceGroupData, DrillData, FacilityData, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { AdminTabs } from '../../components/admin-tabs';
+import { useFocusFirstError } from '../../lib/forms';
 import { SgCategoryBadge, sgCategoryKey } from '../../components/sg-category';
 import type { ShellProps } from '../../layouts/app-shell';
 
@@ -49,12 +50,14 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
     });
     const groups = distance_groups.filter((group) => group.sg_category === form.data.sg_category);
 
+    const onError = useFocusFirstError();
+
     const save = () => {
         form.transform((data) => ({ ...data, source_concept: data.source_concept || null, source_url: data.source_url || null }));
         if (drill) {
-            form.put(`/admin/drills/${drill.id}`);
+            form.put(`/admin/drills/${drill.id}`, { onError });
         } else {
-            form.post('/admin/drills');
+            form.post('/admin/drills', { onError });
         }
     };
 
@@ -107,14 +110,6 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                     </div>
                 </div>
 
-                {form.hasErrors && (
-                    <Alert status="danger">
-                        <Alert.Content>
-                            <Alert.Title>The Drill wasn’t saved. Check the fields marked below.</Alert.Title>
-                        </Alert.Content>
-                    </Alert>
-                )}
-
                 <Card>
                     <Card.Content className="flex flex-col gap-5">
                         <TextField isRequired isInvalid={'name' in form.errors} value={form.data.name} onChange={(value) => form.setData('name', value)}>
@@ -154,7 +149,7 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                     <Card.Header>
                         <Card.Title>Facilities and features</Card.Title>
                     </Card.Header>
-                    <Card.Content className="flex flex-col gap-4">
+                    <Card.Content className="flex flex-col gap-4" data-has-error={form.errors.facility_ids || form.errors.feature_ids ? true : undefined}>
                         {form.errors.facility_ids && <p className="text-sm text-danger">{form.errors.facility_ids}</p>}
                         {facilities.map((facility) => {
                             const needed = form.data.facility_ids.includes(facility.id);
@@ -234,7 +229,7 @@ Drill.layout = (props: Props) => ({ title: props.drill ? 'Edit Drill' : 'Add a D
 
 function Section({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2" data-has-error={error ? true : undefined}>
             <span className="text-sm font-medium">{label}</span>
             {children}
             {error && <p className="text-sm text-danger">{error}</p>}
