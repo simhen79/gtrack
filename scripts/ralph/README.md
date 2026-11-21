@@ -44,7 +44,9 @@ building" is built from a prototype a person has driven, not from the loop's gue
 design. Run `/mattpocock-skills:prototype`, push its `prototype/` branch to origin, and name that
 branch, with the verdict, in a comment on the ticket. `build` and `ticket` stop at such a ticket
 until that branch exists on origin, and label it `needs-prototype` (change it with
-`RALPH_PROTO_LABEL`) so the board shows it. The label comes off once the branch is there.
+`RALPH_PROTO_LABEL`) so the board shows it. The label comes off once the branch is there. A
+comment may mention other `prototype/` paths too, such as the prototype's route: the loop tries
+every one it finds, newest mention first, and builds from the first that is a branch on origin.
 
 **A run tells you what it's waiting on.** `build` and `ticket` end with a "Waiting on you" block
 listing each draft PR to review and the ticket the chain stopped at, with the step to take: a
@@ -180,7 +182,7 @@ Settings, as environment variables:
 |---|---|
 | **GitHub issues** | What to build (the map's tickets, their order, their approval label) and what the loop did (the assignee claim, then a comment with the PR link) |
 | **Project board** | The `gtrack v1` board's Status, for people to look at. Each queue refresh moves every ticket the loop could start now (open, labelled `ready-for-agent`, unassigned, no open blocker) to Selected For Development; a claim moves it to In Progress, and the draft PR to In Review. A ticket not on the board is added. A failed move is logged and the run carries on. The PR body's `Closes #NUM` closes the ticket on merge, and the board's own workflow moves a closed item to Done. The loop never moves a ticket back, so one that loses its label or fails stays where it was |
-| `queue.tsv` | The loop's own progress per ticket, the branch it made, and the ticket's `prototype/` branch |
+| `queue.tsv` | The loop's own progress per ticket, the branch it made, and every `prototype/` path the ticket's comments name |
 | `spec`, `context/` | The spec issue's number; the spec and each ticket as passed to the sessions |
 | `reports/` | What each phase did, why a session was blocked, and `retro.md` |
 | `pr/` | Each PR's title and body |

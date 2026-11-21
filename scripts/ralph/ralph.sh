@@ -51,8 +51,9 @@ PROJECT="${RALPH_PROJECT-2}"   # the "gtrack v1" board; RALPH_PROJECT= turns boa
 # use_state NUMBER: the state folder of a map, or of a ticket that has no map.
 # queue.tsv: NUM <tab> LOCAL <tab> STATE <tab> APPROVED <tab> ASSIGNED <tab> SLUG <tab> UI <tab> NEEDS_PROTO <tab> BRANCH <tab> PROTOTYPE
 # STATE is GitHub's OPEN or CLOSED. UI is yes when the Design section lists screens; NEEDS_PROTO
-# is yes when it says to prototype before building, and PROTOTYPE is the prototype/ branch the
-# ticket names (empty when none). LOCAL is the loop's own progress: new, retry, built, pr-open
+# is yes when it says to prototype before building, and PROTOTYPE is every prototype/ path the
+# owner's comments name, oldest mention first, space-separated (empty when none). A comment can
+# name other prototype/ paths too, such as a route, so resolve_prototype picks the branch. LOCAL is the loop's own progress: new, retry, built, pr-open
 # or failed.
 use_state() {
   STATE="$STATE_ROOT/map-$1"
@@ -286,8 +287,11 @@ TICKET_JQ='
   def slug: .title | ascii_downcase | gsub("[^a-z0-9]+"; "-") | gsub("^-+|-+$"; "")
     | if length > 40 then .[0:41] | sub("-[^-]*$"; "") else . end;
   # A verdict is posted as a comment; a body that cites an older prototype as an input is not one.
+  # Every mention is kept, oldest first and each once, since a verdict can also name a route
+  # such as /prototype/<page>: resolve_prototype later picks the newest that exists on origin.
   def prototype: owner_comments | [match("prototype/[A-Za-z0-9._/-]+"; "g").string | sub("[./]+$"; "")]
-    | map(select(test("^prototype/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$"))) | last // "";
+    | map(select(test("^prototype/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$")))
+    | reduce .[] as $branch ([]; map(select(. != $branch)) + [$branch]) | join(" ");
   [ (.number | tostring), .state,
     (if any(.labels.nodes[]; .name == $ready) then "yes" else "no" end),
     (if .assignees.totalCount > 0 then "yes" else "no" end),
@@ -381,14 +385,29 @@ needs_prototype() {
   local proto
   [ "$(field "$1" 8)" = yes ] || return 1
   proto="$(field "$1" 10)"
-  if [ -n "$proto" ] && git ls-remote --exit-code -q --heads origin "$proto" >/dev/null 2>&1; then
+  if resolve_prototype "$proto" >/dev/null; then
     gh issue edit "$1" --remove-label "$PROTO_LABEL" >/dev/null 2>&1 || true
     return 1
   fi
   gh label create "$PROTO_LABEL" --color FBCA04 \
     --description "Ralph is waiting for a prototype/ branch and its verdict on this ticket" >/dev/null 2>&1 || true
   gh issue edit "$1" --add-label "$PROTO_LABEL" >/dev/null || log "#$1: could not add the $PROTO_LABEL label"
-  stopped_at "$1" "needs a prototype: ${proto:+its branch $proto is not on origin}${proto:-it names no prototype/ branch}. Run /mattpocock-skills:prototype, push its prototype/ branch, and name the branch and the verdict in a comment on the ticket"
+  stopped_at "$1" "needs a prototype: ${proto:+none of the prototype/ paths it names is a branch on origin ($proto)}${proto:-it names no prototype/ branch}. Run /mattpocock-skills:prototype, push its prototype/ branch, and name the branch and the verdict in a comment on the ticket"
+}
+
+# resolve_prototype "CANDIDATES": prints the newest-mentioned of a ticket's prototype/ paths that is
+# a branch on origin, and fails when none is. CANDIDATES comes from queue.tsv, where TICKET_JQ has
+# already checked each against the branch-name pattern, so splitting it on spaces is safe.
+resolve_prototype() {
+  local candidate newest_first=""
+  for candidate in $1; do newest_first="$candidate $newest_first"; done
+  for candidate in $newest_first; do
+    if git ls-remote --exit-code -q --heads origin "$candidate" >/dev/null 2>&1; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
 }
 
 # read_recently FILE: true when FILE is non-empty and was written under 10 minutes ago.
@@ -433,7 +452,8 @@ build_ticket() {
   sandbox="ralph-$num"
   base="ralph-base/$num"
   fetched="refs/remotes/sandbox-$sandbox/$branch"
-  proto="$(field "$num" 10)"
+  # A retried ticket skips needs_prototype, so resolve here too; none on origin means none.
+  proto="$(resolve_prototype "$(field "$num" 10)" || true)"
 
   # The Wayfinder claim: an assigned ticket is taken, so other sessions skip it.
   gh issue edit "$num" --add-assignee "$GH_USER" >/dev/null || return 1
