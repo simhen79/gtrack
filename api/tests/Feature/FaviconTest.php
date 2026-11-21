@@ -16,7 +16,7 @@ it('links the ring-and-dot mark as the icon on every page, signed in or out', fu
 });
 
 /** A colour token's value in a theme, from the design system's tokens.json. */
-function token(string $name, string $theme): string
+function colourToken(string $name, string $theme): string
 {
     $tokens = json_decode(file_get_contents(base_path('../docs/design-system/tokens.json')), true)['color']['tokens'];
 
@@ -27,9 +27,15 @@ it('draws the SVG icon in the accent ring and highlight dot of the browser\'s li
     $svg = file_get_contents(public_path('favicon.svg'));
     [$light, $dark] = explode('@media (prefers-color-scheme: dark)', $svg);
 
-    expect($light)->toContain(token('accent', 'light'), token('highlight', 'light'))
-        ->and($dark)->toContain(token('accent', 'dark'), token('highlight', 'dark'));
+    expect($light)->toContain(colourToken('accent', 'light'), colourToken('highlight', 'light'))
+        ->and($dark)->toContain(colourToken('accent', 'dark'), colourToken('highlight', 'dark'));
 });
+
+/** An opaque pixel's colour as #RRGGBB, or 'transparent'. */
+function pixelColour(int $r, int $g, int $b, int $a): string
+{
+    return $a === 255 ? sprintf('#%02X%02X%02X', $r, $g, $b) : 'transparent';
+}
 
 /** The colour of pixel ($x, $y), counted from the top left, in the 32px image of an .ico of 32-bit bitmaps. */
 function icoPixel(string $ico, int $x, int $y): string
@@ -43,21 +49,21 @@ function icoPixel(string $ico, int $x, int $y): string
     // Rows run bottom to top, after the 40-byte header, in blue, green, red, alpha.
     [, $b, $g, $r, $a] = unpack('C4', $ico, $entry['offset'] + 40 + ((31 - $y) * 32 + $x) * 4);
 
-    return $a === 255 ? sprintf('#%02X%02X%02X', $r, $g, $b) : 'transparent';
+    return pixelColour($r, $g, $b, $a);
 }
 
 it('gives a browser that asks for /favicon.ico the mark on the dark ground, readable on light and dark tabs', function () {
     $ico = file_get_contents(public_path('favicon.ico'));
 
     expect(substr($ico, 0, 4))->toBe("\0\0\1\0")
-        ->and(icoPixel($ico, 16, 16))->toBe(token('highlight', 'dark'))
-        ->and(icoPixel($ico, 6, 16))->toBe(token('accent', 'dark'))
-        ->and(icoPixel($ico, 2, 16))->toBe(token('background', 'dark'))
+        ->and(icoPixel($ico, 16, 16))->toBe(colourToken('highlight', 'dark'))
+        ->and(icoPixel($ico, 6, 16))->toBe(colourToken('accent', 'dark'))
+        ->and(icoPixel($ico, 2, 16))->toBe(colourToken('background', 'dark'))
         ->and(icoPixel($ico, 0, 0))->toBe('transparent');
 });
 
-/** The width and height of an 8-bit RGBA .png and the colour of pixel ($x, $y), counted from the top left. */
-function pngPixel(string $png, int $x, int $y): array
+/** The colour of pixel ($x, $y), counted from the top left, in an 8-bit RGBA .png. */
+function pngPixel(string $png, int $x, int $y): string
 {
     expect(substr($png, 0, 8))->toBe("\x89PNG\r\n\x1a\n");
     $header = unpack('Nwidth/Nheight/Cdepth/Ctype', $png, 16);
@@ -77,14 +83,15 @@ function pngPixel(string $png, int $x, int $y): array
     expect(ord($pixels[$y * $row]))->toBe(0);
     [, $r, $g, $b, $a] = unpack('C4', $pixels, $y * $row + 1 + $x * 4);
 
-    return [$header['width'], $header['height'], $a === 255 ? sprintf('#%02X%02X%02X', $r, $g, $b) : 'transparent'];
+    return pixelColour($r, $g, $b, $a);
 }
 
 it('gives an iOS home-screen shortcut the mark on a solid 180px square', function () {
     $png = file_get_contents(public_path('apple-touch-icon.png'));
 
-    expect(pngPixel($png, 90, 90))->toBe([180, 180, token('highlight', 'dark')])
-        ->and(pngPixel($png, 90, 45)[2])->toBe(token('accent', 'dark'))
-        ->and(pngPixel($png, 0, 0)[2])->toBe(token('background', 'dark'))
-        ->and(pngPixel($png, 179, 179)[2])->toBe(token('background', 'dark'));
+    expect(unpack('Nwidth/Nheight', $png, 16))->toBe(['width' => 180, 'height' => 180])
+        ->and(pngPixel($png, 90, 90))->toBe(colourToken('highlight', 'dark'))
+        ->and(pngPixel($png, 90, 45))->toBe(colourToken('accent', 'dark'))
+        ->and(pngPixel($png, 0, 0))->toBe(colourToken('background', 'dark'))
+        ->and(pngPixel($png, 179, 179))->toBe(colourToken('background', 'dark'));
 });
