@@ -166,7 +166,9 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                     {draftItems.length === 0 ? (
                         <p className="text-[13px] text-muted">No Drafts waiting.</p>
                     ) : (
-                        <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+                        // One Draft per row, scrolling inside the card once about three are showing; the padding
+                        // keeps the selected Draft's outline clear of the scroll edge.
+                        <ul className="-m-1 flex max-h-[19rem] flex-col gap-2 overflow-y-auto p-1">
                             {draftItems.map((item) => (
                                 <li key={item.id}>
                                     <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => openItem(item.id)} />
