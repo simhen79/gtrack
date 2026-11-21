@@ -1,6 +1,7 @@
 <?php
 
 use App\Auth\CurrentGolfer;
+use App\Models\Facility;
 use App\Models\User;
 use App\Notifications\SignInCode;
 use Illuminate\Database\Eloquent\Model;
@@ -207,4 +208,28 @@ function enterRound(array $overrides = []): string
     test()->post('/rounds', roundFields(['new_baseline' => 'Scratch', ...$overrides]))->assertSessionHasNoErrors();
 
     return test()->get('/rounds')->inertiaProps('rounds.0.id');
+}
+
+/**
+ * A Drill as the editor posts it, linking reference rows by id.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function drillFields(array $overrides = []): array
+{
+    return [
+        'name' => 'Gate Drill',
+        'sg_category' => 'putting',
+        'balls' => 20,
+        'estimated_minutes' => null,
+        'seconds_per_ball' => null,
+        'setup' => 'Two tees just wider than the putter head. Twenty strokes through the gate.',
+        'source_concept' => null,
+        'source_url' => null,
+        'facility_ids' => [Facility::where('key', 'putting_green')->value('id')],
+        'feature_ids' => [],
+        'distance_group_ids' => [],
+        ...$overrides,
+    ];
 }

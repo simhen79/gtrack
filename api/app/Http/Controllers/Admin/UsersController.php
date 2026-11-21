@@ -32,6 +32,7 @@ class UsersController extends Controller
 
         $user = User::create(['email' => $email])->assignRole('golfer');
         Mail::to($user)->send(new Invitation);
+        $this->toast('Invite sent', $user->email);
 
         return to_route('admin.users.index');
     }
@@ -43,6 +44,7 @@ class UsersController extends Controller
         }
 
         Mail::to($user)->send(new Invitation);
+        $this->toast('Invite re-sent', $user->email);
 
         return to_route('admin.users.index');
     }
@@ -61,6 +63,7 @@ class UsersController extends Controller
 
             $user->syncRoles($roles);
         });
+        $this->toast('Roles saved', $user->email);
 
         return to_route('admin.users.index');
     }
@@ -79,6 +82,7 @@ class UsersController extends Controller
             DB::table('sessions')->where('user_id', $user->id)->delete();
             $user->tokens()->delete();
         });
+        $this->toast('Disabled', $user->email);
 
         return to_route('admin.users.index');
     }
@@ -86,6 +90,7 @@ class UsersController extends Controller
     public function enable(User $user): RedirectResponse
     {
         $user->forceFill(['disabled_at' => null])->save();
+        $this->toast('Re-enabled', $user->email);
 
         return to_route('admin.users.index');
     }

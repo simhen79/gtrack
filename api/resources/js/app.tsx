@@ -4,8 +4,11 @@ import { RouterProvider } from '@heroui/react';
 import { createInertiaApp, router } from '@inertiajs/react';
 import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
+import { raiseToastsFromRequests, Toasts } from './components/toasts';
 import AppShell from './layouts/app-shell';
 import './lib/theme';
+
+raiseToastsFromRequests();
 
 const pages = import.meta.glob<{ default: ComponentType }>('./pages/**/*.tsx', { eager: true });
 
@@ -24,6 +27,7 @@ createInertiaApp({
         createRoot(el).render(
             <RouterProvider navigate={(href) => router.visit(href)}>
                 <App {...props} />
+                <Toasts />
             </RouterProvider>,
         );
     },
