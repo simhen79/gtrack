@@ -34,6 +34,8 @@ if [ ! -f .env ]; then
   cp .env.example .env
   php artisan key:generate
 fi
+# .env.example sends mail to Mailpit, which the sandbox doesn't run; keep it in the log here.
+sed -i 's/^MAIL_MAILER=.*/MAIL_MAILER=log/' .env
 php artisan migrate --force
 retry npm ci --no-audit --no-fund
 npm run build
