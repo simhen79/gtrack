@@ -108,9 +108,9 @@ it('confirms changed roles, a disabled login and a re-enabled one with Toasts', 
     $this->followingRedirects()->put("/admin/users/{$golfer->id}/roles", ['roles' => ['admin', 'golfer']])
         ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Roles saved', 'golfer@example.com')));
     $this->followingRedirects()->post("/admin/users/{$golfer->id}/disable")
-        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Disabled', 'golfer@example.com')));
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Login disabled', 'golfer@example.com')));
     $this->followingRedirects()->post("/admin/users/{$golfer->id}/enable")
-        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Re-enabled', 'golfer@example.com')));
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Login re-enabled', 'golfer@example.com')));
 });
 
 it('confirms a saved Handicap Index with a Toast', function () {

@@ -82,7 +82,7 @@ class UsersController extends Controller
             DB::table('sessions')->where('user_id', $user->id)->delete();
             $user->tokens()->delete();
         });
-        $this->toast('Disabled', $user->email);
+        $this->toast('Login disabled', $user->email);
 
         return to_route('admin.users.index');
     }
@@ -90,7 +90,7 @@ class UsersController extends Controller
     public function enable(User $user): RedirectResponse
     {
         $user->forceFill(['disabled_at' => null])->save();
-        $this->toast('Re-enabled', $user->email);
+        $this->toast('Login re-enabled', $user->email);
 
         return to_route('admin.users.index');
     }
