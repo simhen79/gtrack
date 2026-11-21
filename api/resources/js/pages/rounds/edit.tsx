@@ -16,7 +16,7 @@ import {
 import { parseSG } from '@gtrack/design';
 import type { BaselineData, CourseData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
-import { useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { AdvancedButton, AdvancedSheet, advancedErrorCount, advancedSummary } from '../../components/advanced-stats';
 import { DeleteRound } from '../../components/delete-round';
 import { RoundDate } from '../../components/round-date';
@@ -241,7 +241,7 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                                 locked={form.locked[field] !== null}
                                 onChange={(value) => form.setData(field, value)}
                                 onEnter={() => focusAfter(index)}
-                                invalid={field in form.errors}
+                                error={form.errors[field]}
                                 inputRef={(input) => {
                                     inputs.current[index] = input;
                                 }}
@@ -313,7 +313,7 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                                 value={form.sg(field)}
                                 active={activeSg === index}
                                 locked={form.locked[field] !== null}
-                                invalid={field in form.errors}
+                                error={form.errors[field]}
                                 onPress={() => setActiveSg(index)}
                             />
                         ))}
@@ -341,6 +341,7 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                             >
                                 <Label>Score</Label>
                                 <Input />
+                                <FieldError>{form.errors.score}</FieldError>
                             </TextField>
                             <BaselinePicker form={form} baselines={baselines} compact />
                         </div>
@@ -450,36 +451,46 @@ function SgRow(props: {
     value: string;
     active: boolean;
     locked: boolean;
-    invalid: boolean;
+    /** Why the value can't be saved, shown under the row. */
+    error?: string;
     onPress: () => void;
 }) {
-    const border = props.active ? 'border-highlight border-2' : props.invalid ? 'border-danger' : 'border-(--field-border)';
+    const errorId = useId();
+    const border = props.active ? 'border-highlight border-2' : props.error !== undefined ? 'border-danger' : 'border-(--field-border)';
 
     return (
-        <div className="flex items-center justify-between gap-3">
-            <SgCategoryBadge category={props.category} long />
-            {props.locked ? (
-                <span
-                    aria-label={`${props.label} Strokes Gained, the sum of its distance bands`}
-                    className="flex h-12 min-w-24 flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
-                >
-                    <SgValue value={props.value} className="text-xl leading-none" />
-                    <span className="text-[11px] font-bold text-muted">Sum of bands</span>
-                </span>
-            ) : (
-                <button
-                    type="button"
-                    aria-label={`${props.label} Strokes Gained`}
-                    aria-pressed={props.active}
-                    onClick={props.onPress}
-                    className={`h-12 min-w-24 rounded-[12px] border bg-(--field-background) px-3 text-right ${border}`}
-                >
-                    {props.active ? (
-                        <span className="text-xl font-extrabold tabular-nums">{(props.value || '0').replace('-', '−')}</span>
-                    ) : (
-                        <SgValue value={props.value} className="text-xl" />
-                    )}
-                </button>
+        <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-3">
+                <SgCategoryBadge category={props.category} long />
+                {props.locked ? (
+                    <span
+                        aria-label={`${props.label} Strokes Gained, the sum of its distance bands`}
+                        className="flex h-12 min-w-24 flex-col items-end justify-center rounded-[12px] bg-surface-tertiary px-3"
+                    >
+                        <SgValue value={props.value} className="text-xl leading-none" />
+                        <span className="text-[11px] font-bold text-muted">Sum of bands</span>
+                    </span>
+                ) : (
+                    <button
+                        type="button"
+                        aria-label={`${props.label} Strokes Gained`}
+                        aria-pressed={props.active}
+                        aria-describedby={props.error === undefined ? undefined : errorId}
+                        onClick={props.onPress}
+                        className={`h-12 min-w-24 rounded-[12px] border bg-(--field-background) px-3 text-right ${border}`}
+                    >
+                        {props.active ? (
+                            <span className="text-xl font-extrabold tabular-nums">{(props.value || '0').replace('-', '−')}</span>
+                        ) : (
+                            <SgValue value={props.value} className="text-xl" />
+                        )}
+                    </button>
+                )}
+            </div>
+            {props.error !== undefined && (
+                <p id={errorId} className="text-right text-sm text-danger">
+                    {props.error}
+                </p>
             )}
         </div>
     );

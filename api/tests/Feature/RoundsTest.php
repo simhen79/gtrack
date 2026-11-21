@@ -57,7 +57,7 @@ it('refuses a Round missing required fields and names each one', function () {
             'played_on' => 'The date field is required.',
             'course_name' => 'The course field is required.',
             'holes' => 'The holes field is required.',
-            'score' => 'The score field is required.',
+            'score' => 'The Score field is required.',
             'handicap_index' => 'The Handicap Index field is required.',
             'course_handicap' => 'The Course Handicap field is required.',
             'baseline_id' => 'Pick a Baseline or add a new one.',
@@ -126,7 +126,7 @@ it('returns an Edit Round that wasn’t saved to its form, with each field’s o
         ->assertInertia(fn ($page) => $page
             ->component('rounds/edit')
             ->where('round.id', $id)
-            ->where('errors.score', 'The score field is required.')
+            ->where('errors.score', 'The Score field is required.')
             ->has('errors.sg_putting')
             ->missing('errors.course_name'));
 });
