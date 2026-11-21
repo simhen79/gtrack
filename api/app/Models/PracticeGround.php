@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToGolfer;
 use Database\Factories\PracticeGroundFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -61,21 +60,5 @@ class PracticeGround extends Model
                 ->map(fn (string $facilityId) => ['facility_id' => $facilityId])
                 ->all(),
         );
-    }
-
-    /**
-     * @param  Builder<self>  $query
-     */
-    public function scopeActive(Builder $query): void
-    {
-        $query->whereNull('archived_at');
-    }
-
-    /**
-     * @param  Builder<self>  $query
-     */
-    public function scopeArchived(Builder $query): void
-    {
-        $query->whereNotNull('archived_at');
     }
 }

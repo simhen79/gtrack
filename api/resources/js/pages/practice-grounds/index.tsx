@@ -54,7 +54,7 @@ export default function PracticeGrounds({ practice_grounds, archived, facilities
                     ))}
                 </div>
             ) : (
-                <p className="rounded-[24px] bg-surface p-5 text-muted">
+                <p className="rounded-[24px] bg-surface p-6 text-muted">
                     No Practice Grounds yet. Add the places you practise, with the Facilities each has, so Practice Sessions only include what you can play there.
                 </p>
             )}
@@ -108,10 +108,10 @@ function GroundCard({ ground, facilities }: { ground: PracticeGroundData; facili
     const archivedOn = ground.archived_at ? new Date(ground.archived_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null;
 
     return (
-        <div className={`flex flex-col gap-3 rounded-[24px] bg-surface p-5 transition hover:ring-2 hover:ring-highlight ${archivedOn ? 'opacity-60' : ''}`}>
+        <div className={`flex flex-col gap-3 rounded-[24px] bg-surface p-6 transition hover:ring-2 hover:ring-highlight ${archivedOn ? 'opacity-60' : ''}`}>
             <div className="flex items-center justify-between gap-2">
                 <span className="flex min-w-0 flex-col">
-                    <span className="truncate text-[18px] font-extrabold">{ground.name}</span>
+                    <span className="truncate text-[18px] font-bold">{ground.name}</span>
                     {archivedOn && <span className="text-[12px] font-bold text-muted">Archived {archivedOn}</span>}
                 </span>
                 <span className="flex shrink-0 items-center gap-1">
@@ -165,7 +165,7 @@ function FeatureRows({ ground, facilities }: { ground: PracticeGroundData; facil
     if (rows.length === 0) return null;
 
     return (
-        <div className="flex flex-col divide-y divide-(--field-border) rounded-[14px] bg-surface-secondary">
+        <div className="flex flex-col divide-y divide-separator rounded-[18px] bg-surface-secondary">
             {rows.map(({ facility, features }) => (
                 <div key={facility.id} className="flex items-baseline gap-3 px-3 py-2">
                     <span className="w-16 shrink-0 text-[12px] font-bold text-muted">{SHORT[facility.key] ?? facility.name}</span>
@@ -262,7 +262,7 @@ function Editor({ ground, facilities }: { ground: PracticeGroundData | null; fac
                 <div className="flex flex-col gap-2">
                     <span className="text-sm font-medium">Facilities and features</span>
                     {/* One block per Facility, divided: its toggle row, then its features right under it. */}
-                    <div className="flex flex-col divide-y divide-(--field-border) rounded-[16px] bg-surface-secondary">
+                    <div className="flex flex-col divide-y divide-separator rounded-[16px] bg-surface-secondary">
                         {facilities.map((facility) => {
                             const has = form.data.facility_ids.includes(facility.id);
                             return (
@@ -307,13 +307,13 @@ function Editor({ ground, facilities }: { ground: PracticeGroundData | null; fac
 
                 <TextField isInvalid={'note' in form.errors} value={form.data.note} onChange={(value) => form.setData('note', value)}>
                     <Label>Note (optional)</Label>
-                    <TextArea rows={3} />
+                    <TextArea rows={5} />
                     <FieldError>{form.errors.note}</FieldError>
                 </TextField>
             </Sheet.Body>
             <Sheet.Footer className="flex flex-col gap-2">
                 <Button type="submit" size="lg" className="w-full" isPending={form.processing}>
-                    Save Practice Ground
+                    Done
                 </Button>
                 {ground &&
                     (ground.archived_at ? (
