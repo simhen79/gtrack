@@ -15,6 +15,6 @@ class Invitation extends Mailable
 
     public function content(): Content
     {
-        return new Content(markdown: 'mail.invitation', with: ['signInUrl' => route('login')]);
+        return new Content(markdown: 'mail.invitation', with: ['signInUrl' => config('app.url').'/login']);
     }
 }

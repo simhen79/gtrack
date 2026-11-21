@@ -2,6 +2,7 @@
 
 use App\Auth\CurrentGolfer;
 use App\Models\User;
+use App\Notifications\SignInCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -9,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
-use Spatie\OneTimePasswords\Notifications\OneTimePasswordNotification;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -64,7 +64,7 @@ function signInWithCode(User $user): string
     test()->post('/login/code', ['email' => $user->email]);
 
     $code = null;
-    Notification::assertSentTo($user, OneTimePasswordNotification::class, function ($notification) use (&$code) {
+    Notification::assertSentTo($user, SignInCode::class, function ($notification) use (&$code) {
         $code = $notification->oneTimePassword->password;
 
         return true;
@@ -95,7 +95,7 @@ function phoneToken(User $user): string
     test()->postJson('/api/login/code', ['email' => $user->email])->assertNoContent();
 
     $code = null;
-    Notification::assertSentTo($user, OneTimePasswordNotification::class, function ($notification) use (&$code) {
+    Notification::assertSentTo($user, SignInCode::class, function ($notification) use (&$code) {
         $code = $notification->oneTimePassword->password;
 
         return true;
