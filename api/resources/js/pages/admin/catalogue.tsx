@@ -255,7 +255,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
                 </Alert>
             )}
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-3">
                 <Tile label="Facilities">{facilityNames.join(', ') || 'None'}</Tile>
                 <Tile label="Time">{shape.balls ? `${shape.balls} balls` : `${shape.estimated_minutes} min`}</Tile>
                 {item.kind === 'Game' ? <Tile label="Origin">{ORIGINS[item.game.origin]}</Tile> : <Tile label="Distance groups">{groupLabels.join(', ') || 'Any'}</Tile>}
