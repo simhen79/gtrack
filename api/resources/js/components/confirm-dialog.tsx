@@ -7,6 +7,8 @@ export type ConfirmVisit = { onStart: () => void; onFinish: () => void };
 type Props = {
     /** The button that opens the dialog, such as "Delete Round". */
     trigger: string;
+    /** Shows only this icon on the trigger, with `trigger` as its label, as on a card's header. */
+    triggerIcon?: ReactNode;
     /** "danger-soft" beside other actions; "danger" when it's the only action on its card. */
     triggerVariant?: 'danger-soft' | 'danger';
     size?: 'md' | 'lg';
@@ -26,15 +28,21 @@ type Props = {
  * Every destructive confirm in the app: the heading with the danger icon on its right,
  * the consequences, then "Keep <thing>" and the danger confirm. See the design-system README.
  */
-export function ConfirmDialog({ trigger, triggerVariant = 'danger-soft', size, className, heading, children, keep, confirm = trigger, onConfirm }: Props) {
+export function ConfirmDialog({ trigger, triggerIcon, triggerVariant = 'danger-soft', size, className, heading, children, keep, confirm = trigger, onConfirm }: Props) {
     const [open, setOpen] = useState(false);
     const [pending, setPending] = useState(false);
 
     return (
         <AlertDialog isOpen={open} onOpenChange={setOpen}>
-            <Button variant={triggerVariant} size={size} className={className}>
-                {trigger}
-            </Button>
+            {triggerIcon ? (
+                <Button isIconOnly size="sm" variant="ghost" aria-label={trigger} className={className}>
+                    {triggerIcon}
+                </Button>
+            ) : (
+                <Button variant={triggerVariant} size={size} className={className}>
+                    {trigger}
+                </Button>
+            )}
             <AlertDialog.Backdrop>
                 <AlertDialog.Container>
                     <AlertDialog.Dialog className="sm:max-w-[420px]">

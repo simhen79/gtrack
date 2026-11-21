@@ -2,7 +2,9 @@
 
 use App\Auth\CurrentGolfer;
 use App\Models\Baseline;
+use App\Models\Facility;
 use App\Models\GameVersion;
+use App\Models\PracticeGround;
 use App\Models\Round;
 use App\Models\Setting;
 use App\Models\SgBand;
@@ -49,6 +51,8 @@ function withGolferData(User $user): User
     GameVersion::factory()->published()->create()->variations()->make(['wording' => 'Aim at the left flag', 'is_plain' => false])
         ->forceFill(['user_id' => $user->id])
         ->save();
+    $range = Facility::where('key', 'range_bay')->sole();
+    PracticeGround::factory()->create()->saveFacilities([$range->id], [$range->features->first()->id]);
     app(CurrentGolfer::class)->clear();
 
     return $user;
