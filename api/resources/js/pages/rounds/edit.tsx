@@ -63,8 +63,8 @@ type Props = { round: RoundFormData; baselines: BaselineData[]; courses: CourseD
 type RoundForm = ReturnType<typeof useRoundForm>;
 
 /**
- * Round entry. At desktop width, a focused column of Strokes Gained, Score and
- * Details beside a rail with the live total and Save Round. Narrower, layout C:
+ * Round entry, under a save bar that stays in view. At desktop width, a focused column
+ * of Strokes Gained, Score and Details, with the live total in the bar. Narrower, layout C:
  * Strokes Gained on the keypad, with the carried-over details folded under one line.
  * Advanced stats are folded away below either.
  */
@@ -173,76 +173,59 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
     };
 
     return (
-        <form className="flex flex-col gap-8 xl:flex-row xl:items-start" onSubmit={form.submit} noValidate>
-            <div className="flex w-full max-w-[760px] flex-col gap-8">
-                <Errors errors={form.errors} />
-
-                <Section n={1} title="Strokes Gained">
-                    <div className="flex flex-col gap-2">
-                        {SG_CATEGORIES.map(({ field, key }, index) => (
-                            <SgInput
-                                key={field}
-                                category={key}
-                                value={form.sg(field)}
-                                locked={form.locked[field] !== null}
-                                onChange={(value) => form.setData(field, value)}
-                                onEnter={() => focusAfter(index)}
-                                invalid={field in form.errors}
-                                inputRef={(input) => {
-                                    inputs.current[index] = input;
-                                }}
-                            />
-                        ))}
-                    </div>
-                </Section>
-
-                <Section n={2} title="Score">
-                    <div className="grid grid-cols-3 items-start gap-4">
-                        <NumberInput form={form} name="score" label="Score" isRequired />
-                        <HolesPicker form={form} />
-                        <NumberInput form={form} name="course_handicap" label="Course Handicap" isRequired />
-                    </div>
-                </Section>
-
-                <Section n={3} title="Details">
-                    <div className="grid grid-cols-3 items-start gap-4">
-                        <RoundDate value={form.data.played_on} onChange={(value) => form.setData('played_on', value)} error={form.errors.played_on} />
-                        <div className="col-span-2">
-                            <CoursePicker form={form} />
-                        </div>
-                        <NumberInput form={form} name="handicap_index" label="Handicap Index" decimals={1} isRequired />
-                        <TeesPicker form={form} />
-                        <NumberInput form={form} name="par" label="Par (optional)" />
-                        <div className="col-span-3">
-                            <BaselinePicker form={form} baselines={baselines} />
-                        </div>
-                    </div>
-                </Section>
-
-                {form.advanced}
-            </div>
-
-            <aside className="flex w-full flex-col gap-4 rounded-[24px] bg-surface p-5 xl:sticky xl:top-8 xl:w-80">
-                <div>
+        <form className="flex w-full max-w-[760px] flex-col gap-8" onSubmit={form.submit} noValidate>
+            <SaveBar form={form}>
+                <div className="ml-auto text-right">
                     <p className="text-[13px] font-bold text-muted">Total Strokes Gained</p>
-                    <SgValue value={form.total} className="text-[48px] leading-none" />
+                    <SgValue value={form.total} className="text-[32px] leading-none" />
                 </div>
+            </SaveBar>
+
+            <Errors errors={form.errors} />
+
+            <Section n={1} title="Strokes Gained">
                 <div className="flex flex-col gap-2">
-                    {SG_CATEGORIES.map(({ field, key }) => (
-                        <div key={field} className="flex items-center justify-between">
-                            <SgCategoryBadge category={key} long />
-                            <SgValue value={form.sg(field)} className="text-[15px]" />
-                        </div>
+                    {SG_CATEGORIES.map(({ field, key }, index) => (
+                        <SgInput
+                            key={field}
+                            category={key}
+                            value={form.sg(field)}
+                            locked={form.locked[field] !== null}
+                            onChange={(value) => form.setData(field, value)}
+                            onEnter={() => focusAfter(index)}
+                            invalid={field in form.errors}
+                            inputRef={(input) => {
+                                inputs.current[index] = input;
+                            }}
+                        />
                     ))}
                 </div>
-                <p className="text-[13px] text-muted">
-                    {[form.data.course_name, `${form.data.holes} holes`, form.data.score].filter(Boolean).join(' · ')}
-                </p>
-                <Button type="submit" size="lg" fullWidth isPending={form.processing}>
-                    Save Round
-                </Button>
-                {form.deletable && <DeleteRound round={form.deletable} fullWidth />}
-            </aside>
+            </Section>
+
+            <Section n={2} title="Score">
+                <div className="grid grid-cols-3 items-start gap-4">
+                    <NumberInput form={form} name="score" label="Score" isRequired />
+                    <HolesPicker form={form} />
+                    <NumberInput form={form} name="course_handicap" label="Course Handicap" isRequired />
+                </div>
+            </Section>
+
+            <Section n={3} title="Details">
+                <div className="grid grid-cols-3 items-start gap-4">
+                    <RoundDate value={form.data.played_on} onChange={(value) => form.setData('played_on', value)} error={form.errors.played_on} />
+                    <div className="col-span-2">
+                        <CoursePicker form={form} />
+                    </div>
+                    <NumberInput form={form} name="handicap_index" label="Handicap Index" decimals={1} isRequired />
+                    <TeesPicker form={form} />
+                    <NumberInput form={form} name="par" label="Par (optional)" />
+                    <div className="col-span-3">
+                        <BaselinePicker form={form} baselines={baselines} />
+                    </div>
+                </div>
+            </Section>
+
+            {form.advanced}
         </form>
     );
 }
@@ -272,15 +255,6 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                 </span>
             </div>
 
-            <div className="flex items-end justify-between">
-                <h2 className="text-[20px] font-extrabold">Strokes Gained</h2>
-                <span aria-label="Total Strokes Gained">
-                    <SgValue value={form.total} className="text-[32px]" />
-                </span>
-            </div>
-
-            <Errors errors={form.errors} />
-
             <form
                 className="flex flex-col gap-4"
                 onSubmit={(event) => {
@@ -289,6 +263,17 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                 }}
                 noValidate
             >
+                <SaveBar form={form} />
+
+                <Errors errors={form.errors} />
+
+                <div className="flex items-end justify-between">
+                    <h2 className="text-[20px] font-extrabold">Strokes Gained</h2>
+                    <span aria-label="Total Strokes Gained">
+                        <SgValue value={form.total} className="text-[32px]" />
+                    </span>
+                </div>
+
                 <Card>
                     <Card.Content className="flex flex-col gap-2">
                         {SG_CATEGORIES.map(({ field, key, label }, index) => (
@@ -366,14 +351,27 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                         )}
 
                         {form.advanced}
-
-                        <Button type="submit" size="lg" isPending={form.processing}>
-                            Save Round
-                        </Button>
-                        {form.deletable && <DeleteRound round={form.deletable} />}
                     </>
                 )}
             </form>
+        </div>
+    );
+}
+
+/**
+ * Save Round, and Delete Round when editing, in a bar above the form that sticks to the top as the golfer scrolls.
+ * It sticks at 0 inside a strip of page background, so the form never shows through above it.
+ */
+function SaveBar({ form, children }: { form: RoundForm; children?: ReactNode }) {
+    return (
+        <div className="sticky top-0 z-20 -mt-2 bg-(--background) pt-2 md:-mt-4 md:pt-4">
+            <div className="flex items-center gap-2 rounded-[24px] bg-surface p-3 [box-shadow:var(--overlay-shadow)]">
+                <Button type="submit" size="lg" className="flex-1 sm:flex-none" isPending={form.processing}>
+                    Save Round
+                </Button>
+                {form.deletable && <DeleteRound round={form.deletable} size="lg" />}
+                {children}
+            </div>
         </div>
     );
 }

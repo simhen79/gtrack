@@ -116,6 +116,21 @@ it('opens a saved Round for editing and saves the change', function () {
         ->where('round.sg_approach', '-0.75'));
 });
 
+it('returns an Edit Round that wasn’t saved to its form, with each field’s own error', function () {
+    $this->actingAs(golfer());
+    $id = enterRound();
+    $baseline = $this->get("/rounds/{$id}/edit")->inertiaProps('round.baseline_id');
+
+    $this->from("/rounds/{$id}/edit")->followingRedirects()
+        ->put("/rounds/{$id}", roundFields(['baseline_id' => $baseline, 'score' => null, 'sg_putting' => '1,05']))
+        ->assertInertia(fn ($page) => $page
+            ->component('rounds/edit')
+            ->where('round.id', $id)
+            ->where('errors.score', 'The score field is required.')
+            ->has('errors.sg_putting')
+            ->missing('errors.course_name'));
+});
+
 it('deletes a Round', function () {
     $this->actingAs(golfer());
     $id = enterRound();

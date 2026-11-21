@@ -3,17 +3,17 @@ import { ConfirmDialog, ConfirmName } from './confirm-dialog';
 
 type Props = {
     round: { id: string; course_name: string; played_on: string };
-    fullWidth?: boolean;
+    size?: 'md' | 'lg';
 };
 
 /** Delete Round, asked first in the shared ConfirmDialog. */
-export function DeleteRound({ round, fullWidth = false }: Props) {
+export function DeleteRound({ round, size }: Props) {
     const played = new Date(`${round.played_on}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
         <ConfirmDialog
             trigger="Delete Round"
-            fullWidth={fullWidth}
+            size={size}
             heading="Delete this Round?"
             keep="Keep Round"
             onConfirm={(visit) => router.delete(`/rounds/${round.id}`, visit)}
