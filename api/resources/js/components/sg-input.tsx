@@ -98,6 +98,7 @@ export function SignedInput(props: {
                 ref={props.inputRef}
                 aria-label={props.label}
                 aria-describedby={props.describedBy}
+                aria-invalid={props.invalid || undefined}
                 inputMode="decimal"
                 autoComplete="off"
                 placeholder={props.placeholder}

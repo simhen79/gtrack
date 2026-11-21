@@ -1,5 +1,4 @@
 import {
-    Alert,
     Button,
     Card,
     ComboBox,
@@ -25,6 +24,7 @@ import { SgInput } from '../../components/sg-input';
 import { SgKeypad } from '../../components/sg-keypad';
 import { SgValue } from '../../components/sg-value';
 import type { ShellProps } from '../../layouts/app-shell';
+import { useFocusFirstError } from '../../lib/forms';
 import { useMediaQuery } from '../../lib/media';
 import { sgForServer, sumSg } from '../../lib/strokes-gained';
 
@@ -133,6 +133,8 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
     };
     const fieldOf = (category: SgCategory) => SG_CATEGORIES.find((entry) => entry.category === category)!.field;
 
+    const onError = useFocusFirstError();
+
     const submit = (event?: FormEvent) => {
         event?.preventDefault();
         form.transform(({ baseline_id, new_baseline, ...data }) => ({
@@ -144,11 +146,11 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
             par: data.par || null,
             bands: Object.fromEntries(enteredBands.map(([id, value]) => [id, sgForServer(value)])),
         }));
-        // A save that fails returns to the top, so the banner and the fields show below the save bar, not behind it.
+        // A refused save has no summary: it moves to the first field that needs fixing, whose message is under it.
         if (editing) {
-            form.put(`/rounds/${round.id}`);
+            form.put(`/rounds/${round.id}`, { onError });
         } else {
-            form.post('/rounds');
+            form.post('/rounds', { onError });
         }
     };
 
@@ -203,8 +205,6 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                     <SgValue value={form.total} className="text-[32px] leading-none" />
                 </div>
             </SaveBar>
-
-            <Errors errors={form.errors} />
 
             <Section n={1} title="Score">
                 <div className="grid grid-cols-3 items-start gap-4">
@@ -293,8 +293,6 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                 noValidate
             >
                 <SaveBar form={form} />
-
-                <Errors errors={form.errors} />
 
                 <div className="flex items-end justify-between">
                     <h2 className="text-[20px] font-extrabold">Strokes Gained</h2>
@@ -423,27 +421,6 @@ function Section({ n, title, children }: { n: number; title: string; children: R
     );
 }
 
-function Errors({ errors }: { errors: Partial<Record<string, string>> }) {
-    const list = [...new Set(Object.values(errors))];
-
-    return (
-        list.length > 0 && (
-            <Alert status="danger">
-                <Alert.Content>
-                    <Alert.Title>This Round can’t be saved yet</Alert.Title>
-                    <Alert.Description>
-                        <ul className="list-disc pl-4">
-                            {list.map((error) => (
-                                <li key={error}>{error}</li>
-                            ))}
-                        </ul>
-                    </Alert.Description>
-                </Alert.Content>
-            </Alert>
-        )
-    );
-}
-
 /** A Strokes Gained value at phone width, opening the keypad; read-only once its bands make it up. */
 function SgRow(props: {
     category: SgCategoryKey;
@@ -476,6 +453,7 @@ function SgRow(props: {
                         aria-label={`${props.label} Strokes Gained`}
                         aria-pressed={props.active}
                         aria-describedby={props.error === undefined ? undefined : errorId}
+                        data-has-error={props.error === undefined ? undefined : true}
                         onClick={props.onPress}
                         className={`h-12 min-w-24 rounded-[12px] border bg-(--field-background) px-3 text-right ${border}`}
                     >
@@ -533,6 +511,7 @@ function BaselinePicker({ form, baselines, compact = false }: { form: RoundForm;
             </div>
             <ToggleButtonGroup
                 aria-label="Baseline"
+                data-has-error={form.errors.baseline_id ? true : undefined}
                 selectionMode="single"
                 disallowEmptySelection
                 className={`flex-wrap ${TRACK}`}
