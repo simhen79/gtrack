@@ -37,10 +37,22 @@ class AppServiceProvider extends ServiceProvider
                 && ($token->last_used_at ?? $token->created_at)->gte(now()->subDays(config('sanctum.idle_days'))),
         );
 
-        // Fail closed rather than email golfers from .env.example's placeholder address.
+        // Fail closed rather than email golfers from .env.example's placeholder address or with
+        // localhost links. Report and drop the email instead of throwing, so an invited email gets
+        // the same response as any other.
         Event::listen(MessageSending::class, function () {
-            if ($this->app->isProduction() && str_ends_with((string) config('mail.from.address'), '@example.com')) {
-                throw new RuntimeException('Set MAIL_FROM_ADDRESS to a real gtrack address before sending mail.');
+            if (! $this->app->isProduction()) {
+                return;
+            }
+            if (str_ends_with((string) config('mail.from.address'), '@example.com')) {
+                report(new RuntimeException('Set MAIL_FROM_ADDRESS to a real gtrack address before sending mail.'));
+
+                return false;
+            }
+            if (str_contains((string) parse_url((string) config('app.url'), PHP_URL_HOST), 'localhost')) {
+                report(new RuntimeException('Set APP_URL to gtrack\'s real address before sending mail.'));
+
+                return false;
             }
         });
     }

@@ -121,7 +121,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Every email uses the gtrack theme: the components and theme CSS in
-    | resources/views/vendor/mail, built from the design system's tokens.
+    | resources/views/vendor/mail, with colours copied from the design system's tokens.
     |
     */
 

@@ -1,7 +1,8 @@
 import { Button, Card, FieldError, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from 'heroui-native';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from '@/components/safe-area-view';
+import { SignInHeading } from '@/components/sign-in-heading';
 import { Wordmark } from '@/components/wordmark';
 import { Invalid } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -50,7 +51,7 @@ export default function SignIn() {
 
           {step === 'email' ? (
             <>
-              <Heading title="Sign in to gtrack">There’s no password. We’ll email you a 6-digit code.</Heading>
+              <SignInHeading title="Sign in to gtrack">There’s no password. We’ll email you a 6-digit code.</SignInHeading>
               <Card>
                 <Card.Body className="gap-5">
                   <TextField isInvalid={!!error}>
@@ -77,10 +78,10 @@ export default function SignIn() {
             </>
           ) : (
             <>
-              <Heading title="Check your email">
+              <SignInHeading title="Check your email">
                 If <Text className="text-foreground" style={{ fontFamily: fonts.bold }}>{email}</Text> has an invite, a 6-digit code is on
                 its way. It works once, for 10 minutes.
-              </Heading>
+              </SignInHeading>
               <Card>
                 <Card.Body className="gap-5">
                   <View className="gap-2">
@@ -95,6 +96,7 @@ export default function SignIn() {
                       isDisabled={busy}
                       textInputProps={{ textContentType: 'oneTimeCode', autoComplete: 'one-time-code', autoFocus: true }}
                     >
+                      {/* Six 52px slots don't fit a phone's card, so they share its width. */}
                       <InputOTP.Group className="gap-2">
                         {[0, 1, 2, 3, 4, 5].map((index) => (
                           <InputOTP.Slot key={index} index={index} className="h-14 flex-1" />
@@ -120,18 +122,5 @@ export default function SignIn() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
-}
-
-function Heading({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View className="gap-3">
-      <Text className="text-[34px] leading-[38px] text-foreground" style={{ fontFamily: fonts.serif }}>
-        {title}
-      </Text>
-      <Text className="text-[15px] text-muted" style={{ fontFamily: fonts.body }}>
-        {children}
-      </Text>
-    </View>
   );
 }

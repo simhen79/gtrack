@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Support\Facades\Exceptions;
 use Symfony\Component\Mime\Email;
 
 // Real mail through the array transport, so each test reads the emails as an inbox would.
@@ -33,6 +34,8 @@ it('sends the invitation and the sign-in code in one gtrack mail theme, each wit
             ->toContain('<meta name="color-scheme" content="light dark">')
             ->toContain('prefers-color-scheme: dark')
             ->toContain('Manrope')
+            ->toContain('#B84C1A')
+            ->toContain('#C9DC6B')
             ->toContain('#EE7B47')
             ->toContain('#B4CB45')
             ->toContain('gtrack</span>')
@@ -59,6 +62,7 @@ it('puts the code first in the sign-in code email, says it lasts 10 minutes and 
         ->and($email->getTextBody())
         ->toContain($code)
         ->toContain('10 minutes')
+        ->toContain('works once')
         ->toContain('https://gtrack.test/login')
         ->not->toContain('localhost');
 });
@@ -80,14 +84,31 @@ it('sends from MAIL_FROM_ADDRESS as gtrack', function () {
     }
 });
 
-it('refuses to send mail in production from a placeholder address', function () {
+it('sends nothing in production from a placeholder address, and answers as for an uninvited email', function () {
+    Exceptions::fake();
     config(['mail.from.address' => 'hello@example.com']);
     app()->detectEnvironment(fn () => 'production');
     $golfer = golfer();
+    $this->withoutMiddleware(ValidateCsrfToken::class);
 
-    $this->withoutExceptionHandling()->withoutMiddleware(ValidateCsrfToken::class);
-    expect(fn () => $this->post('/login/code', ['email' => $golfer->email]))
-        ->toThrow(RuntimeException::class, 'MAIL_FROM_ADDRESS');
+    $invited = $this->post('/login/code', ['email' => $golfer->email]);
+    $uninvited = $this->post('/login/code', ['email' => 'stranger@example.com']);
+
+    expect($invited->status())->toBe($uninvited->status())
+        ->and($invited->headers->get('Location'))->toBe($uninvited->headers->get('Location'))
+        ->and(inbox())->toBeEmpty();
+    Exceptions::assertReported(fn (RuntimeException $e) => str_contains($e->getMessage(), 'MAIL_FROM_ADDRESS'));
+});
+
+it('sends nothing in production while APP_URL is still localhost', function () {
+    Exceptions::fake();
+    config(['app.url' => 'http://localhost']);
+    app()->detectEnvironment(fn () => 'production');
+    $golfer = golfer();
+    $this->withoutMiddleware(ValidateCsrfToken::class);
+
+    $this->post('/login/code', ['email' => $golfer->email])->assertRedirect('/login/code');
 
     expect(inbox())->toBeEmpty();
+    Exceptions::assertReported(fn (RuntimeException $e) => str_contains($e->getMessage(), 'APP_URL'));
 });
