@@ -1,4 +1,5 @@
 import { Avatar, BottomSheet, Tabs } from 'heroui-native';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +15,7 @@ const THEMES: { id: ThemeChoice; label: string }[] = [
   { id: 'light', label: 'Light' },
 ];
 
-/** The wordmark and the avatar, whose sheet holds the email, the theme choice and Sign out. */
+/** The wordmark and the avatar, whose sheet holds the email, the theme choice, the pages that aren't tabs and Sign out. */
 export function TopRow() {
   const { me, signOut } = useSession();
   const insets = useSafeAreaInsets();
@@ -41,6 +42,12 @@ export function TopRow() {
           <BottomSheet.Content backgroundClassName="rounded-t-[24px] bg-overlay" contentContainerClassName="gap-2 p-5">
             <BottomSheet.Title className="text-[13px] text-muted">{email}</BottomSheet.Title>
             <ThemeChoicePicker />
+            <PracticeGroundsRow
+              onPress={() => {
+                setOpen(false);
+                router.push('/practice-grounds');
+              }}
+            />
             <SignOutRow
               onPress={() => {
                 setOpen(false);
@@ -74,6 +81,23 @@ function ThemeChoicePicker() {
         ))}
       </Tabs.List>
     </Tabs>
+  );
+}
+
+function PracticeGroundsRow({ onPress }: { onPress: () => void }) {
+  const [foreground] = useCSSVariable(['--color-foreground']) as string[];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      className="h-14 flex-row items-center gap-3 rounded-[18px] bg-surface-secondary px-4"
+    >
+      <Icon name="MapPin" color={foreground} />
+      <Text className="text-[15px] text-foreground" style={{ fontFamily: fonts.bold }}>
+        Practice Grounds
+      </Text>
+    </Pressable>
   );
 }
 
