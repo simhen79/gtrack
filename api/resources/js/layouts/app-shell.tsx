@@ -95,7 +95,7 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
                     <h1 className="truncate font-bold">{title}</h1>
                     <div className="ml-auto flex shrink-0 items-center gap-2">
                         {action && <PageActionLink action={action} size="sm" />}
-                        <AccountMenu email={email} admin={adminPages} />
+                        <AccountMenu email={email} pages={golferNav.filter((item) => !item.tab)} admin={adminPages} />
                     </div>
                 </header>
                 <header className="hidden items-end justify-between gap-4 px-7 pt-8 pb-4 md:flex">

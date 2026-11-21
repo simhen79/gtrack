@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\GamesController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\EmailCodeController;
 use App\Http\Controllers\FallbackHandicapController;
+use App\Http\Controllers\PracticeGroundsController;
 use App\Http\Controllers\RoundsController;
 use App\Http\Controllers\TrendsController;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,9 @@ Route::middleware(['auth', 'golfer.settings'])->group(function () {
     Route::inertia('/settings', 'settings/index');
     Route::resource('rounds', RoundsController::class)->except('show');
     Route::get('/trends', [TrendsController::class, 'index']);
+    Route::resource('practice-grounds', PracticeGroundsController::class)->except('show', 'destroy');
+    Route::post('/practice-grounds/{practice_ground}/archive', [PracticeGroundsController::class, 'archive'])->name('practice-grounds.archive');
+    Route::post('/practice-grounds/{practice_ground}/restore', [PracticeGroundsController::class, 'restore'])->name('practice-grounds.restore');
 });
 
 Route::middleware('auth')->group(function () {

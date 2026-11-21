@@ -128,6 +128,19 @@ name: string | null,
 permissions: string[],
 };
 export type PaginatedDataCollection<TKey, TValue> = LengthAwarePaginator<TKey, TValue>;
+export type PracticeGroundData = {
+id: string,
+name: string,
+note: string | null,
+facility_ids: string[],
+feature_ids: string[],
+archived_at: string | null,
+};
+export type PracticeGroundsData = {
+practice_grounds: PracticeGroundData[],
+archived: PracticeGroundData[],
+facilities: FacilityData[],
+};
 export type Role = 'admin' | 'golfer';
 export type RoundFormData = {
 id: string | null,
