@@ -82,7 +82,19 @@ export function SignedInput(props: {
 
     return (
         <InputGroup className={props.className} isInvalid={props.invalid}>
-            <InputGroup.Prefix>
+            <InputGroup.Input
+                ref={props.inputRef}
+                aria-label={props.label}
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder={props.placeholder}
+                value={props.value.replace('-', '−')}
+                onChange={(event) => props.onChange(typeSg(props.value, event.target.value))}
+                onKeyDown={onKeyDown}
+                className={`w-full min-w-0 pr-3 text-right font-extrabold tabular-nums ${number === null ? '' : sgTone(number)} ${props.inputClassName ?? ''}`}
+            />
+            {/* After the value: the golfer types the number, then flips its sign if it's positive. */}
+            <InputGroup.Suffix>
                 <Button
                     isIconOnly
                     size="sm"
@@ -94,18 +106,7 @@ export function SignedInput(props: {
                 >
                     ±
                 </Button>
-            </InputGroup.Prefix>
-            <InputGroup.Input
-                ref={props.inputRef}
-                aria-label={props.label}
-                inputMode="decimal"
-                autoComplete="off"
-                placeholder={props.placeholder}
-                value={props.value.replace('-', '−')}
-                onChange={(event) => props.onChange(typeSg(props.value, event.target.value))}
-                onKeyDown={onKeyDown}
-                className={`w-full min-w-0 text-right font-extrabold tabular-nums ${number === null ? '' : sgTone(number)} ${props.inputClassName ?? ''}`}
-            />
+            </InputGroup.Suffix>
         </InputGroup>
     );
 }
