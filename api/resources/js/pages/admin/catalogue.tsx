@@ -166,7 +166,9 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                     {draftItems.length === 0 ? (
                         <p className="text-[13px] text-muted">No Drafts waiting.</p>
                     ) : (
-                        <ul className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+                        // One Draft per row, scrolling inside the card once about three are showing; the padding
+                        // keeps the selected Draft's outline clear of the scroll edge.
+                        <ul className="-m-1 flex max-h-[19rem] flex-col gap-2 overflow-y-auto p-1">
                             {draftItems.map((item) => (
                                 <li key={item.id}>
                                     <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => openItem(item.id)} />
@@ -231,7 +233,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
     const groupLabels = distanceGroups.filter((group) => shape.distance_group_ids.includes(group.id)).map((group) => group.label);
 
     return (
-        <div className="flex max-w-3xl flex-col gap-5">
+        <div className="flex flex-col gap-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <span className="flex items-center gap-2">
@@ -255,7 +257,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
                 </Alert>
             )}
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-3">
                 <Tile label="Facilities">{facilityNames.join(', ') || 'None'}</Tile>
                 <Tile label="Time">{shape.balls ? `${shape.balls} balls` : `${shape.estimated_minutes} min`}</Tile>
                 {item.kind === 'Game' ? <Tile label="Origin">{ORIGINS[item.game.origin]}</Tile> : <Tile label="Distance groups">{groupLabels.join(', ') || 'Any'}</Tile>}
@@ -353,11 +355,12 @@ function Tile({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
+/** Rules, scoring and setup keep a reading width, while the tiles above use the whole pane. */
 function Text({ label, children }: { label: string; children: ReactNode }) {
     return (
         <div>
             <p className="text-[13px] font-bold text-muted">{label}</p>
-            <p className="mt-1 text-[15px] leading-relaxed whitespace-pre-line">{children}</p>
+            <p className="mt-1 max-w-prose text-[15px] leading-relaxed whitespace-pre-line">{children}</p>
         </div>
     );
 }
