@@ -2,8 +2,8 @@
 
 use App\Auth\ConsumeHashedOneTimePassword;
 use App\Auth\CreateHashedOneTimePassword;
+use App\Notifications\SignInCode;
 use Spatie\OneTimePasswords\Models\OneTimePassword;
-use Spatie\OneTimePasswords\Notifications\OneTimePasswordNotification;
 use Spatie\OneTimePasswords\Support\OriginInspector\DefaultOriginEnforcer;
 use Spatie\OneTimePasswords\Support\PasswordGenerators\NumericOneTimePasswordGenerator;
 
@@ -71,7 +71,7 @@ return [
     /*
      * The notification used to send a one-time password to a user
      */
-    'notification' => OneTimePasswordNotification::class,
+    'notification' => SignInCode::class,
 
     /*
      * These class are responsible for performing core tasks regarding one-time passwords.

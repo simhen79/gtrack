@@ -115,4 +115,19 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Markdown Mail
+    |--------------------------------------------------------------------------
+    |
+    | Every email uses the gtrack theme: the components and theme CSS in
+    | resources/views/vendor/mail, with colours copied from the design system's tokens.
+    |
+    */
+
+    'markdown' => [
+        'theme' => 'gtrack',
+        'paths' => [resource_path('views/vendor/mail')],
+    ],
+
 ];

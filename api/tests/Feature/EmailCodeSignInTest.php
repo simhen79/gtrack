@@ -1,9 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\SignInCode;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\OneTimePasswords\Notifications\OneTimePasswordNotification;
 
 beforeEach(fn () => Notification::fake());
 
@@ -11,7 +11,7 @@ beforeEach(fn () => Notification::fake());
 function sentCode(User $user): string
 {
     $code = null;
-    Notification::assertSentTo($user, OneTimePasswordNotification::class, function ($notification) use (&$code) {
+    Notification::assertSentTo($user, SignInCode::class, function ($notification) use (&$code) {
         $code = $notification->oneTimePassword->password;
 
         return true;
@@ -133,7 +133,7 @@ it('refuses a fourth code for one email within 15 minutes', function () {
     }
 
     $this->post('/login/code', ['email' => $golfer->email])->assertSessionHasErrors('email');
-    Notification::assertSentToTimes($golfer, OneTimePasswordNotification::class, 3);
+    Notification::assertSentToTimes($golfer, SignInCode::class, 3);
 
     $this->travel(16)->minutes();
     $this->post('/login/code', ['email' => $golfer->email])->assertSessionHasNoErrors();

@@ -1,0 +1,184 @@
+/* gtrack mail theme: the light tokens from docs/design-system/tokens.json, inlined into every email.
+   html/layout.blade.php switches to the dark tokens for mail clients set to dark. */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: Manrope, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-feature-settings: 'tnum';
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #E4E8D8;
+    color: #161616;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol {
+    color: #161616;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-top: 0;
+    text-align: left;
+}
+
+a {
+    color: #161616;
+}
+
+/* Typography: one Instrument Serif title per email, as on a page. */
+
+h1 {
+    color: #161616;
+    font-family: 'Instrument Serif', Georgia, serif !important;
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 1.1;
+    margin: 0 0 16px;
+    text-align: left;
+}
+
+.muted {
+    color: #5A5A55;
+    font-size: 13px;
+}
+
+/* Layout */
+
+.wrapper,
+.content,
+.body {
+    background-color: #E4E8D8;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.wrapper {
+    padding: 0 12px;
+}
+
+/* Header: the wordmark */
+
+.header {
+    padding: 32px 0 20px;
+    text-align: center;
+}
+
+.wordmark {
+    color: #161616;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.mark-ring {
+    border: 5px solid #B84C1A;
+    border-radius: 50%;
+    display: inline-block;
+    height: 24px;
+    margin-right: 8px;
+    text-align: center;
+    vertical-align: middle;
+    width: 24px;
+}
+
+.mark-dot {
+    background-color: #C9DC6B;
+    border-radius: 50%;
+    display: block;
+    height: 8px;
+    margin: 3px auto 0;
+    width: 8px;
+}
+
+.wordmark-name {
+    color: #161616;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    vertical-align: middle;
+}
+
+/* The card: flat, rounded, no border or shadow. */
+
+.inner-body {
+    background-color: #F4F4EE;
+    border-radius: 24px;
+    margin: 0 auto;
+    padding: 0;
+    width: 520px;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 36px 32px;
+}
+
+/* Footer */
+
+.footer {
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 520px;
+}
+
+.footer p {
+    color: #5A5A55;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Buttons: the email's one accent action, 12px corners. */
+
+.action {
+    margin: 28px auto;
+    padding: 0;
+    text-align: left;
+    width: 100%;
+}
+
+.button {
+    border-radius: 12px;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 700;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+.button-primary {
+    background-color: #B84C1A;
+    border-bottom: 14px solid #B84C1A;
+    border-left: 24px solid #B84C1A;
+    border-right: 24px solid #B84C1A;
+    border-top: 14px solid #B84C1A;
+    color: #FFFFFF;
+}
+
+/* The sign-in code: stat-xl digits on a white tile. */
+
+.code-table {
+    margin: 24px 0;
+}
+
+.code {
+    background-color: #FFFFFF;
+    border-radius: 18px;
+    color: #161616;
+    font-family: Manrope, 'SF Mono', Menlo, Consolas, monospace !important;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    line-height: 1;
+    padding: 24px 16px 24px 24px;
+    text-align: center;
+}
