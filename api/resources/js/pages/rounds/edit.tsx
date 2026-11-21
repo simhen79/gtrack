@@ -55,7 +55,7 @@ const TRACK = 'w-max rounded-full bg-surface-secondary p-1';
  */
 const HOLE = 'h-full w-full min-w-0 rounded-none bg-transparent';
 
-/** From here the page has room for the focused column and the side rail, typed on a keyboard. */
+/** From here the page has room for the full-width form, typed on a keyboard. */
 const WIDE = '(min-width: 80rem)';
 
 type Props = { round: RoundFormData; baselines: BaselineData[]; courses: CourseData[]; sg_bands: SgBandData[] };
@@ -63,8 +63,8 @@ type Props = { round: RoundFormData; baselines: BaselineData[]; courses: CourseD
 type RoundForm = ReturnType<typeof useRoundForm>;
 
 /**
- * Round entry, under a save bar that stays in view. At desktop width, a focused column
- * of Strokes Gained, Score and Details, with the live total in the bar. Narrower, layout C:
+ * Round entry, under a save bar that stays in view. At desktop width, Strokes Gained, Score
+ * and Details use the full width, as the Drill form does, with the live total in the bar. Narrower, layout C:
  * Strokes Gained on the keypad, with the carried-over details folded under one line.
  * Advanced stats are folded away below either.
  */
@@ -174,7 +174,7 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
     };
 
     return (
-        <form className="flex w-full max-w-[760px] flex-col gap-8" onSubmit={form.submit} noValidate>
+        <form className="flex w-full flex-col gap-8" onSubmit={form.submit} noValidate>
             <SaveBar form={form}>
                 <div className="ml-auto text-right">
                     <p className="text-[13px] font-bold text-muted">Total Strokes Gained</p>
@@ -185,7 +185,8 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
             <Errors errors={form.errors} />
 
             <Section n={1} title="Strokes Gained">
-                <div className="flex flex-col gap-2">
+                {/* Two columns now the form is full width: Off the Tee, Approach / Short Game, Putting. */}
+                <div className="grid grid-cols-2 gap-2">
                     {SG_CATEGORIES.map(({ field, key }, index) => (
                         <SgInput
                             key={field}
