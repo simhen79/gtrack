@@ -17,6 +17,13 @@ Route::middleware(['auth', 'golfer.settings'])->group(function () {
     Route::inertia('/settings', 'settings/index');
     Route::resource('rounds', RoundsController::class)->except('show');
     Route::get('/trends', [TrendsController::class, 'index']);
+
+    // PROTOTYPE (#28), local only: Practice Grounds variants, kept on the prototype/28-practice-grounds branch.
+    if (app()->environment('local')) {
+        Route::get('/prototype/practice-grounds', fn () => Inertia\Inertia::render('prototype/practice-grounds', [
+            'facilities' => App\Data\FacilityData::list(),
+        ]));
+    }
 });
 
 Route::middleware('auth')->group(function () {
