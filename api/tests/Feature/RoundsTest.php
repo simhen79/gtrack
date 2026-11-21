@@ -86,6 +86,7 @@ it('refuses holes other than 9 or 18, and Strokes Gained past two decimals', fun
     'holes 12' => [['holes' => 12], 'holes'],
     'three decimals' => [['sg_approach' => '-1.255'], 'sg_approach'],
     'not a number' => [['sg_putting' => '1,05'], 'sg_putting'],
+    'two decimal points' => [['sg_putting' => '1.2.3'], 'sg_putting'],
 ]);
 
 it('refuses a Baseline that belongs to another golfer', function () {
