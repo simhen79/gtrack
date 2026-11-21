@@ -17,7 +17,7 @@ import { parseSG } from '@gtrack/design';
 import type { BaselineData, CourseData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
 import { useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { AdvancedStats } from '../../components/advanced-stats';
+import { AdvancedButton, AdvancedSheet, advancedErrorCount, advancedSummary } from '../../components/advanced-stats';
 import { DeleteRound } from '../../components/delete-round';
 import { RoundDate } from '../../components/round-date';
 import { SgCategoryBadge, type SgCategoryKey } from '../../components/sg-category';
@@ -58,15 +58,19 @@ const HOLE = 'h-full w-full min-w-0 rounded-none bg-transparent';
 /** From here the page has room for the full-width form, typed on a keyboard. */
 const WIDE = '(min-width: 80rem)';
 
+/** From here the advanced stats open in a panel from the right rather than a sheet from the bottom. */
+const TABLET = '(min-width: 48rem)';
+
 type Props = { round: RoundFormData; baselines: BaselineData[]; courses: CourseData[]; sg_bands: SgBandData[] };
 
 type RoundForm = ReturnType<typeof useRoundForm>;
 
 /**
- * Round entry, under a save bar that stays in view. At desktop width, Strokes Gained, Score
- * and Details use the full width, as the Drill form does, with the live total in the bar. Narrower, layout C:
- * Strokes Gained on the keypad, with the carried-over details folded under one line.
- * Advanced stats are folded away below either.
+ * Round entry, under a save bar that stays in view. At desktop width, Score, Details and then
+ * Strokes Gained use the full width, as the Drill form does, with the live total in the bar; each
+ * SG Category's row opens its advanced stats in a flyout from the right. Narrower, layout C:
+ * Strokes Gained on the keypad, with the carried-over details folded under one line, and a list
+ * of the SG Categories below that opens each one's advanced stats in a sheet from the bottom.
  */
 export default function EditRound({ round, baselines, courses, sg_bands }: Props) {
     const wide = useMediaQuery(WIDE);
@@ -107,8 +111,8 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
         stats: round.stats,
         bands: { ...round.bands } as Record<string, string>,
     });
-    const hasAdvanced = Object.values(round.stats).some((value) => value !== null) || Object.keys(round.bands).length > 0;
-    const [advancedOpen, setAdvancedOpen] = useState(hasAdvanced);
+    // The SG Category whose advanced stats are open in the flyout, if any.
+    const [advancedFor, setAdvancedFor] = useState<SgCategory | null>(null);
 
     const enteredBands = Object.entries(form.data.bands).filter(([, value]) => parseSG(value) !== null);
     const bandTotal = (category: SgCategory): string | null => {
@@ -119,7 +123,15 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
     const locked = Object.fromEntries(SG_CATEGORIES.map(({ field, category }) => [field, bandTotal(category)])) as Record<SgField, string | null>;
     const sg = (field: SgField) => locked[field] ?? form.data[field];
     const errors = form.errors as Partial<Record<string, string>>;
-    const advancedHasErrors = Object.keys(errors).some((key) => key.startsWith('stats') || key.startsWith('bands'));
+    const advancedValues = {
+        stats: form.data.stats,
+        onStatChange: (field: keyof RoundStatsData, value: number | null) => form.setData('stats', { ...form.data.stats, [field]: value }),
+        sgBands,
+        bands: form.data.bands,
+        onBandChange: (id: string, value: string) => form.setData('bands', { ...form.data.bands, [id]: value }),
+        errors,
+    };
+    const fieldOf = (category: SgCategory) => SG_CATEGORIES.find((entry) => entry.category === category)!.field;
 
     const submit = (event?: FormEvent) => {
         event?.preventDefault();
@@ -151,16 +163,26 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
         total: sumSg(SG_CATEGORIES.map(({ field }) => sg(field))),
         submit,
         deletable: editing ? { id: round.id!, course_name: round.course_name, played_on: round.played_on } : null,
-        advanced: (
-            <AdvancedStats
-                stats={form.data.stats}
-                onStatChange={(field: keyof RoundStatsData, value) => form.setData('stats', { ...form.data.stats, [field]: value })}
-                sgBands={sgBands}
-                bands={form.data.bands}
-                onBandChange={(id, value) => form.setData('bands', { ...form.data.bands, [id]: value })}
-                errors={errors}
-                isExpanded={advancedOpen || advancedHasErrors}
-                onExpandedChange={setAdvancedOpen}
+        /** Opens one SG Category's advanced stats; `standalone` when it doesn't sit under that category's row. */
+        advancedButton: (category: SgCategory, standalone = false) => (
+            <AdvancedButton
+                key={category}
+                category={category}
+                standalone={standalone}
+                summary={advancedSummary(category, advancedValues)}
+                errorCount={advancedErrorCount(category, advancedValues)}
+                onPress={() => setAdvancedFor(category)}
+            />
+        ),
+        /** The flyout with the open category's advanced stats: from the right when wide, from the bottom narrower. */
+        advancedSheet: (placement: 'right' | 'bottom') => (
+            <AdvancedSheet
+                category={advancedFor}
+                onClose={() => setAdvancedFor(null)}
+                placement={placement}
+                value={advancedFor ? sg(fieldOf(advancedFor)) : ''}
+                fromBands={advancedFor !== null && locked[fieldOf(advancedFor)] !== null}
+                {...advancedValues}
             />
         ),
     };
@@ -184,27 +206,7 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
 
             <Errors errors={form.errors} />
 
-            <Section n={1} title="Strokes Gained">
-                {/* Two columns now the form is full width: Off the Tee, Approach / Short Game, Putting. */}
-                <div className="grid grid-cols-2 gap-2">
-                    {SG_CATEGORIES.map(({ field, key }, index) => (
-                        <SgInput
-                            key={field}
-                            category={key}
-                            value={form.sg(field)}
-                            locked={form.locked[field] !== null}
-                            onChange={(value) => form.setData(field, value)}
-                            onEnter={() => focusAfter(index)}
-                            invalid={field in form.errors}
-                            inputRef={(input) => {
-                                inputs.current[index] = input;
-                            }}
-                        />
-                    ))}
-                </div>
-            </Section>
-
-            <Section n={2} title="Score">
+            <Section n={1} title="Score">
                 <div className="grid grid-cols-3 items-start gap-4">
                     <NumberInput form={form} name="score" label="Score" isRequired />
                     <HolesPicker form={form} />
@@ -212,7 +214,7 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                 </div>
             </Section>
 
-            <Section n={3} title="Details">
+            <Section n={2} title="Details">
                 <div className="grid grid-cols-3 items-start gap-4">
                     <RoundDate value={form.data.played_on} onChange={(value) => form.setData('played_on', value)} error={form.errors.played_on} />
                     <div className="col-span-2">
@@ -227,12 +229,37 @@ function WideEntry({ form, baselines }: { form: RoundForm; baselines: BaselineDa
                 </div>
             </Section>
 
-            {form.advanced}
+            <Section n={3} title="Strokes Gained">
+                {/* Two columns: Off the Tee, Approach / Short Game, Putting, each with a button that opens its
+                    advanced stats in a flyout from the right. */}
+                <div className="grid grid-cols-2 gap-2">
+                    {SG_CATEGORIES.map(({ field, key, category }, index) => (
+                        <div key={field} className="flex flex-col rounded-[16px] bg-surface-secondary">
+                            <SgInput
+                                category={key}
+                                value={form.sg(field)}
+                                locked={form.locked[field] !== null}
+                                onChange={(value) => form.setData(field, value)}
+                                onEnter={() => focusAfter(index)}
+                                invalid={field in form.errors}
+                                inputRef={(input) => {
+                                    inputs.current[index] = input;
+                                }}
+                            />
+                            <div className="px-1 pb-1">{form.advancedButton(category)}</div>
+                        </div>
+                    ))}
+                </div>
+            </Section>
+
+            {form.advancedSheet('right')}
         </form>
     );
 }
 
 function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: BaselineData[] }) {
+    // A bottom sheet on a phone; with a tablet's width, the panel from the right, as on desktop.
+    const tablet = useMediaQuery(TABLET);
     const firstOpen = SG_CATEGORIES.findIndex(({ field }) => form.locked[field] === null);
     const [activeSg, setActiveSg] = useState<number | null>(form.editing || firstOpen < 0 ? null : firstOpen);
     const [showDetails, setShowDetails] = useState(form.data.course_name === '');
@@ -352,7 +379,12 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                             </Card>
                         )}
 
-                        {form.advanced}
+                        <Card>
+                            <Card.Content className="flex flex-col gap-1 p-2">
+                                {SG_CATEGORIES.map(({ category }) => form.advancedButton(category, true))}
+                            </Card.Content>
+                        </Card>
+                        {form.advancedSheet(tablet ? 'right' : 'bottom')}
                     </>
                 )}
             </form>
