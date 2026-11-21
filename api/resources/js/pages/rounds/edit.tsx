@@ -132,10 +132,11 @@ function useRoundForm(round: RoundFormData, baselines: BaselineData[], courses: 
             par: data.par || null,
             bands: Object.fromEntries(enteredBands.map(([id, value]) => [id, sgForServer(value)])),
         }));
+        // A save that fails returns to the top, so the banner and the fields show below the save bar, not behind it.
         if (editing) {
-            form.put(`/rounds/${round.id}`, { preserveScroll: true });
+            form.put(`/rounds/${round.id}`);
         } else {
-            form.post('/rounds', { preserveScroll: true });
+            form.post('/rounds');
         }
     };
 

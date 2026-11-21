@@ -9,7 +9,6 @@ type Props = {
     trigger: string;
     /** "danger-soft" beside other actions; "danger" when it's the only action on its card. */
     triggerVariant?: 'danger-soft' | 'danger';
-    fullWidth?: boolean;
     size?: 'md' | 'lg';
     className?: string;
     /** "<Verb> this <thing>?", such as "Delete this Round?". */
@@ -27,13 +26,13 @@ type Props = {
  * Every destructive confirm in the app: the heading with the danger icon on its right,
  * the consequences, then "Keep <thing>" and the danger confirm. See the design-system README.
  */
-export function ConfirmDialog({ trigger, triggerVariant = 'danger-soft', fullWidth = false, size, className, heading, children, keep, confirm = trigger, onConfirm }: Props) {
+export function ConfirmDialog({ trigger, triggerVariant = 'danger-soft', size, className, heading, children, keep, confirm = trigger, onConfirm }: Props) {
     const [open, setOpen] = useState(false);
     const [pending, setPending] = useState(false);
 
     return (
         <AlertDialog isOpen={open} onOpenChange={setOpen}>
-            <Button variant={triggerVariant} size={size} fullWidth={fullWidth} className={className}>
+            <Button variant={triggerVariant} size={size} className={className}>
                 {trigger}
             </Button>
             <AlertDialog.Backdrop>
