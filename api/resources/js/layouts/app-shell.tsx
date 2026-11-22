@@ -94,8 +94,8 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
                     </span>
                     <h1 className="truncate font-bold">{title}</h1>
                     <div className="ml-auto flex shrink-0 items-center gap-2">
-                        {action && <PageActionLink action={action} size="sm" />}
-                        <AccountMenu email={email} admin={adminPages} />
+                        {action && <PageActionLink action={action} size="sm" iconOnly />}
+                        <AccountMenu email={email} pages={golferNav.filter((item) => !item.tab)} admin={adminPages} />
                     </div>
                 </header>
                 <header className="hidden items-end justify-between gap-4 px-7 pt-8 pb-4 md:flex">
@@ -110,12 +110,19 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
     );
 }
 
-/** A page's create action, top right: secondary, because Enter a Round is the view's one accent button. */
-function PageActionLink({ action, size = 'md' }: { action: PageAction; size?: 'sm' | 'md' }) {
+/**
+ * A page's create action, top right: secondary, because Enter a Round is the view's one accent button.
+ * In the phone's top row it's just the +, with the label as its name, so the page name keeps its room.
+ */
+function PageActionLink({ action, size = 'md', iconOnly = false }: { action: PageAction; size?: 'sm' | 'md'; iconOnly?: boolean }) {
     return (
-        <Link href={action.href} className={buttonVariants({ variant: 'secondary', size, className: 'gap-1.5 bg-surface no-underline hover:no-underline' })}>
+        <Link
+            href={action.href}
+            aria-label={iconOnly ? action.label : undefined}
+            className={buttonVariants({ variant: 'secondary', size, isIconOnly: iconOnly, className: 'gap-1.5 bg-surface no-underline hover:no-underline' })}
+        >
             <Plus className="size-4" />
-            {action.label}
+            {!iconOnly && action.label}
         </Link>
     );
 }
