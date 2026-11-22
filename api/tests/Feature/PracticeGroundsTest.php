@@ -1,37 +1,8 @@
 <?php
 
-use App\Models\Facility;
-use App\Models\Feature;
 use App\Models\PracticeGround;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
-
-function facilityId(string $key): string
-{
-    return Facility::where('key', $key)->value('id');
-}
-
-function featureId(string $facilityKey, string $key): string
-{
-    return Feature::where('facility_id', facilityId($facilityKey))->where('key', $key)->value('id');
-}
-
-/**
- * A Practice Ground as the editor posts it, linking reference rows by id.
- *
- * @param  array<string, mixed>  $overrides
- * @return array<string, mixed>
- */
-function practiceGroundFields(array $overrides = []): array
-{
-    return [
-        'name' => 'Home club',
-        'note' => 'The chipping green slopes back to front.',
-        'facility_ids' => [facilityId('range_bay'), facilityId('putting_green')],
-        'feature_ids' => [featureId('range_bay', 'target_flags'), featureId('putting_green', 'slopes')],
-        ...$overrides,
-    ];
-}
 
 it('saves a named Practice Ground with its Facilities, their features and a note', function () {
     $this->actingAs(golfer())

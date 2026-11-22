@@ -119,6 +119,35 @@ it('confirms a saved Handicap Index with a Toast', function () {
         ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Handicap Index saved', '12.4')));
 });
 
+it('confirms a saved Practice Ground with a Toast', function () {
+    $this->actingAs(golfer())->followingRedirects()
+        ->post('/practice-grounds', practiceGroundFields())
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('practice-grounds/index')
+            ->hasFlash('toast', successToast('Practice Ground saved', 'Home club')));
+});
+
+it('confirms an edited Practice Ground with a Toast', function () {
+    $this->actingAs(golfer());
+    $this->post('/practice-grounds', practiceGroundFields());
+    $id = $this->get('/practice-grounds')->inertiaProps('practice_grounds.0.id');
+
+    $this->followingRedirects()
+        ->put("/practice-grounds/{$id}", practiceGroundFields(['name' => 'Range at work']))
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Practice Ground saved', 'Range at work')));
+});
+
+it('confirms an archived and a restored Practice Ground with a Toast', function () {
+    $this->actingAs(golfer());
+    $this->post('/practice-grounds', practiceGroundFields());
+    $id = $this->get('/practice-grounds')->inertiaProps('practice_grounds.0.id');
+
+    $this->followingRedirects()->post("/practice-grounds/{$id}/archive")
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Practice Ground archived', 'Home club')));
+    $this->followingRedirects()->post("/practice-grounds/{$id}/restore")
+        ->assertInertia(fn (Assert $page) => $page->hasFlash('toast', successToast('Practice Ground restored', 'Home club')));
+});
+
 it('shows no Toast when a form comes back with errors', function () {
     $this->actingAs(golfer());
 

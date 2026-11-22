@@ -2,6 +2,7 @@
 
 use App\Auth\CurrentGolfer;
 use App\Models\Facility;
+use App\Models\Feature;
 use App\Models\User;
 use App\Notifications\SignInCode;
 use Illuminate\Database\Eloquent\Model;
@@ -230,6 +231,33 @@ function drillFields(array $overrides = []): array
         'facility_ids' => [Facility::where('key', 'putting_green')->value('id')],
         'feature_ids' => [],
         'distance_group_ids' => [],
+        ...$overrides,
+    ];
+}
+
+function facilityId(string $key): string
+{
+    return Facility::where('key', $key)->value('id');
+}
+
+function featureId(string $facilityKey, string $key): string
+{
+    return Feature::where('facility_id', facilityId($facilityKey))->where('key', $key)->value('id');
+}
+
+/**
+ * A Practice Ground as the editor posts it, linking reference rows by id.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function practiceGroundFields(array $overrides = []): array
+{
+    return [
+        'name' => 'Home club',
+        'note' => 'The chipping green slopes back to front.',
+        'facility_ids' => [facilityId('range_bay'), facilityId('putting_green')],
+        'feature_ids' => [featureId('range_bay', 'target_flags'), featureId('putting_green', 'slopes')],
         ...$overrides,
     ];
 }
