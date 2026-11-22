@@ -1,10 +1,11 @@
 import { Archive, ArrowRotateLeft, Check, Pencil } from '@gravity-ui/icons';
 import type { FacilityData, PracticeGroundData } from '@gtrack/types';
-import { Alert, Button, FieldError, Form, Input, Label, Sheet, TextArea, TextField, ToggleButton } from '@heroui/react';
+import { Button, FieldError, Form, Input, Label, Sheet, TextArea, TextField, ToggleButton } from '@heroui/react';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { ConfirmDialog, ConfirmName } from '../../components/confirm-dialog';
 import type { ShellProps } from '../../layouts/app-shell';
+import { useFocusFirstError } from '../../lib/forms';
 import { useMediaQuery } from '../../lib/media';
 
 type Props = {
@@ -206,12 +207,14 @@ function Editor({ ground, facilities }: { ground: PracticeGroundData | null; fac
         feature_ids: ground?.feature_ids ?? [],
     });
 
+    const onError = useFocusFirstError();
+
     const save = () => {
         form.transform((data) => ({ ...data, note: data.note.trim() || null }));
         if (ground) {
-            form.put(`${INDEX}/${ground.id}`, { preserveScroll: true });
+            form.put(`${INDEX}/${ground.id}`, { preserveScroll: true, onError });
         } else {
-            form.post(INDEX, { preserveScroll: true });
+            form.post(INDEX, { preserveScroll: true, onError });
         }
     };
 
@@ -245,21 +248,13 @@ function Editor({ ground, facilities }: { ground: PracticeGroundData | null; fac
                 </Sheet.Heading>
             </Sheet.Header>
             <Sheet.Body className="flex flex-col gap-5 overflow-y-auto">
-                {form.hasErrors && (
-                    <Alert status="danger">
-                        <Alert.Content>
-                            <Alert.Title>The Practice Ground wasn’t saved. Check the fields marked below.</Alert.Title>
-                        </Alert.Content>
-                    </Alert>
-                )}
-
                 <TextField isRequired isInvalid={'name' in form.errors} value={form.data.name} onChange={(value) => form.setData('name', value)}>
                     <Label>Name</Label>
                     <Input />
                     <FieldError>{form.errors.name}</FieldError>
                 </TextField>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2" data-has-error={setupError ? true : undefined}>
                     <span className="text-sm font-medium">Facilities and features</span>
                     {/* One block per Facility, divided: its toggle row, then its features right under it. */}
                     <div className="flex flex-col divide-y divide-separator rounded-[16px] bg-surface-secondary">
@@ -328,4 +323,4 @@ function Editor({ ground, facilities }: { ground: PracticeGroundData | null; fac
     );
 }
 
-PracticeGrounds.layout = { title: 'Practice Grounds', action: { label: 'Add a Practice Ground', short: 'Add', href: '/practice-grounds/create' } } satisfies ShellProps;
+PracticeGrounds.layout = { title: 'Practice Grounds', action: { label: 'Add a Practice Ground', href: '/practice-grounds/create' } } satisfies ShellProps;

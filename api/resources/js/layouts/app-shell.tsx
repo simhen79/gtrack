@@ -13,8 +13,7 @@ import { adminPagesFor, ENTER_A_ROUND, golferNav, isCurrent, type NavItem } from
  */
 export type ShellProps = { title: string; action?: PageAction };
 
-/** `short` stands in for `label` in the phone's top row, where a long one would push out the page name. */
-export type PageAction = { label: string; href: string; short?: string };
+export type PageAction = { label: string; href: string };
 
 /**
  * Every signed-in page sits in this persistent layout: a sidebar where there's room, which
@@ -95,7 +94,7 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
                     </span>
                     <h1 className="truncate font-bold">{title}</h1>
                     <div className="ml-auto flex shrink-0 items-center gap-2">
-                        {action && <PageActionLink action={action} size="sm" short />}
+                        {action && <PageActionLink action={action} size="sm" iconOnly />}
                         <AccountMenu email={email} pages={golferNav.filter((item) => !item.tab)} admin={adminPages} />
                     </div>
                 </header>
@@ -111,18 +110,19 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
     );
 }
 
-/** A page's create action, top right: secondary, because Enter a Round is the view's one accent button. */
-function PageActionLink({ action, size = 'md', short = false }: { action: PageAction; size?: 'sm' | 'md'; short?: boolean }) {
-    const text = (short && action.short) || action.label;
-
+/**
+ * A page's create action, top right: secondary, because Enter a Round is the view's one accent button.
+ * In the phone's top row it's just the +, with the label as its name, so the page name keeps its room.
+ */
+function PageActionLink({ action, size = 'md', iconOnly = false }: { action: PageAction; size?: 'sm' | 'md'; iconOnly?: boolean }) {
     return (
         <Link
             href={action.href}
-            aria-label={text === action.label ? undefined : action.label}
-            className={buttonVariants({ variant: 'secondary', size, className: 'gap-1.5 bg-surface no-underline hover:no-underline' })}
+            aria-label={iconOnly ? action.label : undefined}
+            className={buttonVariants({ variant: 'secondary', size, isIconOnly: iconOnly, className: 'gap-1.5 bg-surface no-underline hover:no-underline' })}
         >
             <Plus className="size-4" />
-            {text}
+            {!iconOnly && action.label}
         </Link>
     );
 }
