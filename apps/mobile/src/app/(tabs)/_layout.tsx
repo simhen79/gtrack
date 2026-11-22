@@ -42,6 +42,8 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: (props) => <TabIcon name="House" {...props} /> }} />
+      {/* Not a tab: the avatar sheet opens it, as the web's avatar menu does at phone width. */}
+      <Tabs.Screen name="practice-grounds" options={{ title: 'Practice Grounds', href: null }} />
     </Tabs>
   );
 }

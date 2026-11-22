@@ -16,13 +16,15 @@ type Props = {
     email: string;
     /** Shows the email beside the avatar, as the expanded sidebar does. */
     showEmail?: boolean;
+    /** The golfer's pages that aren't tabs, where the layout has no other place for them (phone width). */
+    pages?: NavItem[];
     /** The Admin pages, where the layout has no other place for them (phone width). */
     admin?: NavItem[];
     placement?: 'top start' | 'bottom end';
 };
 
 /** The avatar and its menu: the email, the theme choice, any extra pages, Settings and Sign out. */
-export function AccountMenu({ email, showEmail = false, admin = [], placement = 'bottom end' }: Props) {
+export function AccountMenu({ email, showEmail = false, pages = [], admin = [], placement = 'bottom end' }: Props) {
     return (
         <Dropdown>
             <Dropdown.Trigger
@@ -65,6 +67,13 @@ export function AccountMenu({ email, showEmail = false, admin = [], placement = 
                         }
                     }}
                 >
+                    {pages.map((item) => (
+                        <Dropdown.Item key={item.href} id={item.href} href={item.href} textValue={item.label}>
+                            <item.icon className="size-4" />
+                            {item.label}
+                        </Dropdown.Item>
+                    ))}
+                    {pages.length > 0 && <Separator />}
                     {admin.length > 0 && (
                         <Dropdown.Section>
                             <Header className="px-3 pt-1 text-[11px] font-extrabold tracking-widest text-muted uppercase">
