@@ -51,6 +51,14 @@ Route::middleware(['auth', 'golfer.settings', 'can:catalogue.write'])->prefix('a
     Route::put('/drills/{drill}', [DrillsController::class, 'update'])->name('drills.update');
     Route::post('/drills/{drill}/retire', [DrillsController::class, 'retire'])->name('drills.retire');
     Route::post('/games/{game}/retire', [GamesController::class, 'retire'])->name('games.retire');
+
+    // PROTOTYPE (#25), local only: Game editor variants, kept on the prototype/25-game-editor branch.
+    if (app()->environment('local')) {
+        Route::get('/prototype/game-editor', fn () => Inertia\Inertia::render('prototype/game-editor', [
+            'facilities' => App\Data\FacilityData::list(),
+            'distance_groups' => App\Data\DistanceGroupData::list(),
+        ]));
+    }
 });
 
 Route::middleware(['auth', 'golfer.settings', 'can:drafts.manage'])->prefix('admin')->name('admin.')->group(function () {
