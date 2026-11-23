@@ -264,7 +264,7 @@ function practiceGroundFields(array $overrides = []): array
 }
 
 /**
- * A Game as the editor posts it: an Approach Game on the range with five Levels of
+ * A Game as the editor posts it: an Approach Game at the range bay with five Levels of
  * `{zone}`, linking reference rows by id.
  *
  * @param  array<string, mixed>  $overrides

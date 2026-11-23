@@ -62,14 +62,17 @@ const VERSIONED: { field: keyof GameForm; label: string }[] = [
 /** The page's fields from the top, so the bar names the same problem the form moves to. */
 const FIELD_ORDER = ['name', 'levels', 'rules', 'scoring', 'balls', 'facility_ids', 'feature_ids', 'sg_category', 'score', 'pad_values', 'distance_group_ids'];
 
+/** A `{placeholder}` in the rules, as the server reads it: a name that starts with a letter. */
+const PLACEHOLDER = /\{([A-Za-z]\w*)\}/g;
+
 /** `zone` for `{zone}` and the like, in the order the rules first use them. */
 function placeholders(rules: string): string[] {
-    return [...new Set([...rules.matchAll(/\{([a-z_]+)\}/g)].map((match) => match[1]))];
+    return [...new Set([...rules.matchAll(PLACEHOLDER)].map((match) => match[1]))];
 }
 
 /** The rules as a golfer reads them at a Level, with its settings put in. */
 function rulesAt(rules: string, level: LevelRow): string {
-    return rules.replace(/\{([a-z_]+)\}/g, (all, key: string) => level.settings[key]?.trim() || all);
+    return rules.replace(PLACEHOLDER, (all, key: string) => level.settings[key]?.trim() || all);
 }
 
 const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });

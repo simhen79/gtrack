@@ -217,13 +217,13 @@ class Publisher
 
     /**
      * The placeholders the rules use, such as `zone` for `{zone}`, in the order they
-     * first appear: each Level gives every one a value.
+     * first appear: each Level gives every one a value. A name starts with a letter.
      *
      * @return list<string>
      */
     public static function placeholders(string $rules): array
     {
-        preg_match_all('/\{([a-z_]+)\}/', $rules, $matches);
+        preg_match_all('/\{([A-Za-z]\w*)\}/', $rules, $matches);
 
         return array_values(array_unique($matches[1]));
     }

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Catalogue\Publisher;
 use App\Enums\GameOrigin;
 use App\Enums\GameStatus;
 use App\Models\Facility;
@@ -10,7 +11,7 @@ use App\Models\GameVersion;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * A Draft of a new Game on the range with no Levels, unless a state says otherwise.
+ * A Draft of a new Game at the range bay with no Levels, unless a state says otherwise.
  *
  * @extends Factory<GameVersion>
  */
@@ -72,10 +73,9 @@ class GameVersionFactory extends Factory
     public function withLevels(array $targets): static
     {
         return $this->afterCreating(function (GameVersion $version) use ($targets) {
-            preg_match_all('/\{([a-z_]+)\}/', $version->rules, $placeholders);
             foreach ($targets as $index => [$up, $down]) {
                 $level = $version->levels()->create(['level' => $index + 1, 'up' => $up, 'down' => $down]);
-                $level->settings()->createMany(collect(array_unique($placeholders[1]))
+                $level->settings()->createMany(collect(Publisher::placeholders($version->rules))
                     ->map(fn (string $key) => ['key' => $key, 'value' => (string) (30 - 5 * $index)])->values()->all());
             }
         });

@@ -71,6 +71,7 @@ it('refuses to publish a Level whose up target runs the wrong way for the score 
     'higher is better, up above down' => ['higher', 6, 2, null],
     'lower is better, up above down' => ['lower', 6, 2, 'Level 2: with lower is better, the up target must be below the down target.'],
     'lower is better, up below down' => ['lower', 2, 6, null],
+    'higher is better, up equal to down' => ['higher', 4, 4, 'Level 2: with higher is better, the up target must be above the down target.'],
 ]);
 
 it('refuses to publish when a Level lacks a setting the rules use', function () {
@@ -79,6 +80,13 @@ it('refuses to publish when a Level lacks a setting the rules use', function () 
 
     $this->actingAs(admin())->post('/admin/games', gameFields(['levels' => $levels]))
         ->assertSessionHasErrors(['levels.3.settings.zone' => 'Level 4 has no {zone}.']);
+
+    $this->actingAs(golfer())->getJson('/api/catalogue')->assertJsonCount(0, 'games');
+});
+
+it('refuses to publish when a Level lacks a placeholder with capitals or digits', function () {
+    $this->actingAs(admin())->post('/admin/games', gameFields(['rules' => 'Land within {zone} m, then {Zone2} m, of the flag.']))
+        ->assertSessionHasErrors(['levels.0.settings.Zone2' => 'Level 1 has no {Zone2}.']);
 
     $this->actingAs(golfer())->getJson('/api/catalogue')->assertJsonCount(0, 'games');
 });
@@ -190,6 +198,17 @@ it('publishes a new version when a published Game’s rules, scoring, ball count
     'ball count' => [fn () => ['balls' => 12]],
     'Facilities and features' => [fn () => ['feature_ids' => [featureId('range_bay', 'distance_signs')]]],
 ]);
+
+it('publishes a new version when only a published Game’s Facilities change', function () {
+    $shortGame = ['sg_category' => 'short_game', 'facility_ids' => [facilityId('chipping_area')], 'feature_ids' => [], 'distance_group_ids' => []];
+    $this->actingAs(admin())->post('/admin/games', gameFields($shortGame))->assertSessionHasNoErrors();
+    $gameId = GameVersion::sole()->game_id;
+
+    $this->put("/admin/games/{$gameId}", gameFields([...$shortGame, 'facility_ids' => [facilityId('chipping_area'), facilityId('practice_bunker')]]))
+        ->assertSessionHasNoErrors();
+
+    $this->actingAs(golfer())->getJson('/api/catalogue')->assertJsonCount(1, 'games')->assertJsonPath('games.0.version', 2);
+});
 
 it('saves a published Game’s Level settings and targets in place, with no new version', function () {
     $gameId = publishedGame();
