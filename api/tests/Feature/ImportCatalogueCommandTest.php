@@ -1,0 +1,121 @@
+<?php
+
+use Inertia\Testing\AssertableInertia as Assert;
+use Symfony\Component\Yaml\Yaml;
+
+const CATALOGUE_FIXTURE = 'tests/Fixtures/catalogue.yaml';
+
+/**
+ * The fixture with its first Game changed, written to a file of its own.
+ *
+ * @param  Closure(array<string, mixed>): array<string, mixed>  $change
+ */
+function catalogueFixtureWith(Closure $change): string
+{
+    $content = Yaml::parseFile(base_path(CATALOGUE_FIXTURE));
+    $content['games'][0] = $change($content['games'][0]);
+    $path = tempnam(sys_get_temp_dir(), 'catalogue').'.yaml';
+    file_put_contents($path, Yaml::dump($content, 6));
+
+    return $path;
+}
+
+it('loads Games as first-load Drafts and Drills into the Catalogue, publishing nothing', function () {
+    $this->artisan('app:import-catalogue', ['file' => base_path(CATALOGUE_FIXTURE)])->assertSuccessful();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('games', 0)
+        ->where('drafts', fn ($drafts) => collect($drafts)->map(fn ($draft) => [
+            $draft['game_id'], $draft['name'], $draft['version'], $draft['status'], $draft['origin'],
+        ])->all() === [
+            ['01m83kxb0khv9y88z8dtt5hqxf', 'Flag Zone 100-150', 1, 'draft', 'first_load'],
+            ['01m83kxb237zra49qj4b1zqr6a', 'Return Putt 18', 1, 'draft', 'first_load'],
+        ]));
+
+    $catalogue = $this->actingAs(golfer())->getJson('/api/catalogue')->assertOk();
+    $catalogue->assertJsonCount(0, 'games');
+    expect($catalogue->json('drills'))->toHaveCount(1)
+        ->and($catalogue->json('drills.0'))->toMatchArray([
+            'id' => '01m83kxb2w8p1dv7xxqpts4k03',
+            'name' => 'Putter Gate',
+            'sg_category' => 'putting',
+            'balls' => 20,
+            'setup' => 'Two tees just wider than the putter head, a putter\'s length from the hole.',
+            'source_url' => 'https://example.com/gate',
+            'facility_ids' => [facilityId('putting_green')],
+            'feature_ids' => [featureId('putting_green', 'slopes')],
+        ]);
+});
+
+it('loads nothing twice when run again', function () {
+    $this->artisan('app:import-catalogue', ['file' => base_path(CATALOGUE_FIXTURE)])->assertSuccessful();
+    $this->artisan('app:import-catalogue', ['file' => base_path(CATALOGUE_FIXTURE)])
+        ->expectsOutputToContain('Already loaded: Flag Zone 100-150, v1')
+        ->expectsOutputToContain('Already loaded: Putter Gate')
+        ->assertSuccessful();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('drafts', 2)
+        ->has('drills', 1));
+});
+
+it('loads a Game that fails the publish check as a Draft, and lists its problems', function () {
+    $file = catalogueFixtureWith(function (array $game) {
+        $game['levels'][2]['up'] = null;
+        $game['facilities'] = ['putting_green'];
+        $game['features'] = [];
+
+        return $game;
+    });
+
+    $this->artisan('app:import-catalogue', ['file' => $file])
+        ->expectsOutputToContain('Drafted: Flag Zone 100-150, v1, which won\'t pass the publish check until it\'s fixed:')
+        ->expectsOutputToContain('Approach Games are played at the range bay only.')
+        ->expectsOutputToContain('Level 3 needs an up target.')
+        ->assertSuccessful();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('games', 0)
+        ->where('drafts.0.name', 'Flag Zone 100-150')
+        ->where('drafts.0.levels.2.up', null));
+});
+
+it('runs the publish check when an imported Draft is Approved', function () {
+    $file = catalogueFixtureWith(function (array $game) {
+        $game['levels'][2]['up'] = null;
+
+        return $game;
+    });
+    $this->artisan('app:import-catalogue', ['file' => $file])->assertSuccessful();
+    $drafts = collect($this->actingAs(admin())->get('/admin/catalogue')->inertiaProps('drafts'))->keyBy('name');
+
+    $this->post("/admin/drafts/{$drafts['Flag Zone 100-150']['id']}/approve")
+        ->assertSessionHasErrors(['approve' => 'Level 3 needs an up target.']);
+    $this->post("/admin/drafts/{$drafts['Return Putt 18']['id']}/approve")
+        ->assertSessionHasNoErrors();
+
+    $this->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('drafts', 1)
+        ->where('drafts.0.name', 'Flag Zone 100-150')
+        ->where('games.0.name', 'Return Putt 18')
+        ->where('games.0.status', 'published')
+        ->where('games.0.origin', 'first_load'));
+});
+
+it('refuses a Game the editor would refuse, loads the rest and fails', function () {
+    $file = catalogueFixtureWith(function (array $game) {
+        $game['facilities'] = ['driving_range'];
+
+        return $game;
+    });
+
+    $this->artisan('app:import-catalogue', ['file' => $file])
+        ->expectsOutputToContain('Not loaded: Flag Zone 100-150, v1')
+        ->expectsOutputToContain("There's no Facility called driving_range.")
+        ->assertFailed();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('drafts', 1)
+        ->where('drafts.0.name', 'Return Putt 18')
+        ->has('drills', 1));
+});
