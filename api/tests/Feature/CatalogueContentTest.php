@@ -129,6 +129,29 @@ it('has every Game and Drill on the v1 list: 8 Approach, 5 Off the Tee, 8 Short 
     expect(publishCatalogueContent()['drills'])->toHaveCount(11);
 });
 
+it('has the Games and Drills of the v1 tables in #9, with their ball counts', function () {
+    ['games' => $games, 'drills' => $drills] = catalogueContent();
+
+    // https://github.com/simhen79/gtrack/issues/9, "The v1 Catalogue": name => balls.
+    expect(collect($games)->mapWithKeys(fn (array $game) => [$game['name'] => $game['balls']])->sortKeys()->all())->toBe(collect([
+        'Flag Zone 50-100' => 10, 'Flag Zone 100-150' => 10, 'Flag Zone 150+' => 10, 'Club Change 18' => 18,
+        'Flag Knockout' => 12, 'Club Climb' => 12, 'Call the Side' => 10, 'Landmark Line' => 8,
+        'Fairway Count' => 10, 'Club-Weighted Fairway' => 10, 'Five-Ball Fairway' => 5, 'Alternating-Club Fairway' => 20,
+        'Danger Side' => 10,
+        'Nine-Spot Up-and-Down' => 9, 'Scatter Up-and-Down' => 9, 'Up-and-Down Stations' => 9, 'Up-and-Down Ten' => 10,
+        'Tee Rings' => 12, 'Club-Length Chips' => 15, 'Five-Chip Circles' => 5, 'Bunker Rings' => 8,
+        'Short Clock' => 18, 'Seven Stations' => 7, 'Spiral Stations' => 15, 'Pars or Better' => 10,
+        'Mixed Distance Sequence' => 6, 'Long-Putt Proximity' => 10, 'Past but Not Far' => 10, 'Reverse Ladder' => 12,
+        'Return Putt 18' => null,
+    ])->sortKeys()->all())
+        ->and(collect($drills)->mapWithKeys(fn (array $drill) => [$drill['name'] => $drill['balls']])->sortKeys()->all())->toBe(collect([
+            'Three-Tee Line' => 10, 'Landmark Start Line' => 10,
+            'Short Middle Long' => 9, 'Random Club' => 10, 'Wedge Calibration' => 10,
+            'Headcover Behind the Ball' => 10, 'Alignment-Stick Y' => 10, 'Line in the Sand' => 8,
+            'Gate' => 10, 'Halfway Gate' => 10, 'Distance Ladder' => 8,
+        ])->sortKeys()->all());
+});
+
 it('gives every Game five Levels, except Return Putt 18', function () {
     $games = collect(publishCatalogueContent()['games']);
 
@@ -218,7 +241,7 @@ it('uses neutral names and its own wording, and scores original Approach Games o
         ->toBe([['zone']]));
 });
 
-it('gives each SG Category a Game of about 5 minutes and one needing no features beyond its Facility', function () {
+it('gives each SG Category a short Game of 3 to 6 minutes and one needing no features beyond its Facility', function () {
     $games = collect(publishCatalogueContent()['games']);
 
     // Seconds per ball at each Facility (spec: Facility pace), unless a Game sets its own.
@@ -233,8 +256,9 @@ it('gives each SG Category a Game of about 5 minutes and one needing no features
 
     foreach (['off_the_tee', 'approach', 'short_game', 'putting'] as $category) {
         $inCategory = $games->where('sg_category', $category);
-        expect($inCategory->contains(fn (array $game) => $minutes($game) >= 4 && $minutes($game) <= 6))
-            ->toBeTrue("{$category} has a Game of about 5 minutes")
+        // #9's short Off the Tee Game, Five-Ball Fairway, is 5 balls: about 3 minutes.
+        expect($inCategory->contains(fn (array $game) => $minutes($game) >= 3 && $minutes($game) <= 6))
+            ->toBeTrue("{$category} has a short Game of 3 to 6 minutes")
             ->and($inCategory->contains(fn (array $game) => $game['feature_ids'] === []))
             ->toBeTrue("{$category} has a Game needing no features");
     }
