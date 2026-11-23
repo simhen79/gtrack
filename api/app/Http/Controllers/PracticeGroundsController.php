@@ -29,6 +29,8 @@ class PracticeGroundsController extends Controller
         DB::transaction(fn () => PracticeGround::create($request->safe()->only('name', 'note'))
             ->saveFacilities($request->validated('facility_ids'), $request->validated('feature_ids')));
 
+        $this->toast('Practice Ground saved', $request->validated('name'));
+
         return to_route('practice-grounds.index');
     }
 
@@ -44,6 +46,8 @@ class PracticeGroundsController extends Controller
             $practiceGround->saveFacilities($request->validated('facility_ids'), $request->validated('feature_ids'));
         });
 
+        $this->toast('Practice Ground saved', $practiceGround->name);
+
         return to_route('practice-grounds.index');
     }
 
@@ -51,12 +55,16 @@ class PracticeGroundsController extends Controller
     {
         $practiceGround->update(['archived_at' => now()]);
 
+        $this->toast('Practice Ground archived', $practiceGround->name);
+
         return to_route('practice-grounds.index');
     }
 
     public function restore(PracticeGround $practiceGround): RedirectResponse
     {
         $practiceGround->update(['archived_at' => null]);
+
+        $this->toast('Practice Ground restored', $practiceGround->name);
 
         return to_route('practice-grounds.index');
     }

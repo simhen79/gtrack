@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\DistanceGroup;
-use App\Models\Facility;
 use App\Models\Feature;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -25,30 +24,6 @@ it('offers the Facilities, features and distance groups seeded by migration', fu
                 'putting 0–1 m', 'putting 1–3 m', 'putting 3–5 m', 'putting 5+ m',
             ]));
 });
-
-/**
- * A Drill as the editor posts it, linking reference rows by id.
- *
- * @param  array<string, mixed>  $overrides
- * @return array<string, mixed>
- */
-function drillFields(array $overrides = []): array
-{
-    return [
-        'name' => 'Gate Drill',
-        'sg_category' => 'putting',
-        'balls' => 20,
-        'estimated_minutes' => null,
-        'seconds_per_ball' => null,
-        'setup' => 'Two tees just wider than the putter head. Twenty strokes through the gate.',
-        'source_concept' => null,
-        'source_url' => null,
-        'facility_ids' => [Facility::where('key', 'putting_green')->value('id')],
-        'feature_ids' => [],
-        'distance_group_ids' => [],
-        ...$overrides,
-    ];
-}
 
 it('adds a Drill straight into the Catalogue with a text ULID', function () {
     $this->actingAs(admin())->post('/admin/drills', drillFields())->assertRedirect();

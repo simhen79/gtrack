@@ -17,6 +17,7 @@ class GamesController extends Controller
     {
         $version = $game->versions()->status(GameStatus::Published)->firstOrFail();
         $version->forceFill(['status' => GameStatus::Retired, 'retired_at' => now()])->save();
+        $this->toast('Game retired', $version->name);
 
         return to_route('admin.catalogue', ['item' => $version->id]);
     }

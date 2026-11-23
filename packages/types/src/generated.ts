@@ -212,6 +212,12 @@ export type SignedInUserData = {
 id: string,
 email: string,
 };
+export type ToastData = {
+status: ToastStatus,
+title: string,
+description: string | null,
+};
+export type ToastStatus = 'success' | 'danger';
 export type TrendRoundData = {
 id: string,
 played_on: string,
