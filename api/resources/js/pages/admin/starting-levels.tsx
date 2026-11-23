@@ -72,14 +72,14 @@ export default function StartingLevels({ bands }: Props) {
                                 <thead>
                                     <tr className="text-left text-[13px] text-muted">
                                         <th className="px-3 font-medium">From Handicap Index</th>
-                                        <th className="px-3 font-medium">Band</th>
+                                        <th className="hidden px-3 font-medium sm:table-cell">Band</th>
                                         <th className="px-3 font-medium">Starting Level</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {rows.map((band, index) => (
                                         <tr key={index} className="bg-surface-secondary align-top [&>td:first-child]:rounded-s-[14px] [&>td:last-child]:rounded-e-[14px]">
-                                            <td className="w-40 px-3 py-2">
+                                            <td className="w-32 px-3 py-2 sm:w-40">
                                                 {index === 0 ? (
                                                     <span className="block py-2 text-muted">Below the next band</span>
                                                 ) : (
@@ -90,12 +90,12 @@ export default function StartingLevels({ bands }: Props) {
                                                         value={band.from ?? ''}
                                                         onChange={(value) => setBand(index, { from: value === '' ? null : value })}
                                                     >
-                                                        <Input className="text-right tabular-nums" />
+                                                        <Input className="w-24 text-right tabular-nums sm:w-full" />
                                                         <FieldError>{errors[`bands.${index}.from`]}</FieldError>
                                                     </TextField>
                                                 )}
                                             </td>
-                                            <td className="px-3 py-2">
+                                            <td className="hidden px-3 py-2 sm:table-cell">
                                                 <span className="block py-2 whitespace-nowrap tabular-nums">{range(index)}</span>
                                             </td>
                                             <td className="px-3 py-2">
