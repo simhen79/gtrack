@@ -44,7 +44,7 @@ class ContentFile
      */
     public function gameFields(array $game): array
     {
-        $this->checkId($game);
+        $this->requireUlid($game);
         if (! is_int($game['version'] ?? null) || $game['version'] < 1) {
             throw ValidationException::withMessages(['version' => 'Give the version as a whole number from 1.']);
         }
@@ -68,7 +68,7 @@ class ContentFile
         ];
         $request = new GameRequest;
 
-        return Validator::make($fields, $request->rules(), [], $request->attributes())->validate();
+        return Validator::make($fields, $request->rules(), $request->messages(), $request->attributes())->validate();
     }
 
     /**
@@ -77,12 +77,21 @@ class ContentFile
      * @param  array<string, mixed>  $drill
      * @return array<string, mixed>
      *
-     * @throws ValidationException when the editor would refuse it
+     * @throws ValidationException when the editor would refuse it, or it lists a
+     *                             Facility its SG Category isn't played at: a Drill
+     *                             goes straight into the Catalogue, with no publish check
      */
     public function drillFields(array $drill): array
     {
-        $this->checkId($drill);
+        $this->requireUlid($drill);
         $fields = [...$this->fields($drill), 'setup' => $drill['setup'] ?? null];
+
+        $category = SgCategory::from($fields['sg_category']);
+        $allowed = $category->facilityKeys();
+        if (collect($drill['facilities'] ?? [])->contains(fn (string $key) => ! in_array($key, $allowed, true))) {
+            $names = Facility::whereIn('key', $allowed)->orderBy('position')->pluck('name')->map(fn (string $name) => Str::lower($name));
+            throw ValidationException::withMessages(['facility_ids' => "{$category->label()} Drills are played at the {$names->join(', ', ' or ')} only."]);
+        }
         $request = new DrillRequest;
 
         return Validator::make($fields, $request->rules(), $request->messages(), $request->attributes())->validate();
@@ -130,7 +139,7 @@ class ContentFile
     /**
      * @param  array<string, mixed>  $item
      */
-    private function checkId(array $item): void
+    private function requireUlid(array $item): void
     {
         if (! Str::isUlid((string) ($item['id'] ?? ''))) {
             throw ValidationException::withMessages(['id' => 'Give it a ULID, kept across versions.']);

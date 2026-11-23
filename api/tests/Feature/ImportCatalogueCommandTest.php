@@ -6,14 +6,14 @@ use Symfony\Component\Yaml\Yaml;
 const CATALOGUE_FIXTURE = 'tests/Fixtures/catalogue.yaml';
 
 /**
- * The fixture with its first Game changed, written to a file of its own.
+ * The fixture with its first Game (or first Drill) changed, written to a file of its own.
  *
  * @param  Closure(array<string, mixed>): array<string, mixed>  $change
  */
-function catalogueFixtureWith(Closure $change): string
+function catalogueFixtureWith(Closure $change, string $list = 'games'): string
 {
     $content = Yaml::parseFile(base_path(CATALOGUE_FIXTURE));
-    $content['games'][0] = $change($content['games'][0]);
+    $content[$list][0] = $change($content[$list][0]);
     $path = tempnam(sys_get_temp_dir(), 'catalogue').'.yaml';
     file_put_contents($path, Yaml::dump($content, 6));
 
@@ -118,4 +118,41 @@ it('refuses a Game the editor would refuse, loads the rest and fails', function 
         ->has('drafts', 1)
         ->where('drafts.0.name', 'Return Putt 18')
         ->has('drills', 1));
+});
+
+it('refuses a Drill at a Facility its SG Category isn\'t played at', function () {
+    $file = catalogueFixtureWith(function (array $drill) {
+        $drill['facilities'] = ['putting_green', 'range_bay'];
+
+        return $drill;
+    }, 'drills');
+
+    $this->artisan('app:import-catalogue', ['file' => $file])
+        ->expectsOutputToContain('Not loaded: Putter Gate')
+        ->expectsOutputToContain('Putting Drills are played at the putting green only.')
+        ->assertFailed();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('drafts', 2)
+        ->has('drills', 0));
+});
+
+it('refuses a later version of a Game in another SG Category', function () {
+    $this->artisan('app:import-catalogue', ['file' => base_path(CATALOGUE_FIXTURE)])->assertSuccessful();
+    $file = catalogueFixtureWith(function (array $game) {
+        $game['version'] = 2;
+        $game['category'] = 'short_game';
+        $game['distanceGroups'] = [];
+
+        return $game;
+    });
+
+    $this->artisan('app:import-catalogue', ['file' => $file])
+        ->expectsOutputToContain('Not loaded: Flag Zone 100-150, v2')
+        ->expectsOutputToContain('Fixed once published. For another SG Category, write a new Game.')
+        ->assertFailed();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->has('drafts', 2)
+        ->where('drafts.0.version', 1));
 });

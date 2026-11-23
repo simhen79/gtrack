@@ -52,7 +52,14 @@ class ImportCatalogue extends Command
                 continue;
             }
 
-            $draft = $publisher->draft($gameId, $game['version'], GameOrigin::FirstLoad, $fields);
+            try {
+                $draft = $publisher->draft($gameId, $game['version'], GameOrigin::FirstLoad, $fields);
+            } catch (ValidationException $e) {
+                $this->refuse($label, $e);
+                $refused++;
+
+                continue;
+            }
             $problems = $publisher->problems($draft);
             if ($problems === []) {
                 $this->info("Drafted: {$label}");
