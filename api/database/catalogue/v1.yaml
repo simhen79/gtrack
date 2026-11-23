@@ -1,0 +1,802 @@
+# The v1 Catalogue: 30 Games and 11 Drills, in the Catalogue content format.
+#
+# The list, ball counts, distance groups and time overrides are the v1 tables in
+# https://github.com/simhen79/gtrack/issues/9. Reviewed here, in a PR, then loaded by the
+# first-load import: Games as Drafts that pass the publish check on Approve, Drills straight
+# into the Catalogue.
+#
+# - Distances are metres. Level 1 is the easiest, Level 5 the hardest.
+# - Level 3 is written for a 5.4 Handicap Index. The up target is a score reached about
+#   half the time at a comfortable Level, and the down target one fallen to about one
+#   attempt in five. Both are estimates to tune in play.
+# - Names, wording and tables are our own. `source` credits the concept a Game or Drill
+#   grew from (research/range-games-catalogue.md); original Games have no link.
+
+games:
+
+  # Approach ----------------------------------------------------------------------
+
+  - id: 01M83KXB0G9TJRRK29CCSMZHW7
+    version: 1
+    name: Flag Zone 50-100
+    category: approach
+    facilities: [range_bay]
+    features: [target_flags]
+    distanceGroups: ["50-100"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick a flag between 50 and 100 m away and hit 10 balls at it. A ball is a hit when it first lands within {zone} m of the flag."
+    scoring: "1 point per hit. Judge where the ball first lands, not where it stops."
+    score: { better: higher, entry: counter }
+    open: [flag choice, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 15 }, up: 5, down: 3 }
+      - { level: 2, settings: { zone: 12 }, up: 5, down: 3 }
+      - { level: 3, settings: { zone: 9 }, up: 5, down: 3 }
+      - { level: 4, settings: { zone: 7 }, up: 5, down: 3 }
+      - { level: 5, settings: { zone: 5 }, up: 5, down: 3 }
+    source: { concept: "Original: hit or miss on where the ball first lands near a flag.", url: null }
+
+  - id: 01M83KXB0KHV9Y88Z8DTT5HQXF
+    version: 1
+    name: Flag Zone 100-150
+    category: approach
+    facilities: [range_bay]
+    features: [target_flags]
+    distanceGroups: ["100-150"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick a flag between 100 and 150 m away and hit 10 balls at it. A ball is a hit when it first lands within {zone} m of the flag."
+    scoring: "1 point per hit. Judge where the ball first lands, not where it stops."
+    score: { better: higher, entry: counter }
+    open: [flag choice, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 20 }, up: 5, down: 3 }
+      - { level: 2, settings: { zone: 16 }, up: 5, down: 3 }
+      - { level: 3, settings: { zone: 12 }, up: 5, down: 3 }
+      - { level: 4, settings: { zone: 9 }, up: 5, down: 3 }
+      - { level: 5, settings: { zone: 7 }, up: 5, down: 3 }
+    source: { concept: "Original: hit or miss on where the ball first lands near a flag.", url: null }
+
+  - id: 01M83KXB0NYWPY5MAG0923AHTR
+    version: 1
+    name: Flag Zone 150+
+    category: approach
+    facilities: [range_bay]
+    features: [target_flags]
+    distanceGroups: ["150+"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick a flag 150 m or more away and hit 10 balls at it. A ball is a hit when it first lands within {zone} m of the flag."
+    scoring: "1 point per hit. Judge where the ball first lands, not where it stops."
+    score: { better: higher, entry: counter }
+    open: [flag choice, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 25 }, up: 5, down: 3 }
+      - { level: 2, settings: { zone: 20 }, up: 5, down: 3 }
+      - { level: 3, settings: { zone: 16 }, up: 5, down: 3 }
+      - { level: 4, settings: { zone: 12 }, up: 5, down: 3 }
+      - { level: 5, settings: { zone: 9 }, up: 5, down: 3 }
+    source: { concept: "Original: hit or miss on where the ball first lands near a flag.", url: null }
+
+  - id: 01M83KXB0X7DSZ0KYKSKMQ0DXC
+    version: 1
+    name: Club Change 18
+    category: approach
+    facilities: [range_bay]
+    features: []
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 18
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Hit 18 balls, changing club every ball, from your longest iron or hybrid down to your sand wedge and back up. For each ball pick a target that suits the club: a flag, a sign or a patch of the range. A ball is a hit when it first lands within {zone} m of its target."
+    scoring: "1 point per hit."
+    score: { better: higher, entry: counter }
+    open: [club order, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 20 }, up: 9, down: 6 }
+      - { level: 2, settings: { zone: 16 }, up: 9, down: 6 }
+      - { level: 3, settings: { zone: 12 }, up: 9, down: 6 }
+      - { level: 4, settings: { zone: 9 }, up: 9, down: 6 }
+      - { level: 5, settings: { zone: 7 }, up: 9, down: 6 }
+    source: { concept: "Change club every shot, each at a target sized to the club.", url: "https://golfwrx.com/330732/game-of-the-weekend-eighteen/" }
+
+  - id: 01M83WZ3H3JGXAPS00S3DGAYYG
+    version: 1
+    name: Flag Knockout
+    category: approach
+    facilities: [range_bay]
+    features: [target_flags]
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 12
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Number up to five flags from nearest to farthest. Play at flag 1; when a ball first lands within {zone} m of it, move on to the next flag. A miss sends you back to flag 1. Stop after 12 balls, or when you clear the farthest flag."
+    scoring: "The number of the farthest flag you cleared. 0 if you never clear flag 1."
+    score: { better: higher, entry: counter }
+    open: [flag choice, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 20 }, up: 3, down: 1 }
+      - { level: 2, settings: { zone: 16 }, up: 3, down: 1 }
+      - { level: 3, settings: { zone: 12 }, up: 3, down: 1 }
+      - { level: 4, settings: { zone: 9 }, up: 3, down: 1 }
+      - { level: 5, settings: { zone: 7 }, up: 3, down: 1 }
+    source: { concept: "Clear the range targets in order, nearest first; a miss restarts.", url: "https://www.golflink.com/instruction/best-range-games" }
+
+  - id: 01M83WZ3H66XBJK1NQNPQG8X50
+    version: 1
+    name: Club Climb
+    category: approach
+    facilities: [range_bay]
+    features: []
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 12
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Lay out your clubs from sand wedge up to your longest iron or hybrid. Start with the sand wedge and pick a target that suits it: a flag, a sign or a patch of the range. When a ball first lands within {zone} m of its target, move up to the next club. A miss sends you back to the sand wedge. Stop after 12 balls."
+    scoring: "Your longest climb: the most clubs cleared in a row without a miss."
+    score: { better: higher, entry: counter }
+    open: [scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 20 }, up: 3, down: 1 }
+      - { level: 2, settings: { zone: 16 }, up: 3, down: 1 }
+      - { level: 3, settings: { zone: 12 }, up: 3, down: 1 }
+      - { level: 4, settings: { zone: 9 }, up: 3, down: 1 }
+      - { level: 5, settings: { zone: 7 }, up: 3, down: 1 }
+    source: { concept: "Work up through the bag one club at a time; a miss restarts from the first club.", url: "https://www.golflink.com/instruction/best-range-games" }
+
+  - id: 01M83WZ3H8XYDCBHFN7WFMC4SH
+    version: 1
+    name: Call the Side
+    category: approach
+    facilities: [range_bay]
+    features: [target_flags]
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick a flag at a distance you'd hit an approach from. Before each ball, call left or right of the flag. A ball is a hit when it first lands within {zone} m of the flag, on the side you called."
+    scoring: "1 point per hit. Judge where the ball first lands, not where it stops."
+    score: { better: higher, entry: counter }
+    open: [flag choice, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 20 }, up: 4, down: 1 }
+      - { level: 2, settings: { zone: 16 }, up: 4, down: 1 }
+      - { level: 3, settings: { zone: 12 }, up: 4, down: 1 }
+      - { level: 4, settings: { zone: 9 }, up: 4, down: 1 }
+      - { level: 5, settings: { zone: 7 }, up: 4, down: 1 }
+    source: { concept: "Original: call the side of the flag, then land in the zone on that side.", url: null }
+
+  - id: 01M83WZ3HBPTYP2QMGET1FKQ42
+    version: 1
+    name: Landmark Line
+    category: approach
+    facilities: [range_bay]
+    features: []
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 8
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick any landmark you can see beyond the range, such as a flag, a sign, a tree or a post, at a distance you'd hit an approach from. Hit eight balls at it. A ball is a hit when it first lands within {zone} m of the line from you to the landmark, on either side."
+    scoring: "1 point per hit. Judge where the ball first lands, not where it stops."
+    score: { better: higher, entry: counter }
+    open: [landmark choice, scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 10 }, up: 4, down: 2 }
+      - { level: 2, settings: { zone: 8 }, up: 4, down: 2 }
+      - { level: 3, settings: { zone: 6 }, up: 4, down: 2 }
+      - { level: 4, settings: { zone: 5 }, up: 4, down: 2 }
+      - { level: 5, settings: { zone: 4 }, up: 4, down: 2 }
+    source: { concept: "Original: hit or miss on start line to any landmark, needing no range features.", url: null }
+
+  # Off the Tee -------------------------------------------------------------------
+
+  - id: 01M83KXB14Q1176SR2EKT0XY2N
+    version: 1
+    name: Fairway Count
+    category: off_the_tee
+    facilities: [range_bay]
+    features: []
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick two marks on the range about {width} m apart, such as flags, signs or a change in the grass, as the edges of a fairway. Hit 10 tee shots with the club you'd use off the tee."
+    scoring: "1 point per ball that finishes between the edges."
+    score: { better: higher, entry: counter }
+    open: [fairway marks, scenario wording]
+    levels:
+      - { level: 1, settings: { width: 45 }, up: 6, down: 4 }
+      - { level: 2, settings: { width: 38 }, up: 6, down: 4 }
+      - { level: 3, settings: { width: 32 }, up: 6, down: 4 }
+      - { level: 4, settings: { width: 27 }, up: 6, down: 4 }
+      - { level: 5, settings: { width: 22 }, up: 6, down: 4 }
+    source: { concept: "Count tee shots that finish inside a fairway marked by range boundaries.", url: "https://www.golfdigest.com/story/the-15-best-golf-practice-games" }
+
+  - id: 01M83KXB16BE556BD8G46ES8R6
+    version: 1
+    name: Club-Weighted Fairway
+    category: off_the_tee
+    facilities: [range_bay]
+    features: [distance_signs]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Mark a fairway {width} m wide between range signs. Hit 10 tee shots in this order: driver, long iron, fairway wood or hybrid, driver, long iron, fairway wood or hybrid, driver, long iron, fairway wood or hybrid, driver."
+    scoring: "A ball that finishes in the fairway scores 3 with the driver, 2 with a fairway wood or hybrid, and 1 with an iron. A miss scores 0."
+    score: { better: higher, entry: pad, padValues: [0, 1, 2, 3] }
+    open: [fairway marks, scenario wording]
+    levels:
+      - { level: 1, settings: { width: 45 }, up: 12, down: 8 }
+      - { level: 2, settings: { width: 38 }, up: 12, down: 8 }
+      - { level: 3, settings: { width: 32 }, up: 12, down: 8 }
+      - { level: 4, settings: { width: 27 }, up: 12, down: 8 }
+      - { level: 5, settings: { width: 22 }, up: 12, down: 8 }
+    source: { concept: "Fairways hit, weighted by how hard the club is to keep straight.", url: "https://practical-golf.com/golf-drills" }
+
+  - id: 01M83KXB1935SKB7AXK5XVMM43
+    version: 1
+    name: Five-Ball Fairway
+    category: off_the_tee
+    facilities: [range_bay]
+    features: [distance_signs]
+    balls: 5
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Picture a hole between two range signs, straight or bending, with a fairway {width} m wide. Hit five tee shots, each with your full routine, as if each were the first tee."
+    scoring: "1 point per ball that finishes in the fairway."
+    score: { better: higher, entry: counter }
+    open: [hole shape, scenario wording]
+    levels:
+      - { level: 1, settings: { width: 45 }, up: 3, down: 1 }
+      - { level: 2, settings: { width: 38 }, up: 3, down: 1 }
+      - { level: 3, settings: { width: 32 }, up: 3, down: 1 }
+      - { level: 4, settings: { width: 27 }, up: 3, down: 1 }
+      - { level: 5, settings: { width: 22 }, up: 3, down: 1 }
+    source: { concept: "A five-ball fairway drawn between yardage signs.", url: "https://www.golflink.com/instruction/best-range-games" }
+
+  - id: 01M83KXB1BY1W4S0C54YZJJXNG
+    version: 1
+    name: Alternating-Club Fairway
+    category: off_the_tee
+    facilities: [range_bay]
+    features: [distance_signs]
+    balls: 20
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Mark a fairway {width} m wide between range signs. Hit 10 drives, and after each one play a shot with another club at any target. Only the drives count."
+    scoring: "A drive in the fairway scores 3. One that finishes within 5 m outside an edge scores 1. Anything wider scores 0."
+    score: { better: higher, entry: pad, padValues: [0, 1, 3] }
+    open: [fairway marks, scenario wording]
+    levels:
+      - { level: 1, settings: { width: 45 }, up: 19, down: 15 }
+      - { level: 2, settings: { width: 38 }, up: 19, down: 15 }
+      - { level: 3, settings: { width: 32 }, up: 19, down: 15 }
+      - { level: 4, settings: { width: 27 }, up: 19, down: 15 }
+      - { level: 5, settings: { width: 22 }, up: 19, down: 15 }
+    source: { concept: "Drives scored by fairway, near miss or wide, with another club played between them.", url: "https://golfwrx.com/327676/game-of-the-weekend-100/" }
+
+  - id: 01M83WZ3HDKRX032A1XCN002YP
+    version: 1
+    name: Danger Side
+    category: off_the_tee
+    facilities: [range_bay]
+    features: []
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick two marks on the range about {width} m apart as the edges of a fairway, and choose one side as the danger side, as if out of bounds ran down it. Hit 10 tee shots with the club you'd use off the tee."
+    scoring: "A ball in the fairway scores 1. A miss on the safe side scores 0. A miss on the danger side scores -2."
+    score: { better: higher, entry: pad, padValues: [-2, 0, 1] }
+    open: [fairway marks, scenario wording]
+    levels:
+      - { level: 1, settings: { width: 45 }, up: 4, down: 0 }
+      - { level: 2, settings: { width: 38 }, up: 4, down: 0 }
+      - { level: 3, settings: { width: 32 }, up: 4, down: 0 }
+      - { level: 4, settings: { width: 27 }, up: 4, down: 0 }
+      - { level: 5, settings: { width: 22 }, up: 4, down: 0 }
+    source: { concept: "Original: a fairway with a penalty side, so a miss to the safe side costs less.", url: null }
+
+  # Short Game --------------------------------------------------------------------
+
+  - id: 01M83KXB1G5AWNAZHDMB367FE2
+    version: 1
+    name: Nine-Spot Up-and-Down
+    category: short_game
+    facilities: [chipping_area]
+    features: [green_with_hole]
+    balls: 9
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Choose nine spots around the green, {hard} of them hard: a bad lie, a short side or a shot over a slope. From each, play one ball and hole out. One attempt per spot, no practice shots."
+    scoring: "Your total strokes for the nine spots. Par is 18."
+    score: { better: lower, entry: counter }
+    open: [spot choice, scenario wording]
+    levels:
+      - { level: 1, settings: { hard: 1 }, up: 22, down: 24 }
+      - { level: 2, settings: { hard: 2 }, up: 22, down: 24 }
+      - { level: 3, settings: { hard: 3 }, up: 22, down: 24 }
+      - { level: 4, settings: { hard: 4 }, up: 22, down: 24 }
+      - { level: 5, settings: { hard: 5 }, up: 22, down: 24 }
+    source: { concept: "Up and down from nine chosen spots, par 2 each.", url: "https://practical-golf.com/the-ultimate-practice-game-for-your-short-game" }
+
+  - id: 01M83KXB1JBF8CM4V6ETJ8SGHY
+    version: 1
+    name: Scatter Up-and-Down
+    category: short_game
+    facilities: [chipping_area]
+    features: [green_with_hole]
+    balls: 9
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Toss nine balls underarm so they land between {near} and {far} m from the edge of the green. Play each from where it lies and hole out. No moving a ball to a better lie."
+    scoring: "Your total strokes for the nine balls. Par is 18."
+    score: { better: lower, entry: counter }
+    open: [scenario wording]
+    levels:
+      - { level: 1, settings: { near: 2, far: 8 }, up: 23, down: 25 }
+      - { level: 2, settings: { near: 3, far: 10 }, up: 23, down: 25 }
+      - { level: 3, settings: { near: 4, far: 12 }, up: 23, down: 25 }
+      - { level: 4, settings: { near: 5, far: 15 }, up: 23, down: 25 }
+      - { level: 5, settings: { near: 6, far: 18 }, up: 23, down: 25 }
+    source: { concept: "Scatter balls around the green and get each up and down from where it lies.", url: "https://www.titleist.com/videos/instruction/21-game-for-better-short-game-practice" }
+
+  - id: 01M83KXB21HJ1AZ2ZGAFZ56FD4
+    version: 1
+    name: Up-and-Down Stations
+    category: short_game
+    facilities: [chipping_area]
+    features: [green_with_hole, rough, slopes]
+    balls: 9
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Set three stations at least {distance} m from the hole: one in the rough, one on a slope and one on a tight lie. Play three balls from each and hole out every one."
+    scoring: "1 point per ball holed in two strokes or fewer."
+    score: { better: higher, entry: counter }
+    open: [station choice, scenario wording]
+    levels:
+      - { level: 1, settings: { distance: 4 }, up: 5, down: 3 }
+      - { level: 2, settings: { distance: 6 }, up: 5, down: 3 }
+      - { level: 3, settings: { distance: 8 }, up: 5, down: 3 }
+      - { level: 4, settings: { distance: 10 }, up: 5, down: 3 }
+      - { level: 5, settings: { distance: 12 }, up: 5, down: 3 }
+    source: { concept: "Stations with different lies round the chipping area, counting up-and-downs.", url: "https://www.pga.com/story/three-great-practice-games-to-help-you-play-better-golf-under-pressure" }
+
+  - id: 01M83WZ3HGN8F6BRVGFM1RCSBQ
+    version: 1
+    name: Up-and-Down Ten
+    category: short_game
+    facilities: [chipping_area]
+    features: [green_with_hole]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Place 10 balls in different spots off the green, each at least {distance} m from the hole. Play each and hole out."
+    scoring: "1 point per ball holed in two strokes or fewer."
+    score: { better: higher, entry: counter }
+    open: [spot choice, scenario wording]
+    levels:
+      - { level: 1, settings: { distance: 4 }, up: 5, down: 3 }
+      - { level: 2, settings: { distance: 6 }, up: 5, down: 3 }
+      - { level: 3, settings: { distance: 8 }, up: 5, down: 3 }
+      - { level: 4, settings: { distance: 10 }, up: 5, down: 3 }
+      - { level: 5, settings: { distance: 12 }, up: 5, down: 3 }
+    source: { concept: "Balls in different spots round the green, each got up and down.", url: "https://help.18birdies.com/article/489-5-chipping-games-to-improve-your-short-game-video" }
+
+  - id: 01M83WZ3HJCM50QHXJ1MQ7F76E
+    version: 1
+    name: Tee Rings
+    category: short_game
+    facilities: [chipping_area]
+    features: []
+    balls: 12
+    estimatedMinutes: null
+    secondsPerBall: 45
+    rules: "Push a tee into the green, or into a flat patch of grass, as the target. Mark three rings round it with more tees: {inner} m, {middle} m and {outer} m from it. Chip 12 balls from different spots."
+    scoring: "Each ball scores 3 inside the inner ring, 2 inside the middle ring, 1 inside the outer ring, and 0 outside."
+    score: { better: higher, entry: pad, padValues: [0, 1, 2, 3] }
+    open: [spot choice, scenario wording]
+    levels:
+      - { level: 1, settings: { inner: 1.5, middle: 3, outer: 4.5 }, up: 20, down: 16 }
+      - { level: 2, settings: { inner: 1.2, middle: 2.4, outer: 3.6 }, up: 20, down: 16 }
+      - { level: 3, settings: { inner: 1, middle: 2, outer: 3 }, up: 20, down: 16 }
+      - { level: 4, settings: { inner: 0.8, middle: 1.6, outer: 2.4 }, up: 20, down: 16 }
+      - { level: 5, settings: { inner: 0.6, middle: 1.2, outer: 1.8 }, up: 20, down: 16 }
+    source: { concept: "Proximity rings of tees round a target, more points nearer the middle.", url: "https://practical-golf.com/chipping-drills" }
+
+  - id: 01M83KXB1R9BA3WW4EKE3VW00K
+    version: 1
+    name: Club-Length Chips
+    category: short_game
+    facilities: [chipping_area]
+    features: [green_with_hole]
+    balls: 15
+    estimatedMinutes: null
+    secondsPerBall: 45
+    rules: "Chip five balls from an easy spot, five from a medium one and five from a hard one. Don't putt out."
+    scoring: "1 point per ball that stops within {lengths} club lengths of the hole."
+    score: { better: higher, entry: counter }
+    open: [spot choice, scenario wording]
+    levels:
+      - { level: 1, settings: { lengths: 3 }, up: 8, down: 5 }
+      - { level: 2, settings: { lengths: 2.5 }, up: 8, down: 5 }
+      - { level: 3, settings: { lengths: 2 }, up: 8, down: 5 }
+      - { level: 4, settings: { lengths: 1.5 }, up: 8, down: 5 }
+      - { level: 5, settings: { lengths: 1 }, up: 8, down: 5 }
+    source: { concept: "Chips from easy, medium and hard spots, counting those that finish close.", url: "https://www.golfdigest.com/story/the-15-best-golf-practice-games" }
+
+  - id: 01M83WZ3HNFMQDXT8WHTG43K6Z
+    version: 1
+    name: Five-Chip Circles
+    category: short_game
+    facilities: [chipping_area]
+    features: [green_with_hole]
+    balls: 5
+    estimatedMinutes: null
+    secondsPerBall: 48
+    rules: "Mark two circles round a hole with tees, {inner} m and {outer} m from it. Chip five balls from about 14 m. Don't putt out."
+    scoring: "Each ball scores 3 if holed, 2 inside the inner circle, 1 inside the outer circle, and 0 outside."
+    score: { better: higher, entry: pad, padValues: [0, 1, 2, 3] }
+    open: [spot choice, scenario wording]
+    levels:
+      - { level: 1, settings: { inner: 2, outer: 4 }, up: 7, down: 5 }
+      - { level: 2, settings: { inner: 1.6, outer: 3.2 }, up: 7, down: 5 }
+      - { level: 3, settings: { inner: 1.2, outer: 2.4 }, up: 7, down: 5 }
+      - { level: 4, settings: { inner: 1, outer: 2 }, up: 7, down: 5 }
+      - { level: 5, settings: { inner: 0.8, outer: 1.6 }, up: 7, down: 5 }
+    source: { concept: "Five chips to a hole with two circles round it.", url: "https://specialolympicspa.org/wp-content/uploads/2026/03/Level-1-Individual-Skills-Compeition-Rules.pdf" }
+
+  - id: 01M83KXB1WZ5HANNZ3D5K9ZG5R
+    version: 1
+    name: Bunker Rings
+    category: short_game
+    facilities: [practice_bunker]
+    features: []
+    balls: 8
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Pick a target on the green or the grass beyond the bunker, 8 to 15 m away, and picture two rings round it: {inner} m and {outer} m. Splash eight balls out of the sand at it."
+    scoring: "Each ball scores 2 inside the inner ring, 1 inside the outer ring, and 0 outside or still in the bunker."
+    score: { better: higher, entry: pad, padValues: [0, 1, 2] }
+    open: [target choice, scenario wording]
+    levels:
+      - { level: 1, settings: { inner: 3.5, outer: 7 }, up: 9, down: 6 }
+      - { level: 2, settings: { inner: 3, outer: 6 }, up: 9, down: 6 }
+      - { level: 3, settings: { inner: 2.5, outer: 5 }, up: 9, down: 6 }
+      - { level: 4, settings: { inner: 2, outer: 4 }, up: 9, down: 6 }
+      - { level: 5, settings: { inner: 1.5, outer: 3 }, up: 9, down: 6 }
+    source: { concept: "Bunker shots scored by finishing inside circles round a target.", url: "https://specialolympicspa.org/wp-content/uploads/2026/03/Level-1-Individual-Skills-Compeition-Rules.pdf" }
+
+  # Putting -----------------------------------------------------------------------
+
+  - id: 01M83KXB29DE431F6Q321NPWD8
+    version: 1
+    name: Short Clock
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["0-1"]
+    balls: 18
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Put balls round a hole like the numbers on a clock, each {distance} m from it. Putt them in turn round the clock until you've hit 18 putts."
+    scoring: "Your longest run of putts holed in a row."
+    score: { better: higher, entry: counter }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { distance: 0.6 }, up: 13, down: 9 }
+      - { level: 2, settings: { distance: 0.7 }, up: 13, down: 9 }
+      - { level: 3, settings: { distance: 0.8 }, up: 13, down: 9 }
+      - { level: 4, settings: { distance: 0.9 }, up: 13, down: 9 }
+      - { level: 5, settings: { distance: 1 }, up: 13, down: 9 }
+    source: { concept: "Short putts from all round the hole in a clock pattern, kept going in a row.", url: "https://www.golflink.com/instruction/best-putting-games" }
+
+  - id: 01M83KXB26QEQ432QRZYCD1NRZ
+    version: 1
+    name: Seven Stations
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["1-3"]
+    balls: 7
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Push seven tees into the green in a circle round a hole, each {distance} m from it. Hit one putt from each tee."
+    scoring: "1 point per putt holed."
+    score: { better: higher, entry: counter }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { distance: 1.2 }, up: 4, down: 2 }
+      - { level: 2, settings: { distance: 1.6 }, up: 4, down: 2 }
+      - { level: 3, settings: { distance: 2 }, up: 4, down: 2 }
+      - { level: 4, settings: { distance: 2.4 }, up: 4, down: 2 }
+      - { level: 5, settings: { distance: 2.8 }, up: 4, down: 2 }
+    source: { concept: "One putt from each of seven stations in a circle round the hole.", url: "https://golf.com/instruction/putting/two-putting-games-test-performance-under-pressure/" }
+
+  - id: 01M83WZ3HQ46N1TB0CCGXXXTZX
+    version: 1
+    name: Spiral Stations
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["1-3", "3-5"]
+    balls: 15
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Push five tees into the green in a spiral round a hole: the first {start} m from it, and each next one 0.5 m farther and a little further round. Putt from each in turn, three times round: 15 putts."
+    scoring: "1 point per putt holed."
+    score: { better: higher, entry: counter }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { start: 1 }, up: 8, down: 6 }
+      - { level: 2, settings: { start: 1.25 }, up: 8, down: 6 }
+      - { level: 3, settings: { start: 1.5 }, up: 8, down: 6 }
+      - { level: 4, settings: { start: 1.75 }, up: 8, down: 6 }
+      - { level: 5, settings: { start: 2 }, up: 8, down: 6 }
+    source: { concept: "Putts from stations set in a spiral, each a little longer than the last.", url: "https://golf.com/instruction/putting/two-putting-games-test-performance-under-pressure/" }
+
+  - id: 01M83KXB2J5XRN1MKFJ2R3NCHK
+    version: 1
+    name: Pars or Better
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["3-5"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: 48
+    rules: "Play 10 holes, one ball each, from {distance} m: putt for birdie, then hole out."
+    scoring: "Your total strokes for the 10 holes. Par is 20."
+    score: { better: lower, entry: counter }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { distance: 3 }, up: 18, down: 20 }
+      - { level: 2, settings: { distance: 3.5 }, up: 18, down: 20 }
+      - { level: 3, settings: { distance: 4 }, up: 18, down: 20 }
+      - { level: 4, settings: { distance: 4.5 }, up: 18, down: 20 }
+      - { level: 5, settings: { distance: 5 }, up: 18, down: 20 }
+    source: { concept: "Putt for birdie from mid range, then out, aiming for par or better.", url: "https://www.golflink.com/instruction/best-putting-games" }
+
+  - id: 01M83KXB2GZMM1CTJWKJ1ZPM0A
+    version: 1
+    name: Mixed Distance Sequence
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["1-3", "3-5", "5+"]
+    balls: 6
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Push tees into the green 2, 4 and 6 m from a hole, each on a different line. Putt from them short, long, middle, then do it again: six putts, a different distance every time."
+    scoring: "1 point per putt that's holed or stops within {tolerance} m of the hole."
+    score: { better: higher, entry: counter }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { tolerance: 0.6 }, up: 3, down: 1 }
+      - { level: 2, settings: { tolerance: 0.5 }, up: 3, down: 1 }
+      - { level: 3, settings: { tolerance: 0.4 }, up: 3, down: 1 }
+      - { level: 4, settings: { tolerance: 0.3 }, up: 3, down: 1 }
+      - { level: 5, settings: { tolerance: 0.25 }, up: 3, down: 1 }
+    source: { concept: "Putts from three lengths in a changing order, counting the close ones.", url: "https://www.golflink.com/instruction/best-putting-games" }
+
+  - id: 01M83KXB2DWZT05SBZRZFEJFAA
+    version: 1
+    name: Long-Putt Proximity
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["5+"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Hit 10 putts from {distance} m, each from a different line to the hole."
+    scoring: "Each putt scores 0 if holed, 1 if it stops within a putter length of the hole, 2 within two putter lengths, and 4 beyond that."
+    score: { better: lower, entry: pad, padValues: [0, 1, 2, 4] }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { distance: 6 }, up: 17, down: 21 }
+      - { level: 2, settings: { distance: 8 }, up: 17, down: 21 }
+      - { level: 3, settings: { distance: 10 }, up: 17, down: 21 }
+      - { level: 4, settings: { distance: 12 }, up: 17, down: 21 }
+      - { level: 5, settings: { distance: 14 }, up: 17, down: 21 }
+    source: { concept: "Long putts scored by how close they finish, lowest total wins.", url: "https://www.golflink.com/instruction/best-putting-games" }
+
+  - id: 01M83KXB2NNX8THH7BXSSYANBX
+    version: 1
+    name: Past but Not Far
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["5+"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Lay a club on the green {gap} m past a hole, across the line. Hit 10 putts from between 6 and 12 m, changing the length every putt."
+    scoring: "Each putt scores 2 if holed, 1 if it passes the hole and stops short of the club, and 0 if it stops short of the hole or reaches the club."
+    score: { better: higher, entry: pad, padValues: [0, 1, 2] }
+    open: [hole choice, scenario wording]
+    levels:
+      - { level: 1, settings: { gap: 1.2 }, up: 6, down: 3 }
+      - { level: 2, settings: { gap: 1 }, up: 6, down: 3 }
+      - { level: 3, settings: { gap: 0.8 }, up: 6, down: 3 }
+      - { level: 4, settings: { gap: 0.6 }, up: 6, down: 3 }
+      - { level: 5, settings: { gap: 0.45 }, up: 6, down: 3 }
+    source: { concept: "Lag putts that must pass the hole but stop before a club laid behind it.", url: "https://scramble.golftec.com/blog/2014/11/lag-putting-game/" }
+
+  - id: 01M83WZ3HTQTJ9FH0AQ305WT48
+    version: 1
+    name: Reverse Ladder
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["5+"]
+    balls: 12
+    estimatedMinutes: null
+    secondsPerBall: null
+    rules: "Push a tee into the green about 9 m away. Your first putt must stop within {zone} m short of the tee, and each next putt within {zone} m short of the last ball without reaching it. A putt that fails starts a new ladder from the first putt. Stop after 12 putts."
+    scoring: "Your longest ladder: the most putts in a row that kept to the rule."
+    score: { better: higher, entry: counter }
+    open: [scenario wording]
+    levels:
+      - { level: 1, settings: { zone: 0.9 }, up: 4, down: 2 }
+      - { level: 2, settings: { zone: 0.75 }, up: 4, down: 2 }
+      - { level: 3, settings: { zone: 0.6 }, up: 4, down: 2 }
+      - { level: 4, settings: { zone: 0.5 }, up: 4, down: 2 }
+      - { level: 5, settings: { zone: 0.4 }, up: 4, down: 2 }
+    source: { concept: "Each putt finishes a little short of the one before; a miss restarts the ladder.", url: "https://practical-golf.com/putting-drills-guide" }
+
+  - id: 01M83KXB237ZRA49QJ4B1ZQR6A
+    version: 1
+    name: Return Putt 18
+    category: putting
+    facilities: [putting_green]
+    features: [course_18]
+    distanceGroups: ["0-1", "1-3", "3-5", "5+"]
+    balls: null
+    estimatedMinutes: 25
+    secondsPerBall: null
+    rules: "Play the 18-hole putting course in order with one ball. Start each hole's opening putt where that green is laid out. The opening putt must finish past the hole, then hole the return putt. Holing the opening putt clears the hole too. Leaving the opening putt short, or missing the return, sends you back one hole; on hole 1 you stay on hole 1. Start the timer with your first putt and stop it when you clear hole 18."
+    scoring: "Your time from the first putt to clearing hole 18, with the number of times you went back one hole noted beside it."
+    score: { better: lower, entry: timer }
+    open: []
+    levels: []
+    source: { concept: "Original: a timed round of the putting course where every opening putt must pass the hole.", url: null }
+
+drills:
+
+  # Off the Tee -------------------------------------------------------------------
+
+  - id: 01M83KXB2W8P1DV7XXQPTS4K03
+    name: Three-Tee Line
+    category: off_the_tee
+    facilities: [range_bay]
+    features: []
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Tee the ball as normal, then push two more tees into the ground just ahead of it on the target line. Swing the driver through all three, so the club travels level through the strike rather than up."
+    source: { concept: "Tees on the target line in front of the ball for a flatter path.", url: "https://golf.com/instruction/driving/simple-drill-solid-center-face-strikes/" }
+
+  - id: 01M83WZ3HWEMR211JMR5327YH0
+    name: Landmark Start Line
+    category: off_the_tee
+    facilities: [range_bay]
+    features: []
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Pick a landmark beyond the range, such as a tree or a post, and lay a club on the ground pointing at it. Hit 10 drives, watching only whether each ball starts on the line to the landmark."
+    source: { concept: "Original: start line to a far landmark, with a club on the ground for aim.", url: null }
+
+  # Approach ----------------------------------------------------------------------
+
+  - id: 01M83KXB31CD2FEFDP4417Q9GN
+    name: Short Middle Long
+    category: approach
+    facilities: [range_bay]
+    features: [target_flags]
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 9
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Pick a flag and hit your usual club at it. Then hit the next longer club at a spot 10 m beyond it, and the next shorter club at a spot 10 m short, on the same line. Go round three times."
+    source: { concept: "Three neighbouring clubs at three distances on one line.", url: "https://www.golflink.com/instruction/best-range-games" }
+
+  - id: 01M83KXB336PAHYB484KJPTWBD
+    name: Random Club
+    category: approach
+    facilities: [range_bay]
+    features: []
+    distanceGroups: ["50-100", "100-150", "150+"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Before each ball, pick a club without planning it, then choose a target that suits it. Go through your full routine for every shot, as on the course."
+    source: { concept: "Choose the club unpredictably, then a target to suit it.", url: "https://golf.com/instruction/10-proven-ways-make-range-practice-stick/" }
+
+  - id: 01M83KXB363DXY10C0FKW5EMA5
+    name: Wedge Calibration
+    category: approach
+    facilities: [range_bay]
+    features: [distance_signs]
+    distanceGroups: ["50-100"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "With one wedge, hit three balls with a half swing, three with a three-quarter swing and four with a full swing. Note where each group lands against the range signs, so you know the wedge's three numbers."
+    source: { concept: "Learn a wedge's carry for each length of swing.", url: "https://golf.com/instruction/dustin-johnson-wedge-combine-drill-learned/" }
+
+  # Short Game --------------------------------------------------------------------
+
+  - id: 01M83KXB391HYK2QJQH11ZDYEY
+    name: Headcover Behind the Ball
+    category: short_game
+    facilities: [chipping_area]
+    features: []
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: 30
+    setup: "Lay an empty headcover on the grass about a club-head's length behind the ball. Chip without touching it, so the club meets the ball before the ground."
+    source: { concept: "An object behind the ball to stop heavy chips.", url: "https://practical-golf.com/chipping-drills" }
+
+  - id: 01M83KXB3BTHWDEVBXYTSWKAN8
+    name: Alignment-Stick Y
+    category: short_game
+    facilities: [chipping_area]
+    features: []
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: 30
+    setup: "Hold an alignment stick against the grip so it runs up past your lead side, making a Y with the shaft. Make small chipping swings without the stick touching your body, then hit balls with it, then hit balls without it."
+    source: { concept: "A stick along the shaft to stop the wrists flipping.", url: "https://practical-golf.com/chipping-drills" }
+
+  - id: 01M83KXB3D172B1424H60ESP2D
+    name: Line in the Sand
+    category: short_game
+    facilities: [practice_bunker]
+    features: []
+    balls: 8
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Draw a line in the sand across your stance. Make swings that enter the sand on the line, then put a ball just ahead of the line and splash it out the same way."
+    source: { concept: "A line in the sand to train where the club enters.", url: "https://golfmonthly.com/tips/banish-bad-bunker-shots-with-these-3-expert-drills" }
+
+  # Putting -----------------------------------------------------------------------
+
+  - id: 01M83KXB3G775RBKV291NRQKHN
+    name: Gate
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["1-3"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Push a tee into the green either side of the putter head, with just room for it to pass. Putt from 1 to 3 m without touching either tee."
+    source: { concept: "A gate of tees round the putter head for a square strike.", url: "https://practical-golf.com/putting-drills-guide" }
+
+  - id: 01M83KXB3JZCP8TRQM4QSC519J
+    name: Halfway Gate
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["3-5"]
+    balls: 10
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Pick a fairly straight putt of 3 to 4 m. Halfway to the hole, push two tees into the green just wider than a ball apart. Roll each putt through the gate."
+    source: { concept: "A narrow gate partway to the hole for start line.", url: "https://www.golflink.com/instruction/best-putting-games" }
+
+  - id: 01M83KXB3MTHNY423Y8B5KNQHK
+    name: Distance Ladder
+    category: putting
+    facilities: [putting_green]
+    features: []
+    distanceGroups: ["5+"]
+    balls: 8
+    estimatedMinutes: null
+    secondsPerBall: null
+    setup: "Put balls 5, 6, 7 and 8 m from a hole on one line. Putt each so it stops in the 30 cm past the hole. Go up the ladder twice."
+    source: { concept: "Putts from rising distances, each stopping just past the hole.", url: "https://www.pga.com/story/nine-ways-to-play-better-golf-tee-to-green" }

@@ -62,6 +62,30 @@ const VERSIONED: { field: keyof GameForm; label: string }[] = [
 /** The page's fields from the top, so the bar names the same problem the form moves to. */
 const FIELD_ORDER = ['name', 'levels', 'rules', 'scoring', 'balls', 'facility_ids', 'feature_ids', 'sg_category', 'score', 'pad_values', 'distance_group_ids'];
 
+/** A message the page writes itself, sized and inset like HeroUI's FieldError so every message matches. */
+const MESSAGE = 'px-1 text-xs text-danger';
+
+/**
+ * The fields whose change answers a publish problem, so its message goes as the admin fixes it: balls or
+ * minutes answer either, a wrong-way target is fixed from either target or the better score, and a Level
+ * setting or the Levels count can go when the rules drop the placeholder.
+ */
+function answeredBy(key: string): string[] {
+    const target = key.match(/^levels\.(\d+)\.(up|down)$/);
+    if (target) {
+        return [`levels.${target[1]}.up`, `levels.${target[1]}.down`, 'score_better'];
+    }
+    if (/^levels\.\d+\.settings\./.test(key)) {
+        return [key, 'rules'];
+    }
+    return { balls: ['balls', 'estimated_minutes'], levels: ['levels', 'rules'], feature_ids: ['feature_ids', 'facility_ids'] }[key] ?? [key];
+}
+
+/** The value at a problem's path, such as `levels.2.up`; a path into a typed string, such as `pad_values.2`, stops at the string. */
+function valueAt(data: unknown, path: string): unknown {
+    return path.split('.').reduce<unknown>((value, part) => (value !== null && typeof value === 'object' ? (value as Record<string, unknown>)[part] : value), data);
+}
+
 /** A `{placeholder}` in the rules, as the server reads it: a name that starts with a letter. */
 const PLACEHOLDER = /\{([A-Za-z]\w*)\}/g;
 
@@ -108,8 +132,18 @@ export default function Game({ game, earlier_versions, facilities, category_faci
     const [saved] = useState(() => fromVersion(game));
     const form = useForm<GameForm>(saved);
     const { data } = form;
-    const errors = form.errors as Record<string, string | undefined>;
-    const onError = useFocusFirstError();
+    const focusFirstError = useFocusFirstError();
+    // What the refused publish sent: a message stays only while the fields that answer it are unchanged.
+    const [refused, setRefused] = useState<GameForm | null>(null);
+    const errors = Object.fromEntries(
+        Object.entries(form.errors as Record<string, string | undefined>).filter(
+            ([key]) => refused === null || answeredBy(key).every((path) => JSON.stringify(valueAt(data, path)) === JSON.stringify(valueAt(refused, path))),
+        ),
+    ) as Record<string, string | undefined>;
+    const onError = () => {
+        setRefused(data);
+        focusFirstError();
+    };
 
     const published = game?.status === 'published' ? game : null;
     const keys = placeholders(data.rules);
@@ -293,7 +327,7 @@ export default function Game({ game, earlier_versions, facilities, category_faci
                                         onChange={(value) => form.setData('estimated_minutes', value)}
                                     />
                                 </div>
-                                {(errors.balls || errors.estimated_minutes) && <p className="text-sm text-danger">{errors.balls ?? errors.estimated_minutes}</p>}
+                                {(errors.balls || errors.estimated_minutes) && <p className={MESSAGE}>{errors.balls ?? errors.estimated_minutes}</p>}
                             </div>
 
                             <Section label="Facilities and features" error={errorFor('facility_ids') ?? errorFor('feature_ids')}>
@@ -463,7 +497,7 @@ function Levels(props: {
                 <Button variant="secondary" size="sm" onPress={props.onAdd}>
                     Add Levels
                 </Button>
-                {props.error && <p className="text-sm text-danger">{props.error}</p>}
+                {props.error && <p className={MESSAGE}>{props.error}</p>}
             </div>
         );
     }
@@ -523,14 +557,14 @@ function Levels(props: {
             {levels.some((_, index) => rowErrors(index).length > 0) && (
                 <ul className="flex flex-col gap-0.5">
                     {levels.flatMap((_, index) => rowErrors(index)).map((message) => (
-                        <li key={message} className="text-sm text-danger">
+                        <li key={message} className={MESSAGE}>
                             {message}
                         </li>
                     ))}
                 </ul>
             )}
             {props.error && (
-                <p className="text-sm text-danger" data-has-error>
+                <p className={MESSAGE} data-has-error>
                     {props.error}
                 </p>
             )}
@@ -597,7 +631,7 @@ function Section({ label, error, children }: { label: string; error?: string; ch
         <div className="flex flex-col gap-2" data-has-error={error ? true : undefined}>
             <span className="text-sm font-medium">{label}</span>
             {children}
-            {error && <p className="text-sm text-danger">{error}</p>}
+            {error && <p className={MESSAGE}>{error}</p>}
         </div>
     );
 }
