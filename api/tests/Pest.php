@@ -1,6 +1,7 @@
 <?php
 
 use App\Auth\CurrentGolfer;
+use App\Models\DistanceGroup;
 use App\Models\Facility;
 use App\Models\Feature;
 use App\Models\User;
@@ -258,6 +259,39 @@ function practiceGroundFields(array $overrides = []): array
         'note' => 'The chipping green slopes back to front.',
         'facility_ids' => [facilityId('range_bay'), facilityId('putting_green')],
         'feature_ids' => [featureId('range_bay', 'target_flags'), featureId('putting_green', 'slopes')],
+        ...$overrides,
+    ];
+}
+
+/**
+ * A Game as the editor posts it: an Approach Game on the range with five Levels of
+ * `{zone}`, linking reference rows by id.
+ *
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
+function gameFields(array $overrides = []): array
+{
+    return [
+        'name' => 'Flag Zone 100-150',
+        'sg_category' => 'approach',
+        'balls' => 10,
+        'estimated_minutes' => null,
+        'seconds_per_ball' => null,
+        'rules' => 'Pick a flag between 100 and 150 m. Land within {zone} m of it, first bounce.',
+        'scoring' => '1 point per ball that lands inside the zone',
+        'score_better' => 'higher',
+        'score_entry' => 'counter',
+        'pad_values' => [],
+        'open' => ['target order'],
+        'source_concept' => null,
+        'source_url' => null,
+        'facility_ids' => [facilityId('range_bay')],
+        'feature_ids' => [featureId('range_bay', 'target_flags')],
+        'distance_group_ids' => [DistanceGroup::where('sg_category', 'approach')->orderBy('position')->skip(1)->value('id')],
+        'levels' => collect([30, 25, 20, 15, 10])
+            ->map(fn (int $zone) => ['settings' => ['zone' => (string) $zone], 'up' => 6, 'down' => 2])
+            ->all(),
         ...$overrides,
     ];
 }

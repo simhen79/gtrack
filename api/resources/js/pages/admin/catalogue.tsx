@@ -139,7 +139,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
     ) : items.length > 0 ? (
         <p className="text-muted">Choose a Game or Drill from the list.</p>
     ) : (
-        <p className="text-muted">Nothing in the Catalogue yet. Approve a Draft or add a Drill.</p>
+        <p className="text-muted">Nothing in the Catalogue yet. Approve a Draft, or add a Game or a Drill.</p>
     );
 
     return (
@@ -196,9 +196,24 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
     );
 }
 
-Catalogue.layout = { title: 'Catalogue', action: { label: 'Add a Drill', href: '/admin/drills/create' } } satisfies ShellProps;
+Catalogue.layout = {
+    title: 'Catalogue',
+    action: [
+        { label: 'Add a Game', href: '/admin/games/create' },
+        { label: 'Add a Drill', href: '/admin/drills/create' },
+    ],
+} satisfies ShellProps;
 
 const itemIn = (url: string) => new URLSearchParams(url.split('?')[1] ?? '').get('item');
+
+/** "v2, replaced v1 on 3 March" once a Game has been republished; else just its version. */
+function versionLabel(game: GameVersionData): string {
+    if (game.status !== 'published' || game.version === 1 || !game.published_at) {
+        return `v${game.version}`;
+    }
+    const on = new Date(game.published_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
+    return `v${game.version}, replaced v${game.version - 1} on ${on}`;
+}
 
 const name = (item: Item) => (item.kind === 'Game' ? item.game.name : item.drill.name);
 const category = (item: Item) => (item.kind === 'Game' ? item.game.sg_category : item.drill.sg_category);
@@ -241,7 +256,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
                         <Chip size="sm" color={STATUS_COLOURS[item.status]} className="capitalize">
                             {item.status === 'draft' ? 'Draft' : item.status}
                         </Chip>
-                        {item.kind === 'Game' && <span className="text-[13px] text-muted">v{item.game.version}</span>}
+                        {item.kind === 'Game' && <span className="text-[13px] text-muted">{versionLabel(item.game)}</span>}
                     </span>
                     <h2 className="mt-2 text-[28px] font-extrabold">{shape.name}</h2>
                     <p className="text-[13px] text-muted">{item.kind}</p>
@@ -301,7 +316,10 @@ function Actions({ item }: { item: Item }) {
 
     if (item.status === 'draft') {
         return (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+                <Link href={`/admin/games/${(item as Extract<Item, { kind: 'Game' }>).game.game_id}/edit`} className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}>
+                    Edit Draft
+                </Link>
                 <ConfirmDialog
                     trigger="Delete Draft"
                     heading="Delete this Draft?"
@@ -326,6 +344,11 @@ function Actions({ item }: { item: Item }) {
 
     return (
         <div className="flex gap-2">
+            {item.kind === 'Game' && item.status === 'published' && (
+                <Link href={`/admin/games/${item.game.game_id}/edit`} className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}>
+                    Edit Game
+                </Link>
+            )}
             {item.kind === 'Drill' && (
                 <Link href={`/admin/drills/${item.id}/edit`} className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}>
                     Edit Drill
