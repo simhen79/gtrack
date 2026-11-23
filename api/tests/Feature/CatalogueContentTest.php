@@ -169,6 +169,18 @@ it('lists distance groups on every Approach and Putting Game and Drill, with a G
         ->toBeTrue("A Game is in the {$group->sg_category->label()} group from {$group->min_metres} m"));
 });
 
+it('has a Putting Game played inside each Putting distance group at every Level', function () {
+    $games = collect(publishCatalogueContent()['games'])->where('sg_category', 'putting');
+
+    DistanceGroup::where('sg_category', 'putting')->get()->each(fn (DistanceGroup $group) => expect($games->contains(
+        fn (array $game) => in_array($group->id, $game['distance_group_ids'])
+            && $game['levels'] !== []
+            && collect($game['levels'])->every(fn (array $level) => isset($level['settings']['distance'])
+                && (float) $level['settings']['distance'] >= $group->min_metres
+                && ($group->max_metres === null || (float) $level['settings']['distance'] <= $group->max_metres))
+    ))->toBeTrue("A Game putts from {$group->label()} at every Level"));
+});
+
 it('uses neutral names and its own wording, and scores original Approach Games on landing within {zone} m of the flag', function () {
     ['games' => $games, 'drills' => $drills] = publishCatalogueContent();
 

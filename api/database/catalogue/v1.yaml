@@ -313,11 +313,11 @@ games:
     score: { better: lower, entry: counter }
     open: [spot choice, scenario wording]
     levels:
-      - { level: 1, settings: { hard: 1 }, up: 22, down: 25 }
-      - { level: 2, settings: { hard: 2 }, up: 22, down: 25 }
-      - { level: 3, settings: { hard: 3 }, up: 22, down: 25 }
-      - { level: 4, settings: { hard: 4 }, up: 22, down: 25 }
-      - { level: 5, settings: { hard: 5 }, up: 22, down: 25 }
+      - { level: 1, settings: { hard: 1 }, up: 22, down: 24 }
+      - { level: 2, settings: { hard: 2 }, up: 22, down: 24 }
+      - { level: 3, settings: { hard: 3 }, up: 22, down: 24 }
+      - { level: 4, settings: { hard: 4 }, up: 22, down: 24 }
+      - { level: 5, settings: { hard: 5 }, up: 22, down: 24 }
     source: { concept: "Up and down from nine chosen spots, par 2 each.", url: "https://practical-golf.com/the-ultimate-practice-game-for-your-short-game" }
 
   - id: 01M83KXB1JBF8CM4V6ETJ8SGHY
@@ -501,11 +501,11 @@ games:
     score: { better: higher, entry: counter }
     open: [hole choice, scenario wording]
     levels:
-      - { level: 1, settings: { distance: 1.2 }, up: 5, down: 3 }
-      - { level: 2, settings: { distance: 1.6 }, up: 5, down: 3 }
-      - { level: 3, settings: { distance: 2 }, up: 5, down: 3 }
-      - { level: 4, settings: { distance: 2.4 }, up: 5, down: 3 }
-      - { level: 5, settings: { distance: 2.8 }, up: 5, down: 3 }
+      - { level: 1, settings: { distance: 1.2 }, up: 4, down: 2 }
+      - { level: 2, settings: { distance: 1.6 }, up: 4, down: 2 }
+      - { level: 3, settings: { distance: 2 }, up: 4, down: 2 }
+      - { level: 4, settings: { distance: 2.4 }, up: 4, down: 2 }
+      - { level: 5, settings: { distance: 2.8 }, up: 4, down: 2 }
     source: { concept: "One putt from each of seven stations in a circle round the hole.", url: "https://golf.com/instruction/putting/two-putting-games-test-performance-under-pressure/" }
 
   - id: 01M83KXB29DE431F6Q321NPWD8
@@ -514,20 +514,20 @@ games:
     category: putting
     facilities: [putting_green]
     features: []
-    distanceGroups: ["0-1", "1-3"]
-    balls: 10
+    distanceGroups: ["0-1"]
+    balls: 20
     estimatedMinutes: null
     secondsPerBall: null
-    rules: "Put 10 balls round a hole like the numbers on a clock, each {distance} m from it. Putt them in turn."
+    rules: "Put 10 balls round a hole like the numbers on a clock, each {distance} m from it. Putt them in turn, then go round again: 20 putts."
     scoring: "1 point per putt holed."
     score: { better: higher, entry: counter }
     open: [hole choice, scenario wording]
     levels:
-      - { level: 1, settings: { distance: 0.9 }, up: 9, down: 7 }
-      - { level: 2, settings: { distance: 1 }, up: 9, down: 7 }
-      - { level: 3, settings: { distance: 1.2 }, up: 9, down: 7 }
-      - { level: 4, settings: { distance: 1.4 }, up: 9, down: 7 }
-      - { level: 5, settings: { distance: 1.6 }, up: 9, down: 7 }
+      - { level: 1, settings: { distance: 0.6 }, up: 20, down: 18 }
+      - { level: 2, settings: { distance: 0.7 }, up: 20, down: 18 }
+      - { level: 3, settings: { distance: 0.8 }, up: 20, down: 18 }
+      - { level: 4, settings: { distance: 0.9 }, up: 20, down: 18 }
+      - { level: 5, settings: { distance: 1 }, up: 20, down: 18 }
     source: { concept: "Short putts from all round the hole in a clock pattern.", url: "https://www.golflink.com/instruction/best-putting-games" }
 
   - id: 01M83KXB2DWZT05SBZRZFEJFAA
