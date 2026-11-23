@@ -13,7 +13,7 @@ export function AdminTabs() {
             <Tabs.ListContainer>
                 <Tabs.List aria-label="Admin pages">
                     {pages.map((page) => (
-                        <Tabs.Tab key={page.href} id={page.href} href={page.href}>
+                        <Tabs.Tab key={page.href} id={page.href} href={page.href} className="whitespace-nowrap">
                             {page.label}
                             <Tabs.Indicator />
                         </Tabs.Tab>

@@ -1,4 +1,4 @@
-import { BookOpen, ChartLine, House, ListUl, MapPin, Persons } from '@gravity-ui/icons';
+import { BookOpen, ChartLine, House, Layers, ListUl, MapPin, Persons } from '@gravity-ui/icons';
 import type { ComponentType, SVGProps } from 'react';
 
 export type NavItem = {
@@ -23,7 +23,8 @@ export const golferNav: (NavItem & { tab: boolean })[] = [
 /** Pages under Admin, each shown to whoever has its permission. */
 export const adminNav: (NavItem & { permission: string })[] = [
     { label: 'Users', href: '/admin/users', icon: Persons, permission: 'users.manage' },
-    { label: 'Catalogue', href: '/admin/catalogue', icon: BookOpen, permission: 'catalogue.write', within: ['/admin/drills'] },
+    { label: 'Catalogue', href: '/admin/catalogue', icon: BookOpen, permission: 'catalogue.write', within: ['/admin/drills', '/admin/games'] },
+    { label: 'Starting Levels', href: '/admin/starting-levels', icon: Layers, permission: 'catalogue.write' },
 ];
 
 /** The admin pages this golfer's permissions open, or none for a golfer who isn't an admin. */

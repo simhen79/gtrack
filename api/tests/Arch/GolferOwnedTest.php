@@ -6,10 +6,13 @@ use App\Models\Drill;
 use App\Models\Facility;
 use App\Models\Feature;
 use App\Models\Game;
+use App\Models\GameLevel;
+use App\Models\GameLevelSetting;
 use App\Models\GameVersion;
 use App\Models\OpenField;
 use App\Models\PadValue;
 use App\Models\SgBand;
+use App\Models\StartingLevel;
 use App\Models\User;
 use App\Models\Variation;
 
@@ -25,6 +28,9 @@ $shared = [
     GameVersion::class,
     OpenField::class,
     PadValue::class,
+    GameLevel::class,
+    GameLevelSetting::class,
+    StartingLevel::class,
     Drill::class,
     // Plain Variations are shared and LLM-written ones are a golfer's, so its own
     // MineOrPlainScope stands in for BelongsToGolfer.

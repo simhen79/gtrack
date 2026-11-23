@@ -9,9 +9,9 @@ import { adminPagesFor, ENTER_A_ROUND, golferNav, isCurrent, type NavItem } from
 
 /**
  * What a page tells the shell, through its `layout`. `action` is the page's create action,
- * such as Add a Drill: the shell puts it at the top right, on the title's line.
+ * such as Add a Drill, or its create actions: the shell puts them at the top right, on the title's line.
  */
-export type ShellProps = { title: string; action?: PageAction };
+export type ShellProps = { title: string; action?: PageAction | PageAction[] };
 
 export type PageAction = { label: string; href: string };
 
@@ -24,6 +24,7 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
     const email = props.auth.user?.email ?? '';
     const adminPages = adminPagesFor(props.auth.permissions);
     const [collapsed, toggleCollapsed] = useCollapsed();
+    const actions = action ? [action].flat() : [];
 
     return (
         <div className="min-h-screen md:flex">
@@ -94,13 +95,21 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
                     </span>
                     <h1 className="truncate font-bold">{title}</h1>
                     <div className="ml-auto flex shrink-0 items-center gap-2">
-                        {action && <PageActionLink action={action} size="sm" iconOnly />}
+                        {actions.map((action) => (
+                            <PageActionLink key={action.href} action={action} size="sm" iconOnly />
+                        ))}
                         <AccountMenu email={email} pages={golferNav.filter((item) => !item.tab)} admin={adminPages} />
                     </div>
                 </header>
                 <header className="hidden items-end justify-between gap-4 px-7 pt-8 pb-4 md:flex">
                     <h1 className="font-serif text-[46px] leading-none font-normal">{title}</h1>
-                    {action && <PageActionLink action={action} />}
+                    {actions.length > 0 && (
+                        <div className="flex gap-2">
+                            {actions.map((action) => (
+                                <PageActionLink key={action.href} action={action} />
+                            ))}
+                        </div>
+                    )}
                 </header>
                 <main className="px-4 pb-32 md:px-7 md:pb-12">{children}</main>
             </div>

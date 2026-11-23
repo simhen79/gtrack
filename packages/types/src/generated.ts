@@ -71,6 +71,12 @@ id: string,
 key: string,
 name: string,
 };
+export type GameLevelData = {
+level: number,
+settings: Record<string, string>,
+up: number | null,
+down: number | null,
+};
 export type GameOrigin = 'llm' | 'hand_written' | 'first_load';
 export type GameStatus = 'draft' | 'published' | 'retired';
 export type GameVersionData = {
@@ -95,9 +101,11 @@ feature_ids: string[],
 distance_group_ids: string[],
 open: string[],
 pad_values: number[],
+levels: GameLevelData[],
 variations: VariationData[],
 published_at: string | null,
 retired_at: string | null,
+replaced_at: string | null,
 };
 export type LengthAwarePaginator<TKey, TValue> = {
 data: TKey extends string ? Record<TKey, TValue> : TValue[],
@@ -211,6 +219,10 @@ bands: SgBandTrendData[],
 export type SignedInUserData = {
 id: string,
 email: string,
+};
+export type StartingLevelData = {
+from: string | null,
+level: number,
 };
 export type ToastData = {
 status: ToastStatus,

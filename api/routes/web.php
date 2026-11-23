@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CatalogueController;
 use App\Http\Controllers\Admin\DraftsController;
 use App\Http\Controllers\Admin\DrillsController;
 use App\Http\Controllers\Admin\GamesController;
+use App\Http\Controllers\Admin\StartingLevelsController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\EmailCodeController;
 use App\Http\Controllers\FallbackHandicapController;
@@ -54,7 +55,13 @@ Route::middleware(['auth', 'golfer.settings', 'can:catalogue.write'])->prefix('a
     Route::get('/drills/{drill}/edit', [DrillsController::class, 'edit'])->name('drills.edit');
     Route::put('/drills/{drill}', [DrillsController::class, 'update'])->name('drills.update');
     Route::post('/drills/{drill}/retire', [DrillsController::class, 'retire'])->name('drills.retire');
+    Route::get('/games/create', [GamesController::class, 'create'])->name('games.create');
+    Route::post('/games', [GamesController::class, 'store'])->name('games.store');
+    Route::get('/games/{game}/edit', [GamesController::class, 'edit'])->name('games.edit');
+    Route::put('/games/{game}', [GamesController::class, 'update'])->name('games.update');
     Route::post('/games/{game}/retire', [GamesController::class, 'retire'])->name('games.retire');
+    Route::get('/starting-levels', [StartingLevelsController::class, 'edit'])->name('starting-levels');
+    Route::put('/starting-levels', [StartingLevelsController::class, 'update'])->name('starting-levels.update');
 });
 
 Route::middleware(['auth', 'golfer.settings', 'can:drafts.manage'])->prefix('admin')->name('admin.')->group(function () {

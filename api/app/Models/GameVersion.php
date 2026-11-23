@@ -28,7 +28,7 @@ class GameVersion extends Model
     protected $fillable = [
         'version', 'status', 'origin', 'name', 'sg_category', 'balls', 'estimated_minutes',
         'seconds_per_ball', 'rules', 'scoring', 'score_better', 'score_entry',
-        'source_concept', 'source_url', 'published_at', 'retired_at',
+        'source_concept', 'source_url', 'published_at', 'retired_at', 'replaced_at',
     ];
 
     protected function casts(): array
@@ -45,6 +45,7 @@ class GameVersion extends Model
             'score_entry' => ScoreEntry::class,
             'published_at' => 'datetime',
             'retired_at' => 'datetime',
+            'replaced_at' => 'datetime',
         ];
     }
 
@@ -94,6 +95,14 @@ class GameVersion extends Model
     public function padValues(): HasMany
     {
         return $this->hasMany(PadValue::class)->orderBy('position');
+    }
+
+    /**
+     * @return HasMany<GameLevel, $this>
+     */
+    public function levels(): HasMany
+    {
+        return $this->hasMany(GameLevel::class)->orderBy('level');
     }
 
     /**
