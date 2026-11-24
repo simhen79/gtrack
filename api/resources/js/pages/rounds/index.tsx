@@ -125,7 +125,7 @@ function RoundDetail({ round, sgBands }: { round: RoundSummaryData; sgBands: SgB
                         </div>
                         <div>
                             <dt className="text-[13px] font-bold text-muted">Baseline</dt>
-                            <dd className="text-[16px] font-extrabold">{round.baseline}</dd>
+                            <dd className="text-[16px] font-bold">{round.baseline}</dd>
                         </div>
                     </dl>
                 </div>
