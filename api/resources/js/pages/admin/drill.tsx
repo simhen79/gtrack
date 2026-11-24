@@ -22,7 +22,12 @@ import { useFocusFirstError } from '../../lib/forms';
 import { SgCategoryBadge, sgCategoryKey } from '../../components/sg-category';
 import type { ShellProps } from '../../layouts/app-shell';
 
-type Props = { drill: DrillData | null; facilities: FacilityData[]; distance_groups: DistanceGroupData[] };
+type Props = {
+    drill: DrillData | null;
+    facilities: FacilityData[];
+    category_facilities: Record<SgCategory, string[]>;
+    distance_groups: DistanceGroupData[];
+};
 
 const SG_CATEGORIES: { category: SgCategory; label: string }[] = [
     { category: 'off_the_tee', label: 'Off the Tee' },
@@ -49,7 +54,7 @@ type DrillForm = {
 };
 
 /** Adds a Drill, or edits one in place: a Drill has no Drafts and no versions. */
-export default function Drill({ drill, facilities, distance_groups }: Props) {
+export default function Drill({ drill, facilities, category_facilities, distance_groups }: Props) {
     const form = useForm<DrillForm>({
         name: drill?.name ?? '',
         sg_category: drill?.sg_category ?? 'off_the_tee',
@@ -64,6 +69,10 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
         distance_group_ids: drill?.distance_group_ids ?? [],
     });
     const groups = distance_groups.filter((group) => group.sg_category === form.data.sg_category);
+    const allowed = (facility: FacilityData) => category_facilities[form.data.sg_category].includes(facility.key);
+    // A Facility the SG Category isn't played at stays in view while it's ticked, so the admin can see what to fix.
+    const offered = facilities.filter((facility) => allowed(facility) || form.data.facility_ids.includes(facility.id));
+    const categoryLabel = SG_CATEGORIES.find((option) => option.category === form.data.sg_category)!.label;
 
     const onError = useFocusFirstError();
 
@@ -77,9 +86,15 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
     };
 
     const pickCategory = (category: SgCategory) => {
-        // Distance groups belong to one SG Category, so they don't carry over.
-        const kept = distance_groups.filter((group) => group.sg_category === category).map((group) => group.id);
-        form.setData((data) => ({ ...data, sg_category: category, distance_group_ids: data.distance_group_ids.filter((id) => kept.includes(id)) }));
+        // Facilities the new SG Category can't be played at go, with their features; distance groups belong to one SG Category.
+        const kept = facilities.filter((facility) => form.data.facility_ids.includes(facility.id) && category_facilities[category].includes(facility.key));
+        form.setData((data) => ({
+            ...data,
+            sg_category: category,
+            facility_ids: kept.map((facility) => facility.id),
+            feature_ids: data.feature_ids.filter((id) => kept.some((facility) => facility.features.some((feature) => feature.id === id))),
+            distance_group_ids: data.distance_group_ids.filter((id) => distance_groups.some((group) => group.id === id && group.sg_category === category)),
+        }));
     };
 
     const toggleFacility = (facility: FacilityData, on: boolean) => {
@@ -166,12 +181,17 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                     </Card.Header>
                     <Card.Content className="flex flex-col gap-4" data-has-error={form.errors.facility_ids || form.errors.feature_ids ? true : undefined}>
                         {form.errors.facility_ids && <p className="text-sm text-danger">{form.errors.facility_ids}</p>}
-                        {facilities.map((facility) => {
+                        {offered.map((facility) => {
                             const needed = form.data.facility_ids.includes(facility.id);
 
                             return (
                                 <div key={facility.id} className="flex flex-col gap-2">
                                     <Tick label={facility.name} isSelected={needed} onChange={(on) => toggleFacility(facility, on)} />
+                                    {!allowed(facility) && (
+                                        <p className="ms-7 text-sm text-danger">
+                                            {categoryLabel} Drills aren’t played at the {facility.name.toLowerCase()}. Untick it to save.
+                                        </p>
+                                    )}
                                     {needed && facility.features.length > 0 && (
                                         <div className="ms-7 flex flex-wrap gap-x-5 gap-y-2">
                                             {facility.features.map((feature) => (

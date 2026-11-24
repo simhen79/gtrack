@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Data\DistanceGroupData;
 use App\Data\DrillData;
 use App\Data\FacilityData;
+use App\Enums\SgCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DrillRequest;
 use App\Models\Drill;
@@ -70,6 +71,7 @@ class DrillsController extends Controller
         return Inertia::render('admin/drill', [
             'drill' => $drill ? DrillData::fromDrill($drill) : null,
             'facilities' => FacilityData::list(),
+            'category_facilities' => SgCategory::facilityMap(),
             'distance_groups' => DistanceGroupData::list(),
         ]);
     }
