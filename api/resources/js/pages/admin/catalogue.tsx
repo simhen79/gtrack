@@ -7,6 +7,7 @@ import { ConfirmDialog, ConfirmName } from '../../components/confirm-dialog';
 import { SgCategoryBadge, sgCategoryKey } from '../../components/sg-category';
 import type { ShellProps } from '../../layouts/app-shell';
 import { useMediaQuery } from '../../lib/media';
+import { calibrationLevel, rulesAt } from '../../lib/rules';
 import type { SharedProps } from '../../types';
 
 type Props = {
@@ -218,6 +219,12 @@ function versionLabel(game: GameVersionData): string {
 const name = (item: Item) => (item.kind === 'Game' ? item.game.name : item.drill.name);
 const category = (item: Item) => (item.kind === 'Game' ? item.game.sg_category : item.drill.sg_category);
 
+/** A Game's rules as a golfer reads them at Level 3, or as written when it has no Levels. */
+function readRules(game: GameVersionData): string {
+    const level = calibrationLevel(game.levels);
+    return level ? rulesAt(game.rules, level.settings) : game.rules;
+}
+
 function DraftCard({ draft, selected, onSelect }: { draft: GameVersionData; selected: boolean; onSelect: () => void }) {
     return (
         <button
@@ -233,7 +240,7 @@ function DraftCard({ draft, selected, onSelect }: { draft: GameVersionData; sele
                     v{draft.version} · {ORIGINS[draft.origin]}
                 </span>
             </span>
-            <span className="line-clamp-1 text-[13px] text-muted">{draft.rules}</span>
+            <span className="line-clamp-1 text-[13px] text-muted">{readRules(draft)}</span>
         </button>
     );
 }
@@ -288,7 +295,7 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
 
             {item.kind === 'Game' ? (
                 <>
-                    <Text label="Rules">{item.game.rules}</Text>
+                    <Text label={calibrationLevel(item.game.levels) ? 'Rules at Level 3' : 'Rules'}>{readRules(item.game)}</Text>
                     <Text label="Scoring">{item.game.scoring}</Text>
                     {item.game.open.length > 0 && <Text label="Open fields">{item.game.open.join(', ')}</Text>}
                 </>

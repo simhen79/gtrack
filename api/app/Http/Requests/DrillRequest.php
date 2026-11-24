@@ -4,8 +4,10 @@ namespace App\Http\Requests;
 
 use App\Enums\SgCategory;
 use App\Models\DistanceGroup;
+use App\Models\Facility;
 use App\Models\Feature;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -37,8 +39,9 @@ class DrillRequest extends FormRequest
     }
 
     /**
-     * A feature belongs to one Facility, so it only makes sense on a Drill that needs
-     * that Facility; distance groups belong to the Drill's own SG Category.
+     * A Drill is played only at the Facilities its SG Category allows. A feature belongs
+     * to one Facility, so it only makes sense on a Drill that needs that Facility;
+     * distance groups belong to the Drill's own SG Category.
      *
      * @return array<int, callable(Validator): void>
      */
@@ -47,6 +50,13 @@ class DrillRequest extends FormRequest
         return [function (Validator $validator) {
             if ($validator->errors()->isNotEmpty()) {
                 return;
+            }
+
+            $category = SgCategory::from($this->input('sg_category'));
+            $allowed = Facility::whereIn('key', $category->facilityKeys())->orderBy('position')->get();
+            if (collect($this->input('facility_ids'))->diff($allowed->pluck('id'))->isNotEmpty()) {
+                $names = $allowed->pluck('name')->map(fn (string $name) => Str::lower($name));
+                $validator->errors()->add('facility_ids', "{$category->label()} Drills are played at the {$names->join(', ', ' or ')} only.");
             }
 
             $strayFeatures = Feature::whereIn('id', $this->input('feature_ids'))

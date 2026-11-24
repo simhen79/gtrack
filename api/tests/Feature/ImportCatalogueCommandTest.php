@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Symfony\Component\Yaml\Yaml;
 
@@ -14,8 +15,20 @@ function catalogueFixtureWith(Closure $change, string $list = 'games'): string
 {
     $content = Yaml::parseFile(base_path(CATALOGUE_FIXTURE));
     $content[$list][0] = $change($content[$list][0]);
-    $path = tempnam(sys_get_temp_dir(), 'catalogue').'.yaml';
+
+    return catalogueFile($content);
+}
+
+/**
+ * Content written to a file of its own, deleted when the test ends, passed or failed.
+ *
+ * @param  array<string, mixed>  $content
+ */
+function catalogueFile(array $content): string
+{
+    $path = sys_get_temp_dir().'/catalogue-'.Str::random(12).'.yaml';
     file_put_contents($path, Yaml::dump($content, 6));
+    test()->beforeApplicationDestroyed(fn () => unlink($path));
 
     return $path;
 }
@@ -52,11 +65,30 @@ it('loads nothing twice when run again', function () {
     $this->artisan('app:import-catalogue', ['file' => base_path(CATALOGUE_FIXTURE)])
         ->expectsOutputToContain('Already loaded: Flag Zone 100-150, v1')
         ->expectsOutputToContain('Already loaded: Putter Gate')
+        ->doesntExpectOutputToContain('differs from the file')
         ->assertSuccessful();
 
     $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
         ->has('drafts', 2)
         ->has('drills', 1));
+});
+
+it('says when a loaded Game or Drill differs from the file, and leaves it as loaded', function () {
+    $this->artisan('app:import-catalogue', ['file' => base_path(CATALOGUE_FIXTURE)])->assertSuccessful();
+    $content = Yaml::parseFile(base_path(CATALOGUE_FIXTURE));
+    $content['games'][0]['levels'][2]['settings']['zone'] = 11;
+    $content['drills'][0]['setup'] = 'Two tees, a ball apart.';
+    $file = catalogueFile($content);
+
+    $this->artisan('app:import-catalogue', ['file' => $file])
+        ->expectsOutputToContain('Already loaded: Flag Zone 100-150, v1, but it differs from the file. Change it in the Game editor, or give the file a new version.')
+        ->expectsOutputToContain('Already loaded: Putter Gate, but it differs from the file. Change it in the Drill editor.')
+        ->doesntExpectOutputToContain('Already loaded: Return Putt 18, v1, but')
+        ->assertSuccessful();
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->where('drafts.0.levels.2.settings.zone', '12')
+        ->where('drills.0.setup', 'Two tees just wider than the putter head, a putter\'s length from the hole.'));
 });
 
 it('loads a Game that fails the publish check as a Draft, and lists its problems', function () {

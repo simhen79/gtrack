@@ -77,24 +77,18 @@ class ContentFile
      * @param  array<string, mixed>  $drill
      * @return array<string, mixed>
      *
-     * @throws ValidationException when the editor would refuse it, or it lists a
-     *                             Facility its SG Category isn't played at: a Drill
-     *                             goes straight into the Catalogue, with no publish check
+     * @throws ValidationException when the editor would refuse it: a Drill goes
+     *                             straight into the Catalogue, with no publish check
      */
     public function drillFields(array $drill): array
     {
         $this->requireUlid($drill);
         $fields = [...$this->fields($drill), 'setup' => $drill['setup'] ?? null];
+        $request = DrillRequest::create('/', 'POST', $fields);
 
-        $category = SgCategory::from($fields['sg_category']);
-        $allowed = $category->facilityKeys();
-        if (collect($drill['facilities'] ?? [])->contains(fn (string $key) => ! in_array($key, $allowed, true))) {
-            $names = Facility::whereIn('key', $allowed)->orderBy('position')->pluck('name')->map(fn (string $name) => Str::lower($name));
-            throw ValidationException::withMessages(['facility_ids' => "{$category->label()} Drills are played at the {$names->join(', ', ' or ')} only."]);
-        }
-        $request = new DrillRequest;
-
-        return Validator::make($fields, $request->rules(), $request->messages(), $request->attributes())->validate();
+        return Validator::make($fields, $request->rules(), $request->messages(), $request->attributes())
+            ->after($request->after())
+            ->validate();
     }
 
     /**
