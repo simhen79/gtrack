@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\DistanceGroup;
+use App\Models\Drill;
 use App\Models\Feature;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -23,6 +24,42 @@ it('offers the Facilities, features and distance groups seeded by migration', fu
                 'approach 50–100 m', 'approach 100–150 m', 'approach 150+ m',
                 'putting 0–1 m', 'putting 1–3 m', 'putting 3–5 m', 'putting 5+ m',
             ]));
+});
+
+it('offers only the Facilities each SG Category is played at, from the server', function () {
+    $this->actingAs(admin())->get('/admin/drills/create')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/drill')
+            ->where('category_facilities.putting', ['putting_green'])
+            ->where('category_facilities.short_game', ['chipping_area', 'practice_bunker', 'range_bay'])
+            ->where('category_facilities.off_the_tee', ['range_bay'])
+            ->where('category_facilities.approach', ['range_bay']));
+});
+
+it('keeps Range bay and its Target flags when an Approach Drill becomes Short Game', function () {
+    $this->actingAs(admin())->post('/admin/drills', drillFields([
+        'sg_category' => 'short_game',
+        'facility_ids' => [facilityId('range_bay')],
+        'feature_ids' => [featureId('range_bay', 'target_flags')],
+    ]))->assertRedirect()->assertSessionHasNoErrors();
+
+    $this->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->where('drills.0.facility_ids', [facilityId('range_bay')])
+        ->where('drills.0.feature_ids', [featureId('range_bay', 'target_flags')]));
+});
+
+it('still shows a Facility its SG Category isn’t played at on an existing Drill, so it can be fixed', function () {
+    $drill = Drill::factory()->create(['sg_category' => 'putting']);
+    $drill->facilities()->sync([facilityId('putting_green'), facilityId('range_bay')]);
+
+    $this->actingAs(admin())->get("/admin/drills/{$drill->id}/edit")
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('drill.sg_category', 'putting')
+            ->where('drill.facility_ids', fn ($ids) => collect($ids)->sort()->values()->all() === collect([facilityId('putting_green'), facilityId('range_bay')])->sort()->values()->all())
+            ->where('category_facilities.putting', ['putting_green'])
+            ->where('facilities', fn ($facilities) => collect($facilities)->pluck('key')->contains('range_bay')));
 });
 
 it('adds a Drill straight into the Catalogue with a text ULID', function () {
