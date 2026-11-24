@@ -132,6 +132,17 @@ it('returns an Edit Round that wasn’t saved to its form, with each field’s o
             ->missing('errors.course_name'));
 });
 
+it('gives each Round on the Rounds page the name of its Baseline', function () {
+    $this->actingAs(golfer());
+    $this->post('/rounds', roundFields(['new_baseline' => 'Scratch', 'played_on' => '2026-11-01']));
+    $this->post('/rounds', roundFields(['new_baseline' => 'Tour', 'played_on' => '2026-11-15']));
+
+    $this->get('/rounds')->assertInertia(fn ($page) => $page
+        ->has('rounds', 2)
+        ->where('rounds.0.baseline', 'Tour')
+        ->where('rounds.1.baseline', 'Scratch'));
+});
+
 it('deletes a Round', function () {
     $this->actingAs(golfer());
     $id = enterRound();
