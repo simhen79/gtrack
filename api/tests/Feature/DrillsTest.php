@@ -37,7 +37,7 @@ it('offers only the Facilities each SG Category is played at, from the server', 
             ->where('category_facilities.approach', ['range_bay']));
 });
 
-it('keeps Range bay and its Target flags when an Approach Drill becomes Short Game', function () {
+it('saves a Short Game Drill at the Range bay with its Target flags', function () {
     $this->actingAs(admin())->post('/admin/drills', drillFields([
         'sg_category' => 'short_game',
         'facility_ids' => [facilityId('range_bay')],

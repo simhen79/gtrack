@@ -80,9 +80,7 @@ class GamesController extends Controller
                     ->map(GameVersionData::fromVersion(...))
                 : [],
             'facilities' => FacilityData::list(),
-            // The Facilities each SG Category can be played at, by key: the editor offers only these.
-            'category_facilities' => collect(SgCategory::cases())
-                ->mapWithKeys(fn (SgCategory $category) => [$category->value => $category->facilityKeys()]),
+            'category_facilities' => SgCategory::facilityMap(),
             'distance_groups' => DistanceGroupData::list(),
         ]);
     }

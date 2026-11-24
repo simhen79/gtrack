@@ -71,9 +71,7 @@ class DrillsController extends Controller
         return Inertia::render('admin/drill', [
             'drill' => $drill ? DrillData::fromDrill($drill) : null,
             'facilities' => FacilityData::list(),
-            // The Facilities each SG Category can be played at, by key: the form offers only these.
-            'category_facilities' => collect(SgCategory::cases())
-                ->mapWithKeys(fn (SgCategory $category) => [$category->value => $category->facilityKeys()]),
+            'category_facilities' => SgCategory::facilityMap(),
             'distance_groups' => DistanceGroupData::list(),
         ]);
     }

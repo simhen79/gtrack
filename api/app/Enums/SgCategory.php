@@ -38,6 +38,16 @@ enum SgCategory: string
         };
     }
 
+    /**
+     * Every SG Category's Facility keys, by SG Category: the editors offer only these.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function facilityMap(): array
+    {
+        return collect(self::cases())->mapWithKeys(fn (self $category) => [$category->value => $category->facilityKeys()])->all();
+    }
+
     /** Whether its Games and Drills are split by distance group. */
     public function hasDistanceGroups(): bool
     {

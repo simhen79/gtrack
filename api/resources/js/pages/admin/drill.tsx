@@ -188,7 +188,9 @@ export default function Drill({ drill, facilities, category_facilities, distance
                                 <div key={facility.id} className="flex flex-col gap-2">
                                     <Tick label={facility.name} isSelected={needed} onChange={(on) => toggleFacility(facility, on)} />
                                     {!allowed(facility) && (
-                                        <p className="ms-7 text-sm text-danger">{categoryLabel} Drills aren’t played here. Untick it to save.</p>
+                                        <p className="ms-7 text-sm text-danger">
+                                            {categoryLabel} Drills aren’t played at the {facility.name.toLowerCase()}. Untick it to save.
+                                        </p>
                                     )}
                                     {needed && facility.features.length > 0 && (
                                         <div className="ms-7 flex flex-wrap gap-x-5 gap-y-2">
