@@ -72,9 +72,7 @@ export default function AppShell({ title, action, children }: ShellProps & { chi
                         {collapsed ? (
                             <hr className="mx-2 my-4 border-separator" />
                         ) : (
-                            <p className="mt-6 mb-1 px-3 text-[11px] font-extrabold tracking-widest text-muted uppercase">
-                                Admin
-                            </p>
+                            <p className="mt-6 mb-1 px-3 text-[11px] font-extrabold tracking-widest text-muted uppercase">Admin</p>
                         )}
                         {adminPages.map((item) => (
                             <SidebarLink key={item.href} item={item} url={url} collapsed={collapsed} admin />
@@ -170,10 +168,7 @@ function RailTooltip({ label, collapsed, children }: { label: string; collapsed:
     return (
         <Tooltip delay={0} closeDelay={0}>
             {children}
-            <Tooltip.Content
-                placement="right"
-                className="rounded-[8px] bg-segment px-2 py-1 text-[13px] font-extrabold text-segment-foreground"
-            >
+            <Tooltip.Content placement="right" className="rounded-[8px] bg-segment px-2 py-1 text-[13px] font-extrabold text-segment-foreground">
                 {label}
             </Tooltip.Content>
         </Tooltip>
@@ -218,11 +213,7 @@ function Tab({ item, current }: { item: NavItem; current: boolean }) {
                 current ? 'text-foreground' : 'text-muted'
             }`}
         >
-            <span
-                className={`flex h-8 w-12 items-center justify-center rounded-full ${
-                    current ? 'bg-segment text-segment-foreground' : ''
-                }`}
-            >
+            <span className={`flex h-8 w-12 items-center justify-center rounded-full ${current ? 'bg-segment text-segment-foreground' : ''}`}>
                 <item.icon className="size-5" />
             </span>
             {item.label}

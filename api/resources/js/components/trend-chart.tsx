@@ -34,11 +34,7 @@ export function TrendChart({ category, trend, rounds, domain, height, axis = fal
 
     return (
         <ResponsiveContainer width="100%" height={height}>
-            <LineChart
-                data={points}
-                syncId={SYNC_ID}
-                margin={{ top: 8, right: 8, bottom: 8, left: axis ? 0 : 8 }}
-            >
+            <LineChart data={points} syncId={SYNC_ID} margin={{ top: 8, right: 8, bottom: 8, left: axis ? 0 : 8 }}>
                 {axis && <CartesianGrid vertical={false} stroke="var(--separator)" strokeDasharray="4 4" />}
                 <XAxis dataKey={(point: Point) => point.round.id} hide />
                 <YAxis

@@ -6,7 +6,10 @@ import { fonts } from '@/lib/theme';
 export function SignInHeading({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View className="gap-3">
-      <Text className="text-[34px] leading-[38px] text-foreground" style={{ fontFamily: fonts.serif }}>
+      <Text
+        className="text-[34px] leading-[38px] text-foreground"
+        style={{ fontFamily: fonts.serif }}
+      >
         {title}
       </Text>
       <Text className="text-[15px] text-muted" style={{ fontFamily: fonts.body }}>

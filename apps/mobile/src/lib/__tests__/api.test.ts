@@ -10,7 +10,9 @@ jest.mock('expo-secure-store', () => {
 });
 
 const respond = (status: number, body?: unknown) =>
-  jest.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(body === undefined ? null : JSON.stringify(body), { status }));
+  jest
+    .spyOn(globalThis, 'fetch')
+    .mockResolvedValue(new Response(body === undefined ? null : JSON.stringify(body), { status }));
 
 afterEach(() => jest.restoreAllMocks());
 

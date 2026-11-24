@@ -71,17 +71,12 @@ export default function Users({ users }: { users: AdminUserData[] }) {
                                     <span className="font-medium break-all">{user.email}</span>
                                     <Status user={user} />
                                 </div>
-                                <p className="text-muted text-sm">
-                                    Last sign-in:{' '}
-                                    {user.last_signed_in_at ? new Date(user.last_signed_in_at).toLocaleString() : 'never'}
+                                <p className="text-sm text-muted">
+                                    Last sign-in: {user.last_signed_in_at ? new Date(user.last_signed_in_at).toLocaleString() : 'never'}
                                 </p>
                                 <div className="flex flex-wrap items-center gap-4">
                                     {ROLES.map((role) => (
-                                        <Checkbox
-                                            key={role}
-                                            isSelected={user.roles.includes(role)}
-                                            onChange={(on) => toggleRole(user, role, on)}
-                                        >
+                                        <Checkbox key={role} isSelected={user.roles.includes(role)} onChange={(on) => toggleRole(user, role, on)}>
                                             <Checkbox.Content>
                                                 <Checkbox.Control>
                                                     <Checkbox.Indicator />
@@ -95,9 +90,7 @@ export default function Users({ users }: { users: AdminUserData[] }) {
                                             <Button
                                                 size="sm"
                                                 variant="secondary"
-                                                onPress={() =>
-                                                    router.post(`/admin/users/${user.id}/invite`, {}, { preserveScroll: true })
-                                                }
+                                                onPress={() => router.post(`/admin/users/${user.id}/invite`, {}, { preserveScroll: true })}
                                             >
                                                 Re-send invite
                                             </Button>
@@ -106,9 +99,7 @@ export default function Users({ users }: { users: AdminUserData[] }) {
                                             <Button
                                                 size="sm"
                                                 variant="secondary"
-                                                onPress={() =>
-                                                    router.post(`/admin/users/${user.id}/enable`, {}, { preserveScroll: true })
-                                                }
+                                                onPress={() => router.post(`/admin/users/${user.id}/enable`, {}, { preserveScroll: true })}
                                             >
                                                 Re-enable
                                             </Button>
@@ -116,9 +107,7 @@ export default function Users({ users }: { users: AdminUserData[] }) {
                                             <Button
                                                 size="sm"
                                                 variant="danger"
-                                                onPress={() =>
-                                                    router.post(`/admin/users/${user.id}/disable`, {}, { preserveScroll: true })
-                                                }
+                                                onPress={() => router.post(`/admin/users/${user.id}/disable`, {}, { preserveScroll: true })}
                                             >
                                                 Disable
                                             </Button>

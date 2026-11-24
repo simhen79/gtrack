@@ -64,7 +64,9 @@ export default function StartingLevels({ bands }: Props) {
                 <Card>
                     <Card.Header>
                         <Card.Title>Handicap Index bands</Card.Title>
-                        <Card.Description>A golfer starts each new Game at the Level for their Handicap Index, from their latest Round or else their settings.</Card.Description>
+                        <Card.Description>
+                            A golfer starts each new Game at the Level for their Handicap Index, from their latest Round or else their settings.
+                        </Card.Description>
                     </Card.Header>
                     <Card.Content>
                         <div className="overflow-x-auto">
@@ -78,7 +80,10 @@ export default function StartingLevels({ bands }: Props) {
                                 </thead>
                                 <tbody>
                                     {rows.map((band, index) => (
-                                        <tr key={index} className="bg-surface-secondary align-top [&>td:first-child]:rounded-s-[14px] [&>td:last-child]:rounded-e-[14px]">
+                                        <tr
+                                            key={index}
+                                            className="bg-surface-secondary align-top [&>td:first-child]:rounded-s-[14px] [&>td:last-child]:rounded-e-[14px]"
+                                        >
                                             <td className="w-32 px-3 py-2 sm:w-40">
                                                 {index === 0 ? (
                                                     <span className="block py-2 text-muted">Below the next band</span>

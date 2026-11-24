@@ -76,9 +76,7 @@ export function AccountMenu({ email, showEmail = false, pages = [], admin = [], 
                     {pages.length > 0 && <Separator />}
                     {admin.length > 0 && (
                         <Dropdown.Section>
-                            <Header className="px-3 pt-1 text-[11px] font-extrabold tracking-widest text-muted uppercase">
-                                Admin
-                            </Header>
+                            <Header className="px-3 pt-1 text-[11px] font-extrabold tracking-widest text-muted uppercase">Admin</Header>
                             {admin.map((item) => (
                                 <Dropdown.Item key={item.href} id={item.href} href={item.href} textValue={item.label}>
                                     <item.icon className="size-4" />

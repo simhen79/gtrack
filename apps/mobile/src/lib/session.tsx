@@ -68,7 +68,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setMe(null);
   }, []);
 
-  return <SessionContext.Provider value={{ me, call, refresh: loadMe, sendCode, signIn, signOut }}>{children}</SessionContext.Provider>;
+  return (
+    <SessionContext.Provider value={{ me, call, refresh: loadMe, sendCode, signIn, signOut }}>
+      {children}
+    </SessionContext.Provider>
+  );
 }
 
 export function useSession(): Session {

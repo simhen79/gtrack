@@ -1,17 +1,4 @@
-import {
-    Button,
-    Card,
-    ComboBox,
-    FieldError,
-    Input,
-    Label,
-    Link,
-    ListBox,
-    NumberField,
-    TextField,
-    ToggleButton,
-    ToggleButtonGroup,
-} from '@heroui/react';
+import { Button, Card, ComboBox, FieldError, Input, Label, Link, ListBox, NumberField, TextField, ToggleButton, ToggleButtonGroup } from '@heroui/react';
 import { parseSG } from '@gtrack/design';
 import type { BaselineData, CourseData, RoundFormData, RoundStatsData, SgBandData, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
@@ -347,7 +334,11 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                         {showDetails || detailsHaveErrors ? (
                             <Card>
                                 <Card.Content className="flex flex-col gap-3">
-                                    <RoundDate value={form.data.played_on} onChange={(value) => form.setData('played_on', value)} error={form.errors.played_on} />
+                                    <RoundDate
+                                        value={form.data.played_on}
+                                        onChange={(value) => form.setData('played_on', value)}
+                                        error={form.errors.played_on}
+                                    />
                                     <CoursePicker form={form} />
                                     <HolesPicker form={form} />
                                     <div className="grid grid-cols-2 gap-3">
@@ -363,9 +354,7 @@ function NarrowEntry({ form, baselines }: { form: RoundForm; baselines: Baseline
                                 <Card.Content className="flex flex-row items-center justify-between gap-3">
                                     <div className="text-sm">
                                         <p className="font-medium">
-                                            {[form.data.course_name, form.data.tees, `${form.data.holes} holes`]
-                                                .filter(Boolean)
-                                                .join(' · ')}
+                                            {[form.data.course_name, form.data.tees, `${form.data.holes} holes`].filter(Boolean).join(' · ')}
                                         </p>
                                         <p className="text-muted">
                                             HI {form.data.handicap_index} · CH {form.data.course_handicap}
@@ -546,15 +535,7 @@ function BaselinePicker({ form, baselines, compact = false }: { form: RoundForm;
 
 /** The course, typed or picked from the golfer's earlier Rounds. */
 function CoursePicker({ form }: { form: RoundForm }) {
-    return (
-        <SuggestField
-            form={form}
-            name="course_name"
-            label="Course"
-            options={form.courses.map((course) => course.name)}
-            isRequired
-        />
-    );
+    return <SuggestField form={form} name="course_name" label="Course" options={form.courses.map((course) => course.name)} isRequired />;
 }
 
 /** The tees, typed or picked from those the golfer played the chosen course from. */
@@ -601,13 +582,7 @@ function SuggestField(props: { form: RoundForm; name: 'course_name' | 'tees'; la
 
 type TextFieldName = 'course_name' | 'tees' | 'handicap_index' | 'course_handicap' | 'par';
 
-function Field(props: {
-    form: RoundForm;
-    name: TextFieldName;
-    label: string;
-    inputMode?: 'decimal' | 'numeric';
-    isRequired?: boolean;
-}) {
+function Field(props: { form: RoundForm; name: TextFieldName; label: string; inputMode?: 'decimal' | 'numeric'; isRequired?: boolean }) {
     const { form, name } = props;
 
     return (

@@ -1,4 +1,13 @@
-import { Button, Card, FieldError, Input, InputOTP, Label, REGEXP_ONLY_DIGITS, TextField } from 'heroui-native';
+import {
+  Button,
+  Card,
+  FieldError,
+  Input,
+  InputOTP,
+  Label,
+  REGEXP_ONLY_DIGITS,
+  TextField,
+} from 'heroui-native';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from '@/components/safe-area-view';
@@ -24,9 +33,11 @@ export default function SignIn() {
       await action();
     } catch (e) {
       setError(
-        e instanceof Invalid ? e.message
-        : e instanceof TypeError ? 'Couldn’t reach the server. Check your connection and try again.'
-        : (e as Error).message,
+        e instanceof Invalid
+          ? e.message
+          : e instanceof TypeError
+            ? 'Couldn’t reach the server. Check your connection and try again.'
+            : (e as Error).message,
       );
     } finally {
       setBusy(false);
@@ -34,24 +45,33 @@ export default function SignIn() {
   };
 
   // A wrong code clears the slots, as on the web, so the golfer types the next one fresh.
-  const submitCode = (value: string) => run(async () => {
-    try {
-      await signIn(email, value);
-    } catch (e) {
-      setCode('');
-      throw e;
-    }
-  });
+  const submitCode = (value: string) =>
+    run(async () => {
+      try {
+        await signIn(email, value);
+      } catch (e) {
+        setCode('');
+        throw e;
+      }
+    });
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
-        <ScrollView contentContainerClassName="grow gap-8 px-4 py-6" keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        className="flex-1"
+      >
+        <ScrollView
+          contentContainerClassName="grow gap-8 px-4 py-6"
+          keyboardShouldPersistTaps="handled"
+        >
           <Wordmark />
 
           {step === 'email' ? (
             <>
-              <SignInHeading title="Sign in to gtrack">There’s no password. We’ll email you a 6-digit code.</SignInHeading>
+              <SignInHeading title="Sign in to gtrack">
+                There’s no password. We’ll email you a 6-digit code.
+              </SignInHeading>
               <Card>
                 <Card.Body className="gap-5">
                   <TextField isInvalid={!!error}>
@@ -67,10 +87,16 @@ export default function SignIn() {
                     />
                     <FieldError>{error}</FieldError>
                   </TextField>
-                  <Button size="lg" isDisabled={busy || !email} onPress={() => run(async () => {
-                    await sendCode(email);
-                    setStep('code');
-                  })}>
+                  <Button
+                    size="lg"
+                    isDisabled={busy || !email}
+                    onPress={() =>
+                      run(async () => {
+                        await sendCode(email);
+                        setStep('code');
+                      })
+                    }
+                  >
                     Email me a code
                   </Button>
                 </Card.Body>
@@ -79,8 +105,11 @@ export default function SignIn() {
           ) : (
             <>
               <SignInHeading title="Check your email">
-                If <Text className="text-foreground" style={{ fontFamily: fonts.bold }}>{email}</Text> has an invite, a 6-digit code is on
-                its way. It works once, for 10 minutes.
+                If{' '}
+                <Text className="text-foreground" style={{ fontFamily: fonts.bold }}>
+                  {email}
+                </Text>{' '}
+                has an invite, a 6-digit code is on its way. It works once, for 10 minutes.
               </SignInHeading>
               <Card>
                 <Card.Body className="gap-5">
@@ -94,7 +123,11 @@ export default function SignIn() {
                       onComplete={submitCode}
                       isInvalid={!!error}
                       isDisabled={busy}
-                      textInputProps={{ textContentType: 'oneTimeCode', autoComplete: 'one-time-code', autoFocus: true }}
+                      textInputProps={{
+                        textContentType: 'oneTimeCode',
+                        autoComplete: 'one-time-code',
+                        autoFocus: true,
+                      }}
                     >
                       {/* Six 52px slots don't fit a phone's card, so they share its width. */}
                       <InputOTP.Group className="gap-2">
@@ -105,14 +138,22 @@ export default function SignIn() {
                     </InputOTP>
                     <FieldError isInvalid={!!error}>{error}</FieldError>
                   </View>
-                  <Button size="lg" isDisabled={busy || code.length !== 6} onPress={() => submitCode(code)}>
+                  <Button
+                    size="lg"
+                    isDisabled={busy || code.length !== 6}
+                    onPress={() => submitCode(code)}
+                  >
                     Sign in
                   </Button>
-                  <Button variant="ghost" isDisabled={busy} onPress={() => {
-                    setCode('');
-                    setError(null);
-                    setStep('email');
-                  }}>
+                  <Button
+                    variant="ghost"
+                    isDisabled={busy}
+                    onPress={() => {
+                      setCode('');
+                      setError(null);
+                      setStep('email');
+                    }}
+                  >
                     Use a different email or get a new code
                   </Button>
                 </Card.Body>

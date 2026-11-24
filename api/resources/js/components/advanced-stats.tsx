@@ -183,7 +183,9 @@ function AdvancedBody({ category, stats, onStatChange, sgBands, bands, onBandCha
         <div className="flex flex-col gap-2">
             <span className="text-[13px] font-bold text-muted">Strokes Gained by distance</span>
             <BandGrid bands={bandsOf(category, sgBands)} values={bands} onChange={onBandChange} errors={errors} className="grid-cols-2" />
-            <p className="text-[13px] text-muted">Once you enter any band, {NAMES[category]}’s Strokes Gained is the sum of its bands. Blank bands count as 0.</p>
+            <p className="text-[13px] text-muted">
+                Once you enter any band, {NAMES[category]}’s Strokes Gained is the sum of its bands. Blank bands count as 0.
+            </p>
         </div>
     );
 

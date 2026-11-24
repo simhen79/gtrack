@@ -226,14 +226,7 @@ function TrendCard({ category, trend, rounds, recentLabel, domain, size, onExpan
                         <LastValues trend={trend} size={size} recentLabel={recentLabel} />
                     </div>
                 )}
-                <TrendChart
-                    category={category}
-                    trend={trend}
-                    rounds={rounds}
-                    domain={domain}
-                    height={CHART_HEIGHT[size]}
-                    axis={size !== 'small'}
-                />
+                <TrendChart category={category} trend={trend} rounds={rounds} domain={domain} height={CHART_HEIGHT[size]} axis={size !== 'small'} />
                 {size === 'big' && trend.bands.some(({ value }) => value !== null) && <BandChart bands={trend.bands} />}
             </Card.Content>
         </Card>
