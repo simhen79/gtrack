@@ -7,6 +7,7 @@ import { LevelMeter } from '../../components/level-meter';
 import { SgCategoryBadge, sgCategoryKey } from '../../components/sg-category';
 import type { ShellProps } from '../../layouts/app-shell';
 import { useFocusFirstError } from '../../lib/forms';
+import { placeholders, rulesAt } from '../../lib/rules';
 
 type Props = {
     game: GameVersionData | null;
@@ -84,19 +85,6 @@ function answeredBy(key: string): string[] {
 /** The value at a problem's path, such as `levels.2.up`; a path into a typed string, such as `pad_values.2`, stops at the string. */
 function valueAt(data: unknown, path: string): unknown {
     return path.split('.').reduce<unknown>((value, part) => (value !== null && typeof value === 'object' ? (value as Record<string, unknown>)[part] : value), data);
-}
-
-/** A `{placeholder}` in the rules, as the server reads it: a name that starts with a letter. */
-const PLACEHOLDER = /\{([A-Za-z]\w*)\}/g;
-
-/** `zone` for `{zone}` and the like, in the order the rules first use them. */
-function placeholders(rules: string): string[] {
-    return [...new Set([...rules.matchAll(PLACEHOLDER)].map((match) => match[1]))];
-}
-
-/** The rules as a golfer reads them at a Level, with its settings put in. */
-function rulesAt(rules: string, level: LevelRow): string {
-    return rules.replace(PLACEHOLDER, (all, key: string) => level.settings[key]?.trim() || all);
 }
 
 const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
@@ -548,7 +536,7 @@ function Levels(props: {
                                         />
                                     </td>
                                 ))}
-                                <td className="hidden max-w-md px-3 py-2 text-[13px] text-muted md:table-cell">{rulesAt(rules, level)}</td>
+                                <td className="hidden max-w-md px-3 py-2 text-[13px] text-muted md:table-cell">{rulesAt(rules, level.settings)}</td>
                             </tr>
                         ))}
                     </tbody>

@@ -70,6 +70,13 @@ it('refuses a Drill with distance groups from another SG Category', function () 
         ->assertSessionHasErrors('distance_group_ids');
 });
 
+it('refuses a Drill at a Facility its SG Category isn’t played at', function () {
+    $this->actingAs(admin())->post('/admin/drills', drillFields(['facility_ids' => [facilityId('putting_green'), facilityId('range_bay')]]))
+        ->assertSessionHasErrors(['facility_ids' => 'Putting Drills are played at the putting green only.']);
+
+    $this->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page->has('drills', 0));
+});
+
 it('needs a Drill to have balls or estimated minutes', function () {
     $this->actingAs(admin())->post('/admin/drills', drillFields(['balls' => null]))
         ->assertSessionHasErrors('balls');
