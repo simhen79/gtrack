@@ -74,11 +74,7 @@ export function SgKeypad({ value, onChange, onNext, isLast }: Props) {
             >
                 ⌫
             </Button>
-            <Button
-                className="h-auto w-full text-lg font-semibold"
-                style={{ gridColumnStart: 4, gridRowStart: 2, gridRowEnd: 5 }}
-                onPress={onNext}
-            >
+            <Button className="h-auto w-full text-lg font-semibold" style={{ gridColumnStart: 4, gridRowStart: 2, gridRowEnd: 5 }} onPress={onNext}>
                 {isLast ? 'Done' : 'Next'}
             </Button>
         </div>

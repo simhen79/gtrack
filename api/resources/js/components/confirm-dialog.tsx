@@ -28,7 +28,18 @@ type Props = {
  * Every destructive confirm in the app: the heading with the danger icon on its right,
  * the consequences, then "Keep <thing>" and the danger confirm. See the design-system README.
  */
-export function ConfirmDialog({ trigger, triggerIcon, triggerVariant = 'danger-soft', size, className, heading, children, keep, confirm = trigger, onConfirm }: Props) {
+export function ConfirmDialog({
+    trigger,
+    triggerIcon,
+    triggerVariant = 'danger-soft',
+    size,
+    className,
+    heading,
+    children,
+    keep,
+    confirm = trigger,
+    onConfirm,
+}: Props) {
     const [open, setOpen] = useState(false);
     const [pending, setPending] = useState(false);
 

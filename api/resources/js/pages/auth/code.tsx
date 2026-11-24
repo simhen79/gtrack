@@ -19,8 +19,7 @@ export default function Code({ email }: { email: string }) {
             title="Check your email"
             description={
                 <>
-                    If <span className="font-bold text-foreground">{email}</span> has an invite, a 6-digit code is on its way. It works once, for
-                    10 minutes.
+                    If <span className="font-bold text-foreground">{email}</span> has an invite, a 6-digit code is on its way. It works once, for 10 minutes.
                 </>
             }
         >

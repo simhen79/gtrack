@@ -31,6 +31,7 @@ A golf practice app: golfers log Rounds with Strokes Gained and get Practice Ses
 
 ## Local development
 
+- **Formatting:** Prettier formats the JavaScript and TypeScript (`pnpm format` at the root) and Pint the PHP (`vendor/bin/pint` in `api/`). CI checks both.
 - Mail goes to Mailpit (`docker compose up -d` in `api/`), so sign-in codes appear in the inbox at http://localhost:8025 (or `MAILPIT_UI_PORT` in `api/.env`). Ralph's sandboxes run no Mailpit and keep mail in `api/storage/logs/laravel.log`.
 - The CSS files in `docs/design-system/code/` are generated from `tokens.json`, but the generator isn't in the repo yet: change `tokens.json` and the CSS together.
 - The mail theme (`api/resources/views/vendor/mail/html/themes/gtrack.css` and the dark-mode block in `layout.blade.php`) copies its colours from `tokens.json` by hand: change them with it too.

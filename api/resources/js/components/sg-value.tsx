@@ -5,9 +5,5 @@ import { displaySg } from '../lib/strokes-gained';
 export function SgValue({ value, className = '' }: { value: string | null | undefined; className?: string }) {
     const number = value ? parseSG(value) : null;
 
-    return (
-        <span className={`font-extrabold tabular-nums ${number === null ? 'text-muted' : sgTone(number)} ${className}`}>
-            {displaySg(value)}
-        </span>
-    );
+    return <span className={`font-extrabold tabular-nums ${number === null ? 'text-muted' : sgTone(number)} ${className}`}>{displaySg(value)}</span>;
 }

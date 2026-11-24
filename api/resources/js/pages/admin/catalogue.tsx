@@ -101,7 +101,9 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
             </SearchField>
             {listed.length === 0 && query ? (
                 <div className="flex flex-col items-start gap-2 px-4 py-3">
-                    <p className="text-[13px] text-muted">No {filter} Games or Drills match “{query}”.</p>
+                    <p className="text-[13px] text-muted">
+                        No {filter} Games or Drills match “{query}”.
+                    </p>
                     {/* Not "Clear search": the SearchField's × already has that name. */}
                     <Button size="sm" variant="tertiary" onPress={() => setSearch('')}>
                         Clear “{query}”
@@ -171,7 +173,11 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                         <ul className="-m-1 flex max-h-[19rem] flex-col gap-2 overflow-y-auto p-1">
                             {draftItems.map((item) => (
                                 <li key={item.id}>
-                                    <DraftCard draft={(item as Extract<Item, { kind: 'Game' }>).game} selected={item.id === shown?.id} onSelect={() => openItem(item.id)} />
+                                    <DraftCard
+                                        draft={(item as Extract<Item, { kind: 'Game' }>).game}
+                                        selected={item.id === shown?.id}
+                                        onSelect={() => openItem(item.id)}
+                                    />
                                 </li>
                             ))}
                         </ul>
@@ -275,7 +281,11 @@ function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: 
             <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,11rem),1fr))] gap-3">
                 <Tile label="Facilities">{facilityNames.join(', ') || 'None'}</Tile>
                 <Tile label="Time">{shape.balls ? `${shape.balls} balls` : `${shape.estimated_minutes} min`}</Tile>
-                {item.kind === 'Game' ? <Tile label="Origin">{ORIGINS[item.game.origin]}</Tile> : <Tile label="Distance groups">{groupLabels.join(', ') || 'Any'}</Tile>}
+                {item.kind === 'Game' ? (
+                    <Tile label="Origin">{ORIGINS[item.game.origin]}</Tile>
+                ) : (
+                    <Tile label="Distance groups">{groupLabels.join(', ') || 'Any'}</Tile>
+                )}
                 {featureNames.length > 0 && <Tile label="Features">{featureNames.join(', ')}</Tile>}
                 {item.kind === 'Game' && groupLabels.length > 0 && <Tile label="Distance groups">{groupLabels.join(', ')}</Tile>}
                 {item.kind === 'Game' && (
@@ -317,7 +327,10 @@ function Actions({ item }: { item: Item }) {
     if (item.status === 'draft') {
         return (
             <div className="flex flex-wrap gap-2">
-                <Link href={`/admin/games/${(item as Extract<Item, { kind: 'Game' }>).game.game_id}/edit`} className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}>
+                <Link
+                    href={`/admin/games/${(item as Extract<Item, { kind: 'Game' }>).game.game_id}/edit`}
+                    className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}
+                >
                     Edit Draft
                 </Link>
                 <ConfirmDialog
@@ -345,7 +358,10 @@ function Actions({ item }: { item: Item }) {
     return (
         <div className="flex gap-2">
             {item.kind === 'Game' && item.status === 'published' && (
-                <Link href={`/admin/games/${item.game.game_id}/edit`} className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}>
+                <Link
+                    href={`/admin/games/${item.game.game_id}/edit`}
+                    className={buttonVariants({ variant: 'tertiary', className: 'no-underline hover:no-underline' })}
+                >
                     Edit Game
                 </Link>
             )}

@@ -56,7 +56,8 @@ export default function PracticeGrounds({ practice_grounds, archived, facilities
                 </div>
             ) : (
                 <p className="rounded-[24px] bg-surface p-6 text-muted">
-                    No Practice Grounds yet. Add the places you practise, with the Facilities each has, so Practice Sessions only include what you can play there.
+                    No Practice Grounds yet. Add the places you practise, with the Facilities each has, so Practice Sessions only include what you can play
+                    there.
                 </p>
             )}
 
@@ -95,8 +96,8 @@ function ArchiveGround({ ground, icon = false }: { ground: PracticeGroundData; i
             confirm="Archive Practice Ground"
             onConfirm={(visit) => archive(ground, visit)}
         >
-            <ConfirmName>{ground.name}</ConfirmName> leaves your list and can’t be picked for new Practice Sessions. Practice Sessions you’ve already played there
-            keep it. You can restore it from the archived ones.
+            <ConfirmName>{ground.name}</ConfirmName> leaves your list and can’t be picked for new Practice Sessions. Practice Sessions you’ve already played
+            there keep it. You can restore it from the archived ones.
         </ConfirmDialog>
     );
 }
@@ -106,7 +107,9 @@ function ArchiveGround({ ground, icon = false }: { ground: PracticeGroundData; i
  * the card is a separate button that also opens the editor.
  */
 function GroundCard({ ground, facilities }: { ground: PracticeGroundData; facilities: FacilityData[] }) {
-    const archivedOn = ground.archived_at ? new Date(ground.archived_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+    const archivedOn = ground.archived_at
+        ? new Date(ground.archived_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+        : null;
 
     return (
         <div className={`flex flex-col gap-3 rounded-[24px] bg-surface p-6 transition hover:ring-2 hover:ring-highlight ${archivedOn ? 'opacity-60' : ''}`}>
