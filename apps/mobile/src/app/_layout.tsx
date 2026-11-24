@@ -1,7 +1,12 @@
 import '../../global.css';
 
 import { InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif';
-import { Manrope_500Medium, Manrope_700Bold, Manrope_800ExtraBold, useFonts } from '@expo-google-fonts/manrope';
+import {
+  Manrope_500Medium,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/manrope';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { HeroUINativeProvider } from 'heroui-native';

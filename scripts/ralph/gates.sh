@@ -9,8 +9,8 @@
 #
 # The same checks as CI (.github/workflows/api.yml and mobile.yml): generated types up to date,
 # the web typecheck and build, and the whole Pest suite against MariaDB; the phone's typecheck
-# and Jest when apps/mobile or packages/types changed. Pint on the PHP the change touched.
-# Then a clean tree.
+# and Jest when apps/mobile or packages/types changed. Pint on the PHP the change touched, and
+# Prettier on its JavaScript and TypeScript. Then a clean tree.
 set -euo pipefail
 
 BASE="$1"
@@ -33,6 +33,12 @@ fi
 
 echo "pint: the PHP files changed since $BASE"
 vendor/bin/pint --test --diff="$BASE"
+
+echo "prettier: the JavaScript and TypeScript changed since $BASE"
+changed="$(git -C "$ROOT" diff --name-only --diff-filter=d "$BASE" | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)"
+if [ -n "$changed" ]; then
+  (cd "$ROOT" && echo "$changed" | xargs pnpm exec prettier --check)
+fi
 
 npm run typecheck
 npm run build

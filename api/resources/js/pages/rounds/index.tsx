@@ -39,9 +39,7 @@ export default function Rounds({ rounds, sg_bands }: { rounds: RoundSummaryData[
 
     const list = byMonth(rounds).map(([month, monthRounds]) => (
         <section key={month} className="flex flex-col gap-1">
-            <h2 className="sticky top-0 z-10 bg-surface px-4 pt-3 pb-1 text-[11px] font-extrabold tracking-widest text-muted uppercase">
-                {month}
-            </h2>
+            <h2 className="sticky top-0 z-10 bg-surface px-4 pt-3 pb-1 text-[11px] font-extrabold tracking-widest text-muted uppercase">{month}</h2>
             <ul className="flex flex-col gap-1">
                 {monthRounds.map((round) => (
                     <li key={round.id}>
@@ -109,7 +107,6 @@ function RoundLine({ round, selected = false }: { round: RoundSummaryData; selec
 }
 
 function RoundDetail({ round, sgBands }: { round: RoundSummaryData; sgBands: SgBandData[] }) {
-
     return (
         <div className="flex max-w-4xl flex-col gap-6">
             <div className="flex items-start justify-between gap-4">
@@ -171,9 +168,7 @@ function AdvancedDetail({ stats, bands, sgBands }: { stats: RoundStatsData; band
         },
         {
             key: 'app',
-            stats: (['long', 'short', 'left', 'right'] as const).flatMap((side) =>
-                percent(`Missed ${side}`, stats[`approach_miss_${side}_percent`]),
-            ),
+            stats: (['long', 'short', 'left', 'right'] as const).flatMap((side) => percent(`Missed ${side}`, stats[`approach_miss_${side}_percent`])),
             bands: bandsOf('approach'),
         },
         {

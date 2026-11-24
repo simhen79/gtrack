@@ -23,14 +23,20 @@ export function TopRow() {
   const email = me?.email ?? '';
 
   return (
-    <View className="flex-row items-center justify-between bg-background px-4 pb-3" style={{ paddingTop: insets.top + 12 }}>
+    <View
+      className="flex-row items-center justify-between bg-background px-4 pb-3"
+      style={{ paddingTop: insets.top + 12 }}
+    >
       <Wordmark />
       <BottomSheet isOpen={open} onOpenChange={setOpen}>
         <BottomSheet.Trigger asChild>
           <Pressable className="ml-auto" accessibilityRole="button" accessibilityLabel="Account">
             <Avatar alt={email} size="sm" className="bg-highlight">
               <Avatar.Fallback className="bg-highlight">
-                <Text className="text-sm text-highlight-foreground" style={{ fontFamily: fonts.extraBold }}>
+                <Text
+                  className="text-sm text-highlight-foreground"
+                  style={{ fontFamily: fonts.extraBold }}
+                >
                   {email.slice(0, 2).toUpperCase()}
                 </Text>
               </Avatar.Fallback>
@@ -39,7 +45,10 @@ export function TopRow() {
         </BottomSheet.Trigger>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content backgroundClassName="rounded-t-[24px] bg-overlay" contentContainerClassName="gap-2 p-5">
+          <BottomSheet.Content
+            backgroundClassName="rounded-t-[24px] bg-overlay"
+            contentContainerClassName="gap-2 p-5"
+          >
             <BottomSheet.Title className="text-[13px] text-muted">{email}</BottomSheet.Title>
             <ThemeChoicePicker />
             <PracticeGroundsRow

@@ -48,7 +48,16 @@ jobs:
             echo "::error::Generated types are out of date. Run 'php artisan typescript:transform' in api/ and commit packages/types."
             exit 1
           fi
+      - run: vendor/bin/pint --test
       - run: npm ci
+      # Prettier lives in the root workspace; its Tailwind class sorting reads api/'s stylesheet,
+      # so it runs after npm ci. Only the root's own packages are installed.
+      - name: Check formatting with Prettier
+        working-directory: .
+        run: |
+          corepack enable pnpm
+          pnpm install --frozen-lockfile --filter gtrack
+          pnpm format:check
       - run: npm run typecheck
       - run: npm run build
       - run: vendor/bin/pest

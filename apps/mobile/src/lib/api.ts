@@ -21,9 +21,14 @@ export const clearToken = () => SecureStore.deleteItemAsync(TOKEN_KEY);
  * Calls the Laravel JSON API with the stored token. A 401 forgets the token and
  * throws SignedOut, so the caller can return to sign-in.
  */
-export async function api<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+export async function api<T>(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<T> {
   if (!baseUrl) {
-    throw new Error('EXPO_PUBLIC_API_URL isn’t set. Add it to apps/mobile/.env.local and restart Metro.');
+    throw new Error(
+      'EXPO_PUBLIC_API_URL isn’t set. Add it to apps/mobile/.env.local and restart Metro.',
+    );
   }
   const token = await getToken();
   const response = await fetch(`${baseUrl}/api${path}`, {

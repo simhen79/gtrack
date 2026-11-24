@@ -18,8 +18,8 @@ export function DeleteRound({ round, size }: Props) {
             keep="Keep Round"
             onConfirm={(visit) => router.delete(`/rounds/${round.id}`, visit)}
         >
-            <ConfirmName>{round.course_name}</ConfirmName> on {played}, with its advanced stats and distance bands, will be gone from your
-            Rounds and trends. It can’t be undone.
+            <ConfirmName>{round.course_name}</ConfirmName> on {played}, with its advanced stats and distance bands, will be gone from your Rounds and trends. It
+            can’t be undone.
         </ConfirmDialog>
     );
 }

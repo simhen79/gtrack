@@ -41,7 +41,10 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontFamily: fonts.extraBold, fontSize: 11 },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Home', tabBarIcon: (props) => <TabIcon name="House" {...props} /> }} />
+      <Tabs.Screen
+        name="index"
+        options={{ title: 'Home', tabBarIcon: (props) => <TabIcon name="House" {...props} /> }}
+      />
       {/* Not a tab: the avatar sheet opens it, as the web's avatar menu does at phone width. */}
       <Tabs.Screen name="practice-grounds" options={{ title: 'Practice Grounds', href: null }} />
     </Tabs>
@@ -49,11 +52,21 @@ export default function TabsLayout() {
 }
 
 /** The current tab's icon sits in a segment pill. */
-function TabIcon({ name, focused, color }: { name: IconName; focused: boolean; color: ColorValue }) {
+function TabIcon({
+  name,
+  focused,
+  color,
+}: {
+  name: IconName;
+  focused: boolean;
+  color: ColorValue;
+}) {
   const [segmentForeground] = useCSSVariable(['--color-segment-foreground']) as string[];
 
   return (
-    <View className={`h-8 w-12 items-center justify-center rounded-full ${focused ? 'bg-segment' : ''}`}>
+    <View
+      className={`h-8 w-12 items-center justify-center rounded-full ${focused ? 'bg-segment' : ''}`}
+    >
       <Icon name={name} color={focused ? segmentForeground : color} />
     </View>
   );

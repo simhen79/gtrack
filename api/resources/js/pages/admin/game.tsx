@@ -1,4 +1,20 @@
-import { Button, buttonVariants, Card, Checkbox, CheckboxGroup, FieldError, Form, Input, Label, Link, NumberField, TextArea, TextField, ToggleButton, ToggleButtonGroup } from '@heroui/react';
+import {
+    Button,
+    buttonVariants,
+    Card,
+    Checkbox,
+    CheckboxGroup,
+    FieldError,
+    Form,
+    Input,
+    Label,
+    Link,
+    NumberField,
+    TextArea,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+} from '@heroui/react';
 import type { DistanceGroupData, FacilityData, GameVersionData, ScoreBetter, ScoreEntry, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
 import { useState, type ReactNode } from 'react';
@@ -84,7 +100,9 @@ function answeredBy(key: string): string[] {
 
 /** The value at a problem's path, such as `levels.2.up`; a path into a typed string, such as `pad_values.2`, stops at the string. */
 function valueAt(data: unknown, path: string): unknown {
-    return path.split('.').reduce<unknown>((value, part) => (value !== null && typeof value === 'object' ? (value as Record<string, unknown>)[part] : value), data);
+    return path
+        .split('.')
+        .reduce<unknown>((value, part) => (value !== null && typeof value === 'object' ? (value as Record<string, unknown>)[part] : value), data);
 }
 
 const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long' });
@@ -141,7 +159,13 @@ export default function Game({ game, earlier_versions, facilities, category_faci
     const same = (a: unknown, b: unknown) => JSON.stringify(Array.isArray(a) ? [...a].sort() : a) === JSON.stringify(Array.isArray(b) ? [...b].sort() : b);
     const changes = published ? VERSIONED.filter(({ field }) => !same(data[field], saved[field])).map(({ label }) => label) : [];
 
-    const action = !game ? 'Publish v1' : !published ? `Publish v${game.version}` : changes.length > 0 ? `Publish v${published.version + 1}` : `Save v${published.version}`;
+    const action = !game
+        ? 'Publish v1'
+        : !published
+          ? `Publish v${game.version}`
+          : changes.length > 0
+            ? `Publish v${published.version + 1}`
+            : `Save v${published.version}`;
     const note = !game
         ? 'A new Game publishes as v1 once it passes every publish check.'
         : !published
@@ -255,7 +279,8 @@ export default function Game({ game, earlier_versions, facilities, category_faci
                             </span>
                             {published && earlier_versions[0] && (
                                 <span className="text-[12px] text-muted">
-                                    v{published.version}, replaced v{earlier_versions[0].version} on {day(earlier_versions[0].replaced_at ?? published.published_at!)}
+                                    v{published.version}, replaced v{earlier_versions[0].version} on{' '}
+                                    {day(earlier_versions[0].replaced_at ?? published.published_at!)}
                                 </span>
                             )}
                         </div>
@@ -279,7 +304,12 @@ export default function Game({ game, earlier_versions, facilities, category_faci
                             errors={errors}
                             error={errors.levels}
                             onChange={setLevel}
-                            onAdd={() => form.setData('levels', [1, 2, 3, 4, 5].map(() => ({ settings: {}, up: null, down: null })))}
+                            onAdd={() =>
+                                form.setData(
+                                    'levels',
+                                    [1, 2, 3, 4, 5].map(() => ({ settings: {}, up: null, down: null })),
+                                )
+                            }
                             onRemove={() => form.setData('levels', [])}
                         />
                     </Card.Content>
@@ -290,7 +320,9 @@ export default function Game({ game, earlier_versions, facilities, category_faci
                         <Card.Header>
                             <Card.Title>{published ? `Changes here publish v${published.version + 1}` : 'Locked once published'}</Card.Title>
                             <Card.Description>
-                                {published ? 'A new version keeps scores apart, so Proficiency never compares different Games.' : 'Changing any of these later publishes a new version.'}
+                                {published
+                                    ? 'A new version keeps scores apart, so Proficiency never compares different Games.'
+                                    : 'Changing any of these later publishes a new version.'}
                             </Card.Description>
                         </Card.Header>
                         <Card.Content className="flex flex-col gap-5">
@@ -397,7 +429,11 @@ export default function Game({ game, earlier_versions, facilities, category_faci
                                 />
                             </div>
                             {data.score_entry === 'pad' && (
-                                <TextField isInvalid={errorFor('pad_values') !== undefined} value={data.pad_values} onChange={(value) => form.setData('pad_values', value)}>
+                                <TextField
+                                    isInvalid={errorFor('pad_values') !== undefined}
+                                    value={data.pad_values}
+                                    onChange={(value) => form.setData('pad_values', value)}
+                                >
                                     <Label>Pad values</Label>
                                     <Input placeholder="0, 1, 2, 3" />
                                     <p className="text-[13px] text-muted">The points a golfer can tap, separated by commas.</p>
@@ -431,12 +467,21 @@ export default function Game({ game, earlier_versions, facilities, category_faci
 
                             <OpenFields value={data.open} error={errorFor('open')} onChange={(open) => form.setData('open', open)} />
 
-                            <TextField isInvalid={'source_concept' in errors} value={data.source_concept} onChange={(value) => form.setData('source_concept', value)}>
+                            <TextField
+                                isInvalid={'source_concept' in errors}
+                                value={data.source_concept}
+                                onChange={(value) => form.setData('source_concept', value)}
+                            >
                                 <Label>Source concept</Label>
                                 <TextArea rows={2} />
                                 <FieldError>{errors.source_concept}</FieldError>
                             </TextField>
-                            <TextField type="url" isInvalid={'source_url' in errors} value={data.source_url} onChange={(value) => form.setData('source_url', value)}>
+                            <TextField
+                                type="url"
+                                isInvalid={'source_url' in errors}
+                                value={data.source_url}
+                                onChange={(value) => form.setData('source_url', value)}
+                            >
                                 <Label>Source link</Label>
                                 <Input />
                                 <FieldError>{errors.source_url}</FieldError>
@@ -476,7 +521,10 @@ function Levels(props: {
     onRemove: () => void;
 }) {
     const { rules, keys, levels, errors } = props;
-    const rowErrors = (index: number) => Object.entries(errors).filter(([key, message]) => key.startsWith(`levels.${index}.`) && message !== undefined).map(([, message]) => message!);
+    const rowErrors = (index: number) =>
+        Object.entries(errors)
+            .filter(([key, message]) => key.startsWith(`levels.${index}.`) && message !== undefined)
+            .map(([, message]) => message!);
 
     if (levels.length === 0) {
         return (
@@ -544,11 +592,13 @@ function Levels(props: {
             </div>
             {levels.some((_, index) => rowErrors(index).length > 0) && (
                 <ul className="flex flex-col gap-0.5">
-                    {levels.flatMap((_, index) => rowErrors(index)).map((message) => (
-                        <li key={message} className={MESSAGE}>
-                            {message}
-                        </li>
-                    ))}
+                    {levels
+                        .flatMap((_, index) => rowErrors(index))
+                        .map((message) => (
+                            <li key={message} className={MESSAGE}>
+                                {message}
+                            </li>
+                        ))}
                 </ul>
             )}
             {props.error && (
@@ -583,7 +633,14 @@ function OpenFields({ value, error, onChange }: { value: string[]; error?: strin
                     {value.map((name) => (
                         <li key={name} className="flex items-center gap-1 rounded-full bg-surface-secondary py-1 ps-3 pe-1 text-[13px] font-medium">
                             {name}
-                            <Button isIconOnly size="sm" variant="ghost" aria-label={`Remove ${name}`} className="size-6 min-w-6 rounded-full" onPress={() => onChange(value.filter((other) => other !== name))}>
+                            <Button
+                                isIconOnly
+                                size="sm"
+                                variant="ghost"
+                                aria-label={`Remove ${name}`}
+                                className="size-6 min-w-6 rounded-full"
+                                onPress={() => onChange(value.filter((other) => other !== name))}
+                            >
                                 ×
                             </Button>
                         </li>

@@ -1,4 +1,19 @@
-import { Button, buttonVariants, Card, Checkbox, FieldError, Form, Input, Label, Link, NumberField, TextArea, TextField, ToggleButton, ToggleButtonGroup } from '@heroui/react';
+import {
+    Button,
+    buttonVariants,
+    Card,
+    Checkbox,
+    FieldError,
+    Form,
+    Input,
+    Label,
+    Link,
+    NumberField,
+    TextArea,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+} from '@heroui/react';
 import type { DistanceGroupData, DrillData, FacilityData, SgCategory } from '@gtrack/types';
 import { Head, useForm } from '@inertiajs/react';
 import type { ReactNode } from 'react';
@@ -208,12 +223,21 @@ export default function Drill({ drill, facilities, distance_groups }: Props) {
                         <Card.Title>Source</Card.Title>
                     </Card.Header>
                     <Card.Content className="flex flex-col gap-4">
-                        <TextField isInvalid={'source_concept' in form.errors} value={form.data.source_concept} onChange={(value) => form.setData('source_concept', value)}>
+                        <TextField
+                            isInvalid={'source_concept' in form.errors}
+                            value={form.data.source_concept}
+                            onChange={(value) => form.setData('source_concept', value)}
+                        >
                             <Label>Concept</Label>
                             <TextArea rows={2} />
                             <FieldError>{form.errors.source_concept}</FieldError>
                         </TextField>
-                        <TextField type="url" isInvalid={'source_url' in form.errors} value={form.data.source_url} onChange={(value) => form.setData('source_url', value)}>
+                        <TextField
+                            type="url"
+                            isInvalid={'source_url' in form.errors}
+                            value={form.data.source_url}
+                            onChange={(value) => form.setData('source_url', value)}
+                        >
                             <Label>Link</Label>
                             <Input />
                             <FieldError>{form.errors.source_url}</FieldError>

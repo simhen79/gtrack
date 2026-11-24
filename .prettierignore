@@ -1,0 +1,17 @@
+# Prettier formats the JavaScript and TypeScript: web, phone, packages and the design-system code.
+# Pint formats the PHP.
+*.*
+!*.ts
+!*.tsx
+!*.js
+!*.jsx
+!*.mjs
+!*.cjs
+
+# Written by tools, not people.
+packages/types/src/generated.ts
+api/public/
+api/vendor/
+api/bootstrap/ssr/
+apps/mobile/.expo/
+apps/mobile/uniwind-types.d.ts
