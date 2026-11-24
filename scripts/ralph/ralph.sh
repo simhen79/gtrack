@@ -198,7 +198,9 @@ sandbox_exec() {
 ensure_sandbox() {   # ensure_sandbox NAME
   if ! sbx ls 2>/dev/null | awk '{ print $1 }' | grep -qx "$1"; then
     log "creating sandbox $1 from $TEMPLATE"
-    sbx create --clone --name "$1" -t "$TEMPLATE" --pull never --no-progress claude "$MAIN_TREE" \
+    # --skills=off: sbx's shared skills store (on by default as of sbx 0.54) mounts over
+    # ~/.claude/skills read-only, and install_skills must write there.
+    sbx create --clone --skills=off --name "$1" -t "$TEMPLATE" --pull never --no-progress claude "$MAIN_TREE" \
       "$STATE/reports" "$STATE/pr" "$STATE/logs:ro" "$STATE/context:ro" </dev/null >&2 || return 1
   fi
 }
