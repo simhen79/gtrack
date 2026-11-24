@@ -103,6 +103,34 @@ class Publisher
     }
 
     /**
+     * Writes a version of a Game as a Draft, without the publish check: Approve runs
+     * it later. The Game keeps the ULID it's given.
+     *
+     * @param  array<string, mixed>  $content
+     *
+     * @throws ValidationException under `sg_category` when the Game has a version in another
+     */
+    public function draft(string $gameId, int $version, GameOrigin $origin, array $content): GameVersion
+    {
+        return DB::transaction(function () use ($gameId, $version, $origin, $content) {
+            $game = Game::find($gameId) ?? Game::forceCreate(['id' => $gameId]);
+            if ($game->versions()->where('sg_category', '!=', $content['sg_category'])->exists()) {
+                throw ValidationException::withMessages([
+                    'sg_category' => 'Fixed once published. For another SG Category, write a new Game.',
+                ]);
+            }
+            $draft = $game->versions()->make([
+                'version' => $version,
+                'status' => GameStatus::Draft,
+                'origin' => $origin,
+            ]);
+            $this->write($draft, $content);
+
+            return $draft;
+        });
+    }
+
+    /**
      * Approves a Draft as it stands.
      *
      * @throws ValidationException under `approve` when the check fails or the Game
