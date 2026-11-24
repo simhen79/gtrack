@@ -1,5 +1,6 @@
-import { Alert, Button, buttonVariants, Chip, Link, SearchField, Tabs } from '@heroui/react';
-import type { DistanceGroupData, DrillData, FacilityData, GameOrigin, GameStatus, GameVersionData, ScoreEntry } from '@gtrack/types';
+import { SG_CATEGORIES } from '@gtrack/design';
+import { Alert, Button, buttonVariants, Chip, Link, ListBox, SearchField, Select, Tabs, ToggleButton, ToggleButtonGroup } from '@heroui/react';
+import type { DistanceGroupData, DrillData, FacilityData, GameOrigin, GameStatus, GameVersionData, ScoreEntry, SgCategory } from '@gtrack/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useRef, useState, type ReactNode } from 'react';
 import { AdminTabs } from '../../components/admin-tabs';
@@ -22,6 +23,23 @@ type Props = {
 type Item = { kind: 'Game'; id: string; status: GameStatus; game: GameVersionData } | { kind: 'Drill'; id: string; status: GameStatus; drill: DrillData };
 
 type Filter = 'published' | 'retired';
+
+/** The list's filters, each `all` until the admin picks one. */
+type Filters = { kind: Item['kind'] | 'all'; category: SgCategory | 'all'; facility: string };
+
+const NO_FILTERS: Filters = { kind: 'all', category: 'all', facility: 'all' };
+
+const KINDS = [
+    { id: 'all', label: 'All' },
+    { id: 'Game', label: 'Games' },
+    { id: 'Drill', label: 'Drills' },
+] as const;
+
+const CATEGORIES: SgCategory[] = ['off_the_tee', 'approach', 'short_game', 'putting'];
+
+const sgCategoryName = (sgCategory: SgCategory) => SG_CATEGORIES.find(({ key }) => key === sgCategoryKey(sgCategory))!.name;
+
+const SELECTED_SEGMENT = 'data-[selected=true]:bg-segment data-[selected=true]:text-segment-foreground';
 
 /** From here the list sits beside the selected item's detail. */
 const WIDE = '(min-width: 64rem)';
@@ -55,6 +73,7 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
     const selected = [...draftItems, ...items].find((item) => item.id === selectedId);
     const [filter, setFilter] = useState<Filter>(selected?.status === 'retired' ? 'retired' : 'published');
     const [search, setSearch] = useState('');
+    const [filters, setFilters] = useState(NO_FILTERS);
 
     // Retiring keeps the item selected, so the list follows it to Retired.
     const [listedStatus, setListedStatus] = useState(selected?.status);
@@ -66,7 +85,19 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
     }
 
     const query = search.trim();
-    const listed = items.filter((item) => item.status === filter && name(item).toLowerCase().includes(query.toLowerCase()));
+    const filtered = filters.kind !== 'all' || filters.category !== 'all' || filters.facility !== 'all';
+    const listed = items.filter(
+        (item) =>
+            item.status === filter &&
+            name(item).toLowerCase().includes(query.toLowerCase()) &&
+            (filters.kind === 'all' || item.kind === filters.kind) &&
+            (filters.category === 'all' || category(item) === filters.category) &&
+            (filters.facility === 'all' || shapeOf(item).facility_ids.includes(filters.facility)),
+    );
+    const clear = () => {
+        setSearch('');
+        setFilters(NO_FILTERS);
+    };
     const shown = selected ?? listed[0];
     const count = (status: GameStatus) => items.filter((item) => item.status === status).length;
 
@@ -100,14 +131,17 @@ export default function Catalogue({ games, drafts, drills, facilities, distance_
                     <SearchField.ClearButton />
                 </SearchField.Group>
             </SearchField>
-            {listed.length === 0 && query ? (
+            <ListFilters filters={filters} facilities={facilities} onChange={setFilters} />
+            {listed.length === 0 && (query || filtered) ? (
                 <div className="flex flex-col items-start gap-2 px-4 py-3">
                     <p className="text-[13px] text-muted">
-                        No {filter} Games or Drills match “{query}”.
+                        No {filter} Games or Drills match {query && `“${query}”`}
+                        {query && filtered && ' and '}
+                        {filtered && 'these filters'}.
                     </p>
                     {/* Not "Clear search": the SearchField's × already has that name. */}
-                    <Button size="sm" variant="tertiary" onPress={() => setSearch('')}>
-                        Clear “{query}”
+                    <Button size="sm" variant="tertiary" onPress={clear}>
+                        {filtered && query ? 'Clear filters and search' : filtered ? 'Clear filters' : `Clear “${query}”`}
                     </Button>
                 </div>
             ) : listed.length === 0 ? (
@@ -223,7 +257,72 @@ function versionLabel(game: GameVersionData): string {
 }
 
 const name = (item: Item) => (item.kind === 'Game' ? item.game.name : item.drill.name);
-const category = (item: Item) => (item.kind === 'Game' ? item.game.sg_category : item.drill.sg_category);
+const shapeOf = (item: Item) => (item.kind === 'Game' ? item.game : item.drill);
+const category = (item: Item) => shapeOf(item).sg_category;
+
+/** Narrows the list to Games or Drills, one SG Category and one Facility, under the search. */
+function ListFilters({ filters, facilities, onChange }: { filters: Filters; facilities: FacilityData[]; onChange: (filters: Filters) => void }) {
+    return (
+        <div className="flex flex-col gap-2">
+            <ToggleButtonGroup
+                aria-label="Games or Drills"
+                selectionMode="single"
+                disallowEmptySelection
+                className="w-full rounded-full bg-surface-secondary p-1"
+                selectedKeys={[filters.kind]}
+                onSelectionChange={(keys) => onChange({ ...filters, kind: [...keys][0] as Filters['kind'] })}
+            >
+                {KINDS.map(({ id, label }) => (
+                    <ToggleButton key={id} id={id} className={`flex-1 rounded-full bg-transparent ${SELECTED_SEGMENT}`}>
+                        {label}
+                    </ToggleButton>
+                ))}
+            </ToggleButtonGroup>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Select
+                    aria-label="SG Category"
+                    value={filters.category}
+                    onChange={(key) => key !== null && onChange({ ...filters, category: key as Filters['category'] })}
+                >
+                    <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                        <ListBox>
+                            <ListBox.Item id="all" textValue="Every SG Category">
+                                Every SG Category
+                            </ListBox.Item>
+                            {CATEGORIES.map((sgCategory) => (
+                                <ListBox.Item key={sgCategory} id={sgCategory} textValue={sgCategoryName(sgCategory)}>
+                                    <SgCategoryBadge category={sgCategoryKey(sgCategory)} long />
+                                </ListBox.Item>
+                            ))}
+                        </ListBox>
+                    </Select.Popover>
+                </Select>
+                <Select aria-label="Facility" value={filters.facility} onChange={(key) => key !== null && onChange({ ...filters, facility: String(key) })}>
+                    <Select.Trigger>
+                        <Select.Value />
+                        <Select.Indicator />
+                    </Select.Trigger>
+                    <Select.Popover>
+                        <ListBox>
+                            <ListBox.Item id="all" textValue="Every Facility">
+                                Every Facility
+                            </ListBox.Item>
+                            {facilities.map((facility) => (
+                                <ListBox.Item key={facility.id} id={facility.id} textValue={facility.name}>
+                                    {facility.name}
+                                </ListBox.Item>
+                            ))}
+                        </ListBox>
+                    </Select.Popover>
+                </Select>
+            </div>
+        </div>
+    );
+}
 
 /** A Game's rules as a golfer reads them at Level 3, or as written when it has no Levels. */
 function readRules(game: GameVersionData): string {
