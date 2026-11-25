@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Drill;
+use App\Models\Facility;
 use App\Models\Game;
 use App\Models\GameVersion;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -176,4 +177,19 @@ it('keeps a Game version\'s Open fields and pad values in order', function () {
     $this->actingAs(golfer())->getJson('/api/catalogue')
         ->assertJsonPath('games.0.open', ['target order', 'scenario wording'])
         ->assertJsonPath('games.0.pad_values', [1, 2, 3, 5]);
+});
+
+it('gives each Game and Drill its SG Category and Facilities, for the Catalogue\'s filters', function () {
+    $bunker = Facility::where('key', 'practice_bunker')->sole();
+    $green = Facility::where('key', 'putting_green')->sole();
+    $game = GameVersion::factory()->published()->create(['sg_category' => 'short_game']);
+    $game->facilities()->sync([$bunker->id]);
+    $drill = Drill::factory()->create(['sg_category' => 'putting']);
+    $drill->facilities()->sync([$green->id]);
+
+    $this->actingAs(admin())->get('/admin/catalogue')->assertInertia(fn (Assert $page) => $page
+        ->where('games.0.sg_category', 'short_game')
+        ->where('games.0.facility_ids', [$bunker->id])
+        ->where('drills.0.sg_category', 'putting')
+        ->where('drills.0.facility_ids', [$green->id]));
 });
