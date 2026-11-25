@@ -12,12 +12,16 @@ what approves a ticket. The spec is the issue the map's body links as "Spec: ...
 Decisions" name the seams, and each ticket's acceptance criteria say what to test at them.
 Together they are the pre-agreed seams `tdd` needs.
 
-**Skills come from the host.** A sandbox has none of your skills, so before each ticket the loop
-copies in the ones the prompts call (`tdd`, `codebase-design`, `code-review`, `pr`), from
-`~/.claude/skills` or else the newest `mattpocock-skills` plugin. Sandboxes are created with
-`--skills=off`, so sbx's shared skills store doesn't mount over that directory read-only. If one is missing, the ticket
-stops before any session runs; a session that still finds a skill unknown ends blocked rather
-than working without it.
+**Skills come from the host.** A sandbox has none of your skills, so before every session the
+loop copies in the ones the prompts call (`tdd`, `codebase-design`, `code-review`, `pr`), from
+`~/.claude/skills` or else the newest `mattpocock-skills` plugin. It replaces the whole of
+`/home/agent/.claude/skills`, a path the host fixes rather than asks the sandbox for, and refuses
+if that directory's parent has been turned into a link. The agent has sudo in its sandbox, so
+read-only files wouldn't hold; a fresh copy per session means no session follows skills an
+earlier one changed or added. Sandboxes are created with `--skills=off`, so sbx's shared skills
+store doesn't mount over that directory read-only. If a skill is missing, the ticket stops
+before any session runs; a session that still finds a skill unknown ends blocked rather than
+working without it.
 
 ```
 queue ─► build, per approved ticket in blocking order:
@@ -34,8 +38,8 @@ queue ─► build, per approved ticket in blocking order:
 | verify | for a ticket whose Design section lists screens, or whose build changed a page under `api/resources/js`: `agent-browser` against `php artisan serve`, which `dev-server.sh` starts and stops, signed in as the throwaway users, at desktop and phone width, light and dark | `reports/<NUM>-verify.md` |
 | review | the `code-review` skill, in a fresh context, against the ticket, the spec, `CLAUDE.md` and the design system, fixing what it finds test-first (each fix's test seen red before the fix), and running `/tmp/gates.sh` before it commits | `reports/<NUM>-review.md` |
 | gates | `gates.sh`: the loop itself runs CI's checks (generated types up to date, the web typecheck and build, the whole Pest suite on MariaDB), Pint on the PHP the change touched, and the phone's typecheck and Jest when `apps/mobile` or `packages/types` changed. It does not take a session's word for any of them | `logs/<NUM>-gates.log` |
-| PR | the `pr` skill writes the body; the loop pushes and opens a **draft** PR | `pr/<NUM>.md` |
-| comment | the host comments on the ticket with the PR link and the gate results | |
+| PR | the `pr` skill writes the body, then a test guide from the finished branch; the loop pushes and opens a **draft** PR | `pr/<NUM>.md`, `pr/<NUM>.test.md` |
+| comment | the host comments on the ticket with the PR link, the gate results and the test guide, under "How to test", for a person or an agent to follow | |
 | retro | `prompts/retro.md` over every transcript in `logs/` | `reports/retro.md` |
 
 State lives outside the repo, in `~/.ralph/gtrack/map-<N>/` (change it with `RALPH_STATE`).
