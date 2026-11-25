@@ -93,7 +93,7 @@ function RoundLine({ round, selected = false }: { round: RoundSummaryData; selec
             <span>
                 <span className="block font-bold">{round.course_name}</span>
                 <span className="text-[13px] opacity-70">
-                    {shortDate(round.played_on)} · {round.holes} holes · {round.score}
+                    {shortDate(round.played_on)} · {round.holes} holes · {round.score} · vs {round.baseline}
                 </span>
             </span>
             {/* Mint and coral are too faint on segment, so the selected Round's total takes its text colour. */}
@@ -112,13 +112,22 @@ function RoundDetail({ round, sgBands }: { round: RoundSummaryData; sgBands: SgB
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <p className="text-[13px] text-muted">
-                        {shortDate(round.played_on)} · {round.holes} holes · vs {round.baseline}
+                        {shortDate(round.played_on)} · {round.holes} holes
                     </p>
                     <h2 className="text-[28px] font-extrabold">{round.course_name}</h2>
                 </div>
-                <div className="text-right">
+                <div className="flex flex-col items-end gap-2">
                     <SgValue value={round.sg_total} className="text-[48px] leading-none" />
-                    <p className="text-[13px] text-muted">Score {round.score}</p>
+                    <dl className="flex gap-4 text-right">
+                        <div>
+                            <dt className="text-[13px] font-bold text-muted">Score</dt>
+                            <dd className="text-[16px] font-extrabold tabular-nums">{round.score}</dd>
+                        </div>
+                        <div>
+                            <dt className="text-[13px] font-bold text-muted">Baseline</dt>
+                            <dd className="text-[16px] font-bold">{round.baseline}</dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
 
