@@ -352,7 +352,7 @@ function DraftCard({ draft, selected, onSelect }: { draft: GameVersionData; sele
 
 function Detail({ item, facilities, distanceGroups }: { item: Item; facilities: FacilityData[]; distanceGroups: DistanceGroupData[] }) {
     const { errors } = usePage<SharedProps>().props;
-    const shape = item.kind === 'Game' ? item.game : item.drill;
+    const shape = shapeOf(item);
     const facilityNames = facilities.filter((facility) => shape.facility_ids.includes(facility.id)).map((facility) => facility.name);
     const featureNames = facilities.flatMap((facility) =>
         facility.features.filter((feature) => shape.feature_ids.includes(feature.id)).map((feature) => `${feature.name} (${facility.name.toLowerCase()})`),
