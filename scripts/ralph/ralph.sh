@@ -206,10 +206,13 @@ ensure_sandbox() {   # ensure_sandbox NAME
 }
 
 # The skills the implement, review and PR prompts call. A sandbox has none of the host's skills,
-# so each ticket run copies these in from this machine: ~/.claude/skills first, then the newest
-# mattpocock-skills plugin. tdd names codebase-design, so it comes too. A skill that cannot be
-# found or copied stops the ticket rather than letting a session carry on without it.
+# so before every session the loop copies these in from this machine: ~/.claude/skills first,
+# then the newest mattpocock-skills plugin. tdd names codebase-design, so it comes too. A skill
+# that cannot be found or copied stops the ticket rather than letting a session carry on without it.
 SKILLS="tdd codebase-design code-review pr"
+# Where they go: the agent user's skills directory in the gtrack-ralph template. Fixed here
+# rather than asked of the sandbox, so a session cannot point the root commands below elsewhere.
+SANDBOX_SKILLS="/home/agent/.claude/skills"
 
 skill_source() {   # skill_source NAME: the real directory holding NAME's SKILL.md on this machine
   local dir
@@ -224,16 +227,24 @@ skill_source() {   # skill_source NAME: the real directory holding NAME's SKILL.
 }
 
 install_skills() {   # install_skills SANDBOX
-  local skill src dest
-  dest="$(sandbox_exec "$1" bash -c 'mkdir -p ~/.claude/skills && cd ~/.claude/skills && pwd')" || return 1
+  local skill src
+  # The agent has sudo in its sandbox, so read-only files would not hold. Instead the whole
+  # directory is replaced, so nothing an earlier session changed or added survives. rm -rf
+  # removes a symlink itself, not what it points to, but rm and mkdir follow a link in a
+  # parent, so the parent must resolve to itself first.
+  sbx exec -u root "$1" bash -c '
+    parent="$(dirname "$1")"
+    [ "$(cd "$parent" 2>/dev/null && pwd -P)" = "$parent" ] || exit 3
+    rm -rf -- "$1" && mkdir -- "$1" && chown agent:agent "$1"
+  ' skills "$SANDBOX_SKILLS" </dev/null ||
+    { log "$SANDBOX_SKILLS in $1 is not a plain directory in the agent's home; refusing to install skills"; return 1; }
   for skill in $SKILLS; do
     src="$(skill_source "$skill")" ||
       { log "skill $skill is not in ~/.claude/skills or the mattpocock-skills plugin"; return 1; }
-    # sbx cp leaves the files owned by the host's uid, which the sandbox user cannot delete.
-    sbx exec -u root "$1" rm -rf "$dest/$skill" </dev/null || return 1
-    sbx cp "$src" "$1:$dest/$skill" </dev/null >&2 || return 1
-    sandbox_exec "$1" test -f "$dest/$skill/SKILL.md" ||
-      { log "skill $skill did not reach the sandbox"; return 1; }
+    sbx cp "$src" "$1:$SANDBOX_SKILLS/$skill" </dev/null >&2 || return 1
+    sbx exec -u root "$1" bash -c '[ "$(cd "$1" && pwd -P)" = "$1" ] && test -f "$1/$2/SKILL.md"' \
+      skills "$SANDBOX_SKILLS" "$skill" </dev/null ||
+      { log "skill $skill did not reach $SANDBOX_SKILLS in $1"; return 1; }
   done
 }
 
@@ -280,6 +291,13 @@ run_agent() {
   } > "$failed"
   log "session $2 did not complete; see $failed"
   return 1
+}
+
+# run_session SANDBOX LOGNAME PROMPT: run_agent on a fresh copy of the skills, so a session never
+# follows skills that an earlier session, or a script it ran, changed.
+run_session() {
+  install_skills "$1" || { log "$2: could not give the sandbox its skills"; return 1; }
+  run_agent "$@"
 }
 
 # The fields of one ticket, as TSV, from an issue node of the GraphQL queries below. Everything
@@ -449,7 +467,7 @@ gate_summary() {
 # build_ticket NUM BASE_COMMIT BASE_BRANCH: implement, browser check, review, gates, PR, comment.
 # It runs inside an `if`, where errexit is off, so every step checks its own status.
 build_ticket() {
-  local num="$1" base_commit="$2" base_branch="$3" branch sandbox base fetched url title body proto
+  local num="$1" base_commit="$2" base_branch="$3" branch sandbox base fetched url title body guide proto
   branch="$(field "$num" 9)"
   sandbox="ralph-$num"
   base="ralph-base/$num"
@@ -471,6 +489,7 @@ build_ticket() {
 
   git branch -q -f --no-track "$base" "$base_commit" || return 1
   ensure_sandbox "$sandbox" || return 1
+  # Each session installs them again (run_session); this first copy fails fast, before setup.
   install_skills "$sandbox" || { log "#$num: could not give the sandbox its skills"; return 1; }
   checkout_in_sandbox "$sandbox" "$base" "$branch" || return 1
   log "#$num: setting up the sandbox"
@@ -481,7 +500,7 @@ build_ticket() {
   # before they commit, so they gate on exactly what the loop gates on below.
   sandbox_exec "$sandbox" bash -c 'printf "%s\n" "$1" > /tmp/gates.sh && chmod +x /tmp/gates.sh' \
     gates "$(cat "$RALPH_DIR/gates.sh")" || return 1
-  run_agent "$sandbox" "$num-implement" "$(render "$RALPH_DIR/prompts/implement.md" "$@")" || return 1
+  run_session "$sandbox" "$num-implement" "$(render "$RALPH_DIR/prompts/implement.md" "$@")" || return 1
   # The queue guesses "has a screen" from the Design section; a page under resources/js in
   # what was actually built settles it the other way.
   if [ "$(field "$num" 7)" = yes ] || sandbox_exec "$sandbox" git diff --name-only "host/$base...HEAD" |
@@ -489,9 +508,9 @@ build_ticket() {
     # Passed in rather than run from the clone: a stacked branch may predate the script.
     sandbox_exec "$sandbox" bash -c 'printf "%s\n" "$1" > /tmp/dev-server.sh && chmod +x /tmp/dev-server.sh' \
       dev-server "$(cat "$RALPH_DIR/dev-server.sh")" || return 1
-    run_agent "$sandbox" "$num-verify" "$(render "$RALPH_DIR/prompts/verify.md" "$@")" || return 1
+    run_session "$sandbox" "$num-verify" "$(render "$RALPH_DIR/prompts/verify.md" "$@")" || return 1
   fi
-  run_agent "$sandbox" "$num-review" "$(render "$RALPH_DIR/prompts/review.md" "$@")" || return 1
+  run_session "$sandbox" "$num-review" "$(render "$RALPH_DIR/prompts/review.md" "$@")" || return 1
 
   # The loop's own gates: never trust a session's word that the build is green.
   log "#$num: gates"
@@ -503,7 +522,10 @@ build_ticket() {
   git branch -q -f --no-track "$branch" "$fetched" || return 1
   set_field "$num" 2 built
 
-  run_agent "$sandbox" "$num-pr" "$(render "$RALPH_DIR/prompts/pr.md" "$@")" || return 1
+  # A guide left by an earlier attempt would pass for this one's, so clear it first. Through the
+  # sandbox, like every file in pr/.
+  sandbox_exec "$sandbox" rm -f "$STATE/pr/$num.test.md" || return 1
+  run_session "$sandbox" "$num-pr" "$(render "$RALPH_DIR/prompts/pr.md" "$@")" || return 1
   # pr/ is writable from the sandbox, so the host never opens a file in it: a symlink there
   # would have the host publish one of its own files as the PR body. Read both through the
   # sandbox, where a link reaches nothing the agent could not already read.
@@ -516,9 +538,13 @@ build_ticket() {
   set_field "$num" 2 pr-open
   waiting_on_you "$num" "draft PR $url to review and merge"
   move_on_board "$num" "In Review" || log "#$num: could not move it to In Review on project $PROJECT"
+  # The PR session writes the test guide last, from the finished branch, after the gates passed.
+  guide="$(sandbox_exec "$sandbox" cat "$STATE/pr/$num.test.md" 2>/dev/null || true)"
+  [ -n "$guide" ] || { log "#$num: the PR session wrote no test guide"
+    guide="The PR session wrote no test guide (\`pr/$num.test.md\`). Test from the ticket's acceptance criteria and the PR body."; }
   { printf 'The Ralph loop built this ticket: draft PR %s, on branch `%s`.\n\nThe loop'"'"'s own gates:\n\n' "$url" "$branch"
     gate_summary "$num"
-    printf '\nWhat the reviews left unfixed is in the PR body.\n'; } |
+    printf '\nWhat the reviews left unfixed is in the PR body.\n\n## How to test\n\n%s\n' "$guide"; } |
     gh issue comment "$num" --body-file - >/dev/null || log "#$num: the issue comment failed; the PR is open regardless"
   sbx stop "$sandbox" </dev/null >/dev/null 2>&1 || true
 }
